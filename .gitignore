@@ -1,0 +1,17 @@
+/.idea/
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/.tmp/
+.byebug_history
+
+# rspec failure tracking
+.rspec_status
+
+# gem builds
+*.gem

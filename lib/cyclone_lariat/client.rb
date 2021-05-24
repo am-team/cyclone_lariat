@@ -1,6 +1,4 @@
 require 'aws-sdk-sns'
-# require 'aws-sdk-core/credentials'
-
 require_relative 'event'
 
 module CycloneLariat
@@ -15,11 +13,11 @@ module CycloneLariat
       @publisher = publisher
     end
 
-    def event(type, data:)
+    def event(type, data: {})
       Event.wrap(
         uuid: SecureRandom.uuid,
         type: "event_#{type}",
-        sent_at: Time.now.iso8601,
+        sent_at: Time.current.iso8601,
         version: version,
         publisher: publisher,
         data: data
@@ -33,7 +31,7 @@ module CycloneLariat
       )
     end
 
-    def publish_event(type, data:, to:)
+    def publish_event(type, data: {}, to:)
       publish event(type, data: data), to: to
     end
 

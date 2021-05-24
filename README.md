@@ -1,8 +1,14 @@
 # Cyclone lariat
 
-This is gem work like middleware for [shrunken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. And catch and produce all exceptions.  
+This is gem work like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. And catch and produce all exceptions.  
 
 ![Luna Park](docs/_imgs/lariat.jpg)
+
+
+```ruby
+# Gemfile
+gem 'cyclone_lariat', require: false
+```
 
 
 ## Client
@@ -10,6 +16,8 @@ This is gem work like middleware for [shrunken](https://github.com/ruby-shoryuke
 You can use client directly
 
 ```ruby
+require 'cyclone_lariat/client'
+
 client = CycloneLariat::Client.new(
   key: APP_CONF.aws.key,
   secret_key: APP_CONF.aws.secret_key,
@@ -17,31 +25,39 @@ client = CycloneLariat::Client.new(
   version: 1,
   publisher: 'pilot'
 )
-
-client.publish_event 'test',
-                     data: { foo: 1 },
-                     to: APP_CONF.aws.fanout
+                     # event_type        data                                    topic
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, to: APP_CONF.aws.fanout.emails
+client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' }, to: APP_CONF.aws.fanout.emails
 ```
 
 Or you can use client as Repo.
 
 ```ruby
+require 'cyclone_lariat/client'
+
 class YourClient < CycloneLariat::Client
   version 1
   publisher 'pilot'
   
-  def test
-    publish event('test', data: { foo: 1 }), to: APP_CONF.aws.fanout
+  def email_is_created(mail)
+    publish event( 'email_is_created', 
+      data: { mail: mail }
+    ), 
+    to: APP_CONF.aws.fanout.emails
+  end
+  
+  def email_is_removed(mail)
+    publish event( 'email_is_removed', 
+      data: { mail: mail }
+    ), 
+    to: APP_CONF.aws.fanout.email
   end
 end
 
-client = YourClient.new(
-  key: APP_CONF.aws.key,
-  secret_key: APP_CONF.aws.secret_key,
-  region: APP_CONF.aws.region
-)
+client = YourClient.new(key: APP_CONF.aws.key, secret_key: APP_CONF.aws.secret_key, region: APP_CONF.aws.region)
 
-client.test
+client.email_is_created 'john.doe@example.com'
+client.email_is_removed 'john.doe@example.com'
 ```
 
 # Middleware
@@ -51,6 +67,7 @@ If you use middleware:
 - Notify every error 
 
 ```ruby
+require 'cyclone_lariat/middleware'
 
 class Receiver
   include Shoryuken::Worker
@@ -72,7 +89,7 @@ class Receiver
     # chain.add CycloneLariat::Middleware, dataset: DB[:events]
   end
 
-  def perform(_sqs_message, sqs_message_body)
+  def perform(sqs_message, sqs_message_body)
     # Your logic here
   end
 end
@@ -110,7 +127,7 @@ Sequel.migration do
       Integer  :version,                  null: false
       DateTime :sent_at,                  null: true,  default: nil
       DateTime :received_at,              null: false, default: Sequel::CURRENT_TIMESTAMP
-      DateTime :processed_at,             null: false, default: Sequel::CURRENT_TIMESTAMP
+      DateTime :processed_at,             null: true,  default: nil
     end
   end
 end

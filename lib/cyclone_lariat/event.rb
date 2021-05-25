@@ -4,6 +4,8 @@ require 'luna_park/entities/attributable'
 
 module CycloneLariat
   class Event < LunaPark::Entities::Attributable
+    KIND = 'event'
+
     attr :uuid,      String, :new
     attr :publisher, String, :new
     attr :type,      String, :new
@@ -13,6 +15,10 @@ module CycloneLariat
     attr_reader :sent_at,
                 :processed_at,
                 :received_at
+
+    def kind
+      KIND
+    end
 
     def version=(value)
       @version = Integer(value)
@@ -31,7 +37,9 @@ module CycloneLariat
     end
 
     def to_json(*args)
-      to_h.to_json(*args)
+      hash = serialize
+      hash[:type] = [kind, hash[:type]].join '_'
+      hash.to_json(*args)
     end
 
     private

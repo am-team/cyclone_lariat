@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'event'
 
 module CycloneLariat
@@ -14,6 +16,8 @@ module CycloneLariat
         type: event.type,
         publisher: event.publisher,
         data: JSON.generate(event.data),
+        error_message: event.error&.message,
+        error_details: JSON.generate(event.error&.details),
         version: event.version,
         sent_at: event.sent_at
       )
@@ -24,18 +28,20 @@ module CycloneLariat
     end
 
     def processed!(uuid:)
-      dataset.where(uuid: uuid).update(processed_at: Sequel.function(:NOW))
+      !dataset.where(uuid: uuid).update(processed_at: Sequel.function(:NOW)).zero?
     end
 
     def find(uuid:)
       raw = dataset.where(uuid: uuid).first
-      raw[:data] = JSON.parse raw[:data], symbolize_names: true
+      raw[:data]          = JSON.parse(raw[:data], symbolize_names: true)
+      raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true) if raw[:error_details]
       Event.wrap raw
     end
 
-    def unprocessed
+    def each_unprocessed
       dataset.where(processed_at: nil).each do |raw|
-        raw[:data] = JSON.parse(raw[:data], symbolize_names: true)
+        raw[:data]          = JSON.parse(raw[:data], symbolize_names: true)
+        raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true) if raw[:error_details]
         event = Event.wrap(raw)
         yield(event)
       end

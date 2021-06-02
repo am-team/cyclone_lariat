@@ -1,38 +1,52 @@
+# frozen_string_literal: true
+
 require 'aws-sdk-sns'
+require 'luna_park/extensions/injector'
 require_relative 'event'
+require_relative 'errors'
 
 module CycloneLariat
   class Client
-    DEFAULT_VERSION = 1
+    include LunaPark::Extensions::Injector
 
-    def initialize(key:, secret_key:, region:, version: nil, publisher: nil)
+    dependency(:aws_sns_client_class)  { Aws::SNS::Client }
+    dependency(:aws_credentials_class) { Aws::Credentials }
+
+    DEFAULT_VERSION  = 1
+    DEFAULT_INSTANCE = :prod
+    SNS_SUFFIX       = :fanout
+
+    def initialize(key:, secret_key:, region:, version: nil, publisher: nil, instance: nil)
       @key = key
       @secret_key = secret_key
       @region = region
       @version = version
       @publisher = publisher
+      @instance = instance
     end
 
-    def event(type, data: {})
+    def event(type, data: {}, version: self.version, uuid: SecureRandom.uuid)
       Event.wrap(
-        uuid: SecureRandom.uuid,
-        type: "event_#{type}",
-        sent_at: Time.current.iso8601,
+        uuid: uuid,
+        type: type,
+        sent_at: Time.now.iso8601,
         version: version,
         publisher: publisher,
         data: data
       )
     end
 
-    def publish(event, to:)
+    def publish(msg, to: nil)
+      topic = to || [instance, msg.kind, SNS_SUFFIX, publisher, msg.type].join('-')
+
       aws_client.publish(
-        topic_arn: topic_arn(to),
-        message: event.to_json
+        topic_arn: topic_arn(topic),
+        message: msg.to_json
       )
     end
 
-    def publish_event(type, data: {}, to:)
-      publish event(type, data: data), to: to
+    def publish_event(type, data: {}, version: self.version, uuid: SecureRandom.uuid, to: nil)
+      publish event(type, data: data, version: version, uuid: uuid), to: to
     end
 
     class << self
@@ -40,14 +54,14 @@ module CycloneLariat
         version.nil? ? @version || DEFAULT_VERSION : @version = version
       end
 
+      def instance(instance = nil)
+        instance.nil? ? @instance || DEFAULT_INSTANCE : @instance = instance
+      end
+
       def publisher(publisher = nil)
-        publisher.nil? ? @publisher || (raise 'You should define publisher') : @publisher = version
+        publisher.nil? ? @publisher || (raise 'You should define publisher') : @publisher = publisher
       end
     end
-
-    private
-
-    attr_reader :key, :secret_key, :region
 
     def version
       @version ||= self.class.version
@@ -57,19 +71,28 @@ module CycloneLariat
       @publisher ||= self.class.publisher
     end
 
-    # По уму бы сделать так что если ошибка,
-    # то показывать то име которое пытались ввести
-    # и все очереди которые доступны
+    def instance
+      @instance ||= self.class.instance
+    end
+
+    private
+
+    attr_reader :key, :secret_key, :region
+
     def topic_arn(topic_name)
-      aws_client.list_topics.topics.find { |topic| topic.topic_arn.match?(topic_name) }&.topic_arn
+      list  = aws_client.list_topics.topics
+      topic = list.find { |t| t.topic_arn.match?(topic_name) }
+      raise Errors::TopicNotFound.new(expected_topic: topic_name, existed_topics: list.map(&:topic_arn)) if topic.nil?
+
+      topic.topic_arn
     end
 
     def aws_client
-      @aws_client ||= Aws::SNS::Client.new(credentials: aws_credentials, region: region)
+      @aws_client ||= aws_sns_client_class.new(credentials: aws_credentials, region: region)
     end
 
     def aws_credentials
-      @aws_credentials ||= Aws::Credentials.new(key, secret_key)
+      @aws_credentials ||= aws_credentials_class.new(key, secret_key)
     end
   end
 end

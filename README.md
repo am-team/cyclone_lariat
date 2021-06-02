@@ -7,7 +7,12 @@ This is gem work like middleware for [shoryuken](https://github.com/ruby-shoryuk
 
 ```ruby
 # Gemfile
+
+# If use client or middleware 
 gem 'cyclone_lariat', require: false
+
+# If use client
+gem 'cyclone_lariat'
 ```
 
 
@@ -16,7 +21,7 @@ gem 'cyclone_lariat', require: false
 You can use client directly
 
 ```ruby
-require 'cyclone_lariat/client'
+require 'cyclone_lariat/client' # If require: false in Gemfile 
 
 client = CycloneLariat::Client.new(
   key:        APP_CONF.aws.key,
@@ -44,7 +49,7 @@ client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' },
 Or you can use client as Repo.
 
 ```ruby
-require 'cyclone_lariat/client'
+require 'cyclone_lariat/client' # If require: false in Gemfile
 
 class YourClient < CycloneLariat::Client
   version   1
@@ -81,7 +86,7 @@ If you use middleware:
 - Notify every error 
 
 ```ruby
-require 'cyclone_lariat/middleware'
+require 'cyclone_lariat/middleware' # If require: false in Gemfile
 
 class Receiver
   include Shoryuken::Worker
@@ -150,6 +155,3 @@ Sequel.migration do
   end
 end
 ```
-
-
-

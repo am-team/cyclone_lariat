@@ -34,14 +34,14 @@ module CycloneLariat
     def find(uuid:)
       raw = dataset.where(uuid: uuid).first
       raw[:data]          = JSON.parse(raw[:data], symbolize_names: true)
-      raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true)
+      raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true) if raw[:error_details]
       Event.wrap raw
     end
 
     def each_unprocessed
       dataset.where(processed_at: nil).each do |raw|
         raw[:data]          = JSON.parse(raw[:data], symbolize_names: true)
-        raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true)
+        raw[:error_details] = JSON.parse(raw[:error_details], symbolize_names: true) if raw[:error_details]
         event = Event.wrap(raw)
         yield(event)
       end

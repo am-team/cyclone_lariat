@@ -63,14 +63,6 @@ module CycloneLariat
       end
     end
 
-    def self.publisher=
-      # code here
-    end
-
-    private
-
-    attr_reader :key, :secret_key, :region
-
     def version
       @version ||= self.class.version
     end
@@ -82,6 +74,10 @@ module CycloneLariat
     def instance
       @instance ||= self.class.instance
     end
+
+    private
+
+    attr_reader :key, :secret_key, :region
 
     def topic_arn(topic_name)
       list  = aws_client.list_topics.topics

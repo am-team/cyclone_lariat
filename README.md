@@ -19,15 +19,26 @@ You can use client directly
 require 'cyclone_lariat/client'
 
 client = CycloneLariat::Client.new(
-  key: APP_CONF.aws.key,
+  key:        APP_CONF.aws.key,
   secret_key: APP_CONF.aws.secret_key,
-  region: APP_CONF.aws.region,
-  version: 1,
-  publisher: 'pilot'
+  region:     APP_CONF.aws.region,
+  version:    1,                          # at default 1
+  publisher:  'pilot',
+  instance:   INSTANCE                    # at default :prod
 )
+```
+
+You can don't define topic, and it's name will be defined automatically 
+```ruby
                      # event_type        data                                    topic
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, to: APP_CONF.aws.fanout.emails
-client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' }, to: APP_CONF.aws.fanout.emails
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_created
+client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_removed
+```
+Or you can define it by handle. For example, if you want to send different events to same channel.
+```ruby
+                     # event_type        data                                    topic
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, to: 'prod-event-fanout-pilot-emails'
+client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' }, to: 'prod-event-fanout-pilot-emails'
 ```
 
 Or you can use client as Repo.
@@ -36,8 +47,9 @@ Or you can use client as Repo.
 require 'cyclone_lariat/client'
 
 class YourClient < CycloneLariat::Client
-  version 1
+  version   1
   publisher 'pilot'
+  instance  'stage'
   
   def email_is_created(mail)
     publish event( 'email_is_created', 
@@ -54,8 +66,10 @@ class YourClient < CycloneLariat::Client
   end
 end
 
+# Init repo
 client = YourClient.new(key: APP_CONF.aws.key, secret_key: APP_CONF.aws.secret_key, region: APP_CONF.aws.region)
 
+# And send topics
 client.email_is_created 'john.doe@example.com'
 client.email_is_removed 'john.doe@example.com'
 ```
@@ -81,12 +95,14 @@ class Receiver
                     queue: 'your_sqs_queue_name'
 
   server_middleware do |chain|
+    
+    # Options dataset, errors_notifier and message_notifier is optionals.
+    # If you dont define notifiers - middleware does not notify
+    # If you dont define dataset - middleware does store events in db
     chain.add CycloneLariat::Middleware,
               dataset: DB[:events],
               errors_notifier: LunaPark::Notifiers::Sentry.new,
               message_notifier: LunaPark::Notifiers::Log.new(min_lvl: :debug, format: :pretty_json)
-    # If you don`t need to log messages, you can add middleware in this way:
-    # chain.add CycloneLariat::Middleware, dataset: DB[:events]
   end
 
   def perform(sqs_message, sqs_message_body)
@@ -122,9 +138,11 @@ Sequel.migration do
     create_table :events do
       column   :uuid, :uuid, primary_key: true
       String   :type,                     null: false
+      Integer  :version,                  null: false
       String   :publisher,                null: false
       column   :data, :json,              null: false
-      Integer  :version,                  null: false
+      String   :error_message,            null: true,  default: nil
+      column   :error_details, :json,     null: true,  default: nil
       DateTime :sent_at,                  null: true,  default: nil
       DateTime :received_at,              null: false, default: Sequel::CURRENT_TIMESTAMP
       DateTime :processed_at,             null: true,  default: nil

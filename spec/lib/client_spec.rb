@@ -4,9 +4,9 @@ require_relative '../../lib/cyclone_lariat/client'
 require 'timecop'
 
 RSpec.describe CycloneLariat::Client do
-  let(:client) {
+  let(:client) do
     described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app')
-  }
+  end
 
   describe '.version' do
     after { described_class.version 1 }

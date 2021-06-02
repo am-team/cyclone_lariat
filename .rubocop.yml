@@ -1,0 +1,48 @@
+##
+# Bug with Travis rubocop and rainbow gem
+# resolve:
+# https://github.com/rubocop-hq/rubocop/issues/6398#issuecomment-431898694
+inherit_mode:
+  merge:
+    - Exclude
+
+AllCops:
+  TargetRubyVersion: 2.6
+  Exclude:
+    - Rakefile
+  UseCache: true
+  NewCops: enable
+
+Metrics/LineLength:
+  Max: 120
+  IgnoredPatterns: ['\s*\#\s.*$']
+  Exclude:
+    - 'spec/**/*'
+
+Style/Documentation:
+  Exclude:
+    - '**/*'
+
+Metrics/ParameterLists:
+  Exclude:
+    - '**/*'
+
+Style/AccessorGrouping:
+  Exclude:
+    - 'lib/cyclone_lariat/event.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/cyclone_lariat/event.rb'
+    -
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/cyclone_lariat/event.rb'
+
+Metrics/AbcSize:
+  Exclude:
+    - '**/*'
+
+Metrics/BlockLength:
+  Exclude:
+    - '**/*'

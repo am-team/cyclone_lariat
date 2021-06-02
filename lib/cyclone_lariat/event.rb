@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'luna_park/entities/attributable'
+require_relative 'errors'
 
 module CycloneLariat
   class Event < LunaPark::Entities::Attributable
@@ -9,6 +10,7 @@ module CycloneLariat
     attr :uuid,      String, :new
     attr :publisher, String, :new
     attr :type,      String, :new
+    attr :error
     attr :version
     attr :data
 
@@ -34,6 +36,29 @@ module CycloneLariat
 
     def processed_at=(value)
       @processed_at = wrap_time(value)
+    end
+
+    def error_message=(txt)
+      @error ||= Errors::ProcessingEventLogic.new
+      @error.message = txt
+    end
+
+    def error_details=(details)
+      @error ||= Errors::ProcessingEventLogic.new
+      @error.details = details
+    end
+
+    def ==(other)
+      kind == other.kind &&
+        uuid == other.uuid &&
+        publisher == other.publisher &&
+        type == other.type &&
+        error&.message == other.error&.message &&
+        error&.details == other.error&.details &&
+        version == other.version &&
+        sent_at.to_i == other.sent_at.to_i &&
+        received_at.to_i == other.received_at.to_i
+      processed_at.to_i == other.processed_at.to_i
     end
 
     def to_json(*args)

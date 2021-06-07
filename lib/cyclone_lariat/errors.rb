@@ -9,7 +9,7 @@ module CycloneLariat
       message { |d| "Could not found topic: `#{d[:expected_topic]}`" }
     end
 
-    class ProcessingEventLogic < LunaPark::Errors::Business
+    class ClientError < LunaPark::Errors::Business
       attr_writer :message, :details
 
       def ==(other)

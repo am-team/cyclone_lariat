@@ -39,6 +39,8 @@ RSpec.describe CycloneLariat::Middleware do
           expect(notifier).to_not receive(:post)
           receive_event
         end
+        processed_at: Sequel.function(:NOW)
+      )
       end
 
       context 'receive business error' do
@@ -49,7 +51,7 @@ RSpec.describe CycloneLariat::Middleware do
         end
 
         it 'should write WARNING notify' do
-          expect(notifier).to receive(:warning)
+          expect(notifier).to receive(:error)
           receive_event
         end
 

@@ -2,7 +2,7 @@
 
 This is gem work like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. And catch and produce all exceptions.  
 
-![Luna Park](docs/_imgs/lariat.jpg)
+![Cyclone lariat](docs/_imgs/lariat.jpg)
 
 
 ```ruby
@@ -14,6 +14,10 @@ gem 'cyclone_lariat', require: false
 # If use client
 gem 'cyclone_lariat'
 ```
+
+## Logic
+
+![diagram](docs/_imgs/diagram.png)
 
 
 ## Client
@@ -142,16 +146,34 @@ Sequel.migration do
   change do
     create_table :events do
       column   :uuid, :uuid, primary_key: true
-      String   :type,                     null: false
-      Integer  :version,                  null: false
-      String   :publisher,                null: false
-      column   :data, :json,              null: false
-      String   :error_message,            null: true,  default: nil
-      column   :error_details, :json,     null: true,  default: nil
-      DateTime :sent_at,                  null: true,  default: nil
-      DateTime :received_at,              null: false, default: Sequel::CURRENT_TIMESTAMP
-      DateTime :processed_at,             null: true,  default: nil
+      String   :type,                         null: false
+      Integer  :version,                      null: false
+      String   :publisher,                    null: false
+      column   :data, :json,                  null: false
+      String   :client_error_message,         null: true,  default: nil
+      column   :client_error_details, :json,  null: true,  default: nil
+      DateTime :sent_at,                      null: true,  default: nil
+      DateTime :received_at,                  null: false, default: Sequel::CURRENT_TIMESTAMP
+      DateTime :processed_at,                 null: true,  default: nil
     end
   end
+end
+```
+
+### Rake tasks
+
+For simplify write some Rake tasks you can use CycloneLariat::Repo.
+
+```ruby
+# For retry all unprocessed
+
+CycloneLariat.new(DB[:events]).each_unprocessed do |event|
+  # Your logic here
+end
+
+# For retry all events with client errors
+
+CycloneLariat.new(DB[:events]).each_with_client_errors do |event|
+  # Your logic here
 end
 ```

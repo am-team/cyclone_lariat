@@ -10,7 +10,7 @@ module CycloneLariat
     attr :uuid,      String, :new
     attr :publisher, String, :new
     attr :type,      String, :new
-    attr :error
+    attr :client_error
     attr :version
     attr :data
 
@@ -38,14 +38,18 @@ module CycloneLariat
       @processed_at = wrap_time(value)
     end
 
-    def error_message=(txt)
-      @error ||= Errors::ProcessingEventLogic.new
-      @error.message = txt
+    def client_error_message=(txt)
+      return unless txt
+
+      @client_error ||= Errors::ClientError.new
+      @client_error.message = txt
     end
 
-    def error_details=(details)
-      @error ||= Errors::ProcessingEventLogic.new
-      @error.details = details
+    def client_error_details=(details)
+      return unless details
+
+      @client_error ||= Errors::ClientError.new
+      @client_error.details = details
     end
 
     def ==(other)
@@ -53,8 +57,8 @@ module CycloneLariat
         uuid == other.uuid &&
         publisher == other.publisher &&
         type == other.type &&
-        error&.message == other.error&.message &&
-        error&.details == other.error&.details &&
+        client_error&.message == other.client_error&.message &&
+        client_error&.details == other.client_error&.details &&
         version == other.version &&
         sent_at.to_i == other.sent_at.to_i &&
         received_at.to_i == other.received_at.to_i

@@ -14,7 +14,7 @@ RSpec.describe CycloneLariat::EventsRepo do
       type: 'create_user',
       version: 1,
       data: { email: 'john.doe@example.com', password: 'password' },
-      error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
+      client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
       sent_at: Time.now
     )
   end
@@ -31,13 +31,19 @@ RSpec.describe CycloneLariat::EventsRepo do
       expect(created_event[:uuid]).to be_a String
       expect(created_event[:publisher]).to eq 'users'
       expect(created_event[:type]).to eq 'create_user'
-      expect(created_event[:error_details]).to eq JSON.generate(some: :thing)
-      expect(created_event[:error_message]).to eq 'Something went wrong'
+      expect(created_event[:client_error_details]).to eq JSON.generate(some: :thing)
+      expect(created_event[:client_error_message]).to eq 'Something went wrong'
       expect(created_event[:version]).to eq 1
       expect(created_event[:data]).to eq JSON.generate(email: 'john.doe@example.com', password: 'password')
       expect(created_event[:sent_at]).to be_a Time
       expect(created_event[:received_at]).to be_a Time
       expect(created_event[:processed_at]).to eq nil
+    end
+    
+    context 'when event with same uuid is already exists' do
+      before { repo.create event }
+
+      it { expect { create_event }.to raise_error Sequel::UniqueConstraintViolation }
     end
   end
 
@@ -60,10 +66,45 @@ RSpec.describe CycloneLariat::EventsRepo do
   describe '#processed!' do
     subject(:event_processed!) { repo.processed! uuid: uuid }
 
-    context 'when event with expected uuid is exists' do
+    context 'when event with expected uuid is exists and event does not has error' do
       let(:uuid) { repo.create event }
+      let(:event) do
+        CycloneLariat::Event.new(
+          uuid: SecureRandom.uuid,
+          publisher: 'users',
+          type: 'create_user',
+          version: 1,
+          data: { email: 'john.doe@example.com', password: 'password' },
+          sent_at: Time.now
+        )
+      end
 
-      it { is_expected.to be true }
+      it 'should not set error' do
+        expect { event_processed! }.not_to change { repo.find(uuid: uuid).client_error }
+      end
+
+      it 'should mark event as processed' do
+        expect { event_processed! }.to change { repo.find(uuid: uuid).processed_at }.from(nil).to(Time)
+      end
+    end
+
+    context 'when event catch error on process' do
+      subject(:event_processed!) { repo.processed! uuid: uuid, error: CycloneLariat::Errors::ClientError.new }
+      let(:uuid) { repo.create event }
+      let(:event) do
+        CycloneLariat::Event.new(
+          uuid: SecureRandom.uuid,
+          publisher: 'users',
+          type: 'create_user',
+          version: 1,
+          data: { email: 'john.doe@example.com', password: 'password' },
+          sent_at: Time.now
+        )
+      end
+
+      it 'should set error' do
+        expect { event_processed! }.to change { repo.find(uuid: uuid).client_error }.from(nil).to(CycloneLariat::Errors::ClientError)
+      end
 
       it 'should mark event as processed' do
         expect { event_processed! }.to change { repo.find(uuid: uuid).processed_at }.from(nil).to(Time)
@@ -90,8 +131,6 @@ RSpec.describe CycloneLariat::EventsRepo do
   end
 
   describe '#each_unprocessed' do
-    subject(:unprocessed_events) { repo.each_unprocessed }
-
     let!(:unprocessed_event) { repo.find uuid: repo.create(event) }
     let!(:processed_event) do
       uuid = repo.create CycloneLariat::Event.new(
@@ -100,7 +139,7 @@ RSpec.describe CycloneLariat::EventsRepo do
         type: 'create_user',
         version: 1,
         data: { email: 'john.doe@example.com', password: 'password' },
-        error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
+        client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
         sent_at: Time.now
       )
 
@@ -109,6 +148,42 @@ RSpec.describe CycloneLariat::EventsRepo do
 
     it 'should show only unprocessed event' do
       expect { |b| repo.each_unprocessed(&b) }.to yield_with_args(unprocessed_event)
+    end
+  end
+
+  describe '#each_with_client_errors' do
+    let!(:unprocessed_event) { repo.find uuid: repo.create(event) }
+    let!(:processed_event) do
+      uuid = repo.create CycloneLariat::Event.new(
+        uuid: SecureRandom.uuid,
+        publisher: 'users',
+        type: 'create_user',
+        version: 1,
+        data: { email: 'john.doe@example.com', password: 'password' },
+        sent_at: Time.now
+      )
+
+      repo.processed! uuid: uuid
+      repo.find(uuid: uuid)
+    end
+
+    let!(:processed_event_with_error) do
+      uuid = repo.create CycloneLariat::Event.new(
+        uuid: SecureRandom.uuid,
+        publisher: 'users',
+        type: 'create_user',
+        version: 1,
+        data: { email: 'john.doe@example.com', password: 'password' },
+        client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
+        sent_at: Time.now
+      )
+
+      repo.processed! uuid: uuid
+      repo.find(uuid: uuid)
+    end
+
+    it 'should show only unprocessed event' do
+      expect { |b| repo.each_with_client_errors(&b) }.to yield_with_args(processed_event_with_error)
     end
   end
 end

@@ -38,13 +38,14 @@ module CycloneLariat
 
       events_repo.create(event)
       yield
-      events_repo.processed! uuid: event.uuid
+      events_repo.processed! uuid: event.uuid, error: event.client_error
     end
 
     def catch_business_error(event)
       yield
     rescue LunaPark::Errors::Business => e
-      errors_notifier&.warning(e, event: event)
+      errors_notifier&.error(e, event: event)
+      event.client_error = e
     end
 
     def catch_standard_error(queue, body)

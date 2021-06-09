@@ -16,7 +16,7 @@ RSpec.describe CycloneLariat::Errors::TopicNotFound do
   end
 end
 
-RSpec.describe CycloneLariat::Errors::ProcessingEventLogic do
+RSpec.describe CycloneLariat::Errors::ClientError do
   let(:error) { described_class.new('Could not found user', email: 'john.doe@example.com') }
 
   it { expect(error).to be_a(LunaPark::Errors::Business) }

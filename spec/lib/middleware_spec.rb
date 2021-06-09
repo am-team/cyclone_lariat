@@ -34,13 +34,29 @@ RSpec.describe CycloneLariat::Middleware do
     context 'when errors_notifier is defined' do
       let(:middleware) { described_class.new(errors_notifier: notifier) }
 
+      context 'when message empty' do
+        let(:msg) { '' }
+
+        it 'should write ERROR notify' do
+          expect(notifier).to receive(:error)
+          receive_event
+        end
+      end
+
+      context 'when message nil' do
+        let(:msg) { nil }
+
+        it 'should write ERROR notify' do
+          expect(notifier).to receive(:error)
+          receive_event
+        end
+      end
+
       context 'no any one exception is handled' do
         it 'should not write log message' do
           expect(notifier).to_not receive(:post)
           receive_event
         end
-        processed_at: Sequel.function(:NOW)
-      )
       end
 
       context 'receive business error' do
@@ -50,10 +66,10 @@ RSpec.describe CycloneLariat::Middleware do
           end
         end
 
-        it 'should write WARNING notify' do
-          expect(notifier).to receive(:error)
-          receive_event
-        end
+        it 'should write ERROR notify' do
+           expect(notifier).to receive(:error)
+           receive_event
+         end
 
         it 'should not raise error' do
           expect { receive_event }.to_not raise_error

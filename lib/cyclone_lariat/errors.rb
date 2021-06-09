@@ -5,6 +5,10 @@ require 'luna_park/errors/business'
 
 module CycloneLariat
   module Errors
+    class EmptyMessage < LunaPark::Errors::System
+      message 'Received message is empty'
+    end
+
     class TopicNotFound < LunaPark::Errors::System
       message { |d| "Could not found topic: `#{d[:expected_topic]}`" }
     end

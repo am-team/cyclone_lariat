@@ -16,6 +16,8 @@ module CycloneLariat
       log_received_message queue, body
 
       catch_standard_error(queue, body) do
+        return true unless check(body[:Message])
+        
         event = Event.wrap(JSON.parse(body[:Message]))
 
         catch_business_error(event) do
@@ -53,6 +55,15 @@ module CycloneLariat
     rescue StandardError => e
       errors_notifier&.error(e, queue: queue, aws_message_id: body[:MessageId], message: body[:Message])
       raise e
+    end
+
+    def check(msg)
+      if msg.nil? || msg.empty?
+        errors_notifier&.error(Errors::EmptyMessage.new)
+        false
+      else
+        true
+      end
     end
   end
 end

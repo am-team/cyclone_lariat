@@ -9,7 +9,7 @@
 /tmp/
 /.tmp/
 .byebug_history
-config/database.yml
+config/db.rb
 
 # rspec failure tracking
 .rspec_status

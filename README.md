@@ -19,59 +19,82 @@ gem 'cyclone_lariat'
 
 ![diagram](docs/_imgs/diagram.png)
 
+## Command vs Event
+Commands and events are both simple domain structures that contain solely data for reading. That means they contain no 
+behaviour or business logic.
 
-## Client
+A command is an object that is sent to the domain for a state change which is handled by a command handler. They should 
+be named with a verb in an imperative mood plus the aggregate name which it operates on. Such request can be rejected 
+due to the data the command holds being invalid/inconsistent. There should be exactly 1 handler for each command. 
+Once the command has been executed, the consumer can then carry out whatever the task is depending on the output of the 
+command.
 
+An event is a statement of fact about what change has been made to the domain state. They are named with the aggregate 
+name where the change took place plus the verb past-participle. An event happens off the back of a command. 
+A command can emit any number of events. The sender of the event does not care who receives it or whether it has been 
+received at all.
+
+## SnsClient
 You can use client directly
 
 ```ruby
-require 'cyclone_lariat/client' # If require: false in Gemfile 
+require 'cyclone_lariat/sns_client' # If require: false in Gemfile 
 
-client = CycloneLariat::Client.new(
-  key:        APP_CONF.aws.key,
+client = CycloneLariat::SnsClient.new(
+  key: APP_CONF.aws.key,
   secret_key: APP_CONF.aws.secret_key,
-  region:     APP_CONF.aws.region,
-  version:    1,                          # at default 1
-  publisher:  'pilot',
-  instance:   INSTANCE                    # at default :prod
+  region: APP_CONF.aws.region,
+  version: 1, # at default 1
+  publisher: 'pilot',
+  instance: INSTANCE # at default :prod
 )
 ```
 
 You can don't define topic, and it's name will be defined automatically 
 ```ruby
                      # event_type        data                                    topic
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_created
-client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_removed
+client.publish_event   'email_is_created', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_created
+client.publish_event   'email_is_removed', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_removed
+client.publish_command 'delete_user',      data: { mail: 'john.doe@example.com' } # prod-command-fanout-pilot-delete_user
 ```
 Or you can define it by handle. For example, if you want to send different events to same channel.
 ```ruby
                      # event_type        data                                    topic
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, to: 'prod-event-fanout-pilot-emails'
-client.publish_event 'email_is_removed', data: { mail: 'john.doe@example.com' }, to: 'prod-event-fanout-pilot-emails'
+client.publish_event   'email_is_created', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
+client.publish_event   'email_is_removed', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
+client.publish_command 'delete_user',      data: { mail: 'john.doe@example.com' }, topic: 'prod-command-fanout-pilot-emails'
 ```
 
 Or you can use client as Repo.
 
 ```ruby
-require 'cyclone_lariat/client' # If require: false in Gemfile
+require 'cyclone_lariat/sns_client' # If require: false in Gemfile
 
-class YourClient < CycloneLariat::Client
-  version   1
+class YourClient < CycloneLariat::SnsClient
+  version 1
   publisher 'pilot'
-  instance  'stage'
-  
+  instance 'stage'
+
   def email_is_created(mail)
-    publish event( 'email_is_created', 
-      data: { mail: mail }
-    ), 
-    to: APP_CONF.aws.fanout.emails
+    publish event('email_is_created',
+                  data: { mail: mail }
+            ),
+            to: APP_CONF.aws.fanout.emails
   end
-  
+
   def email_is_removed(mail)
-    publish event( 'email_is_removed', 
-      data: { mail: mail }
-    ), 
-    to: APP_CONF.aws.fanout.email
+    publish event('email_is_removed',
+                  data: { mail: mail }
+            ),
+            to: APP_CONF.aws.fanout.email
+  end
+
+
+  def delete_user(mail)
+    publish command('delete_user',
+                  data: { mail: mail }
+            ),
+            to: APP_CONF.aws.fanout.email
   end
 end
 
@@ -81,7 +104,38 @@ client = YourClient.new(key: APP_CONF.aws.key, secret_key: APP_CONF.aws.secret_k
 # And send topics
 client.email_is_created 'john.doe@example.com'
 client.email_is_removed 'john.doe@example.com'
+client.delete_user      'john.doe@example.com'
 ```
+
+
+# SqsClient
+SqsClient is really similar to SnsClient. It can be initialized in same way:
+
+```ruby
+require 'cyclone_lariat/sns_client' # If require: false in Gemfile 
+
+client = CycloneLariat::SqsClient.new(
+  key: APP_CONF.aws.key,
+  secret_key: APP_CONF.aws.secret_key,
+  region: APP_CONF.aws.region,
+  version: 1, # at default 1
+  publisher: 'pilot',
+  instance: INSTANCE # at default :prod
+)
+```
+
+As you see all params identity. And you can easily change your sqs-queue to sns-topic when you start work with more
+subscribes. But you should define destination.
+
+```ruby
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, dest: 'notify_service'
+```
+
+Or you can define topic directly:
+```ruby
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
+```
+
 
 # Middleware
 If you use middleware:
@@ -144,7 +198,7 @@ end
 # The second one:
 Sequel.migration do
   change do
-    create_table :events do
+    create_table :async_messages do
       column   :uuid, :uuid, primary_key: true
       String   :type,                         null: false
       Integer  :version,                      null: false

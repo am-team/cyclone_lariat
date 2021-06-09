@@ -2,8 +2,9 @@
 
 Sequel.migration do
   change do
-    create_table :events do
+    create_table :async_messages do
       column   :uuid, :uuid, primary_key: true
+      String   :kind,                        null: false
       String   :type,                        null: false
       Integer  :version,                     null: false
       String   :publisher,                   null: false

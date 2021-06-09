@@ -2,10 +2,10 @@
 
 require 'securerandom'
 
-require_relative '../../lib/cyclone_lariat/events_repo'
+require_relative '../../lib/cyclone_lariat/messages_repo'
 
-RSpec.describe CycloneLariat::EventsRepo do
-  let(:dataset) { DB[:events] }
+RSpec.describe CycloneLariat::MessagesRepo do
+  let(:dataset) { DB[:async_messages] }
   let(:repo) { described_class.new dataset }
   let(:event) do
     CycloneLariat::Event.new(
@@ -39,7 +39,7 @@ RSpec.describe CycloneLariat::EventsRepo do
       expect(created_event[:received_at]).to be_a Time
       expect(created_event[:processed_at]).to eq nil
     end
-    
+
     context 'when event with same uuid is already exists' do
       before { repo.create event }
 

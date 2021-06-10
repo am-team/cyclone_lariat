@@ -2,7 +2,7 @@
 
 require 'luna_park/notifiers/log'
 require_relative '../../lib/cyclone_lariat/middleware'
-require_relative '../../lib/cyclone_lariat/events_repo'
+require_relative '../../lib/cyclone_lariat/messages_repo'
 
 RSpec.describe CycloneLariat::Middleware do
   describe '#call' do
@@ -67,9 +67,9 @@ RSpec.describe CycloneLariat::Middleware do
         end
 
         it 'should write ERROR notify' do
-           expect(notifier).to receive(:error)
-           receive_event
-         end
+          expect(notifier).to receive(:error)
+          receive_event
+        end
 
         it 'should not raise error' do
           expect { receive_event }.to_not raise_error
@@ -103,14 +103,14 @@ RSpec.describe CycloneLariat::Middleware do
       end
     end
 
-    context 'when events_repo is defined' do
-      let(:dataset)     { double }
-      let(:events_repo) { instance_double CycloneLariat::EventsRepo }
-      let(:events_repo_class) { class_double(CycloneLariat::EventsRepo, new: events_repo) }
-      let(:middleware) { described_class.new(dataset: dataset, repo: events_repo_class) }
+    context 'when messages_repo is defined' do
+      let(:dataset) { double }
+      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
+      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
+      let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
 
       context 'when event is already exists in dataset' do
-        let(:events_repo) { instance_double CycloneLariat::EventsRepo, exists?: true }
+        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, exists?: true }
         it { is_expected.to be true }
         it 'should not run business logic' do
           expect(business_logic).to_not receive(:call)
@@ -118,18 +118,18 @@ RSpec.describe CycloneLariat::Middleware do
         end
 
         it 'should not event as processed' do
-          expect(events_repo).to_not receive(:processed!)
+          expect(messages_repo).to_not receive(:processed!)
           receive_event
         end
 
         it 'should not crete new event in repository' do
-          expect(events_repo).to_not receive(:create)
+          expect(messages_repo).to_not receive(:create)
           receive_event
         end
       end
 
       context 'when event does not exists in dataset' do
-        let(:events_repo) { instance_double CycloneLariat::EventsRepo, exists?: false, create: nil, processed!: true }
+        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, exists?: false, create: nil, processed!: true }
 
         it { is_expected.to be true }
 
@@ -139,12 +139,12 @@ RSpec.describe CycloneLariat::Middleware do
         end
 
         it 'should mark event as processed' do
-          expect(events_repo).to receive(:processed!)
+          expect(messages_repo).to receive(:processed!)
           receive_event
         end
 
         it 'should not crete new event in repository' do
-          expect(events_repo).to receive(:create)
+          expect(messages_repo).to receive(:create)
           receive_event
         end
       end

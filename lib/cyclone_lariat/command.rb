@@ -3,8 +3,8 @@
 require_relative 'abstract/message'
 
 module CycloneLariat
-  class Event < Abstract::Message
-    KIND = 'event'
+  class Command < Abstract::Message
+    KIND = 'command'
 
     def kind
       KIND

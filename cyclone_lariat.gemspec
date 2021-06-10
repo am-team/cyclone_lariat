@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'aws-sdk-sns'
+  spec.add_dependency 'aws-sdk-sqs'
   spec.add_dependency 'luna_park', '~> 0.11'
 
   spec.add_development_dependency 'bundler', '~> 2.1'

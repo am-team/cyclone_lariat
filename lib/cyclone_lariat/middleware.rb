@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'events_repo'
+require_relative 'messages_repo'
 require 'luna_park/errors'
 require 'json'
 
 module CycloneLariat
   class Middleware
-    def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: EventsRepo)
+    def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: MessagesRepo)
       @events_repo      = repo.new(dataset) if dataset
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
@@ -17,7 +17,7 @@ module CycloneLariat
 
       catch_standard_error(queue, body) do
         return true unless check(body[:Message])
-        
+
         event = Event.wrap(JSON.parse(body[:Message]))
 
         catch_business_error(event) do

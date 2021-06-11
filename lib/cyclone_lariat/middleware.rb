@@ -20,8 +20,8 @@ module CycloneLariat
       catch_standard_error(queue, msg) do
         event = Event.wrap(msg)
 
-        catch_business_error(event) do
-          store_in_dataset(event, &block)
+        store_in_dataset(event) do
+          catch_business_error(event, &block)
         end
       end
     end

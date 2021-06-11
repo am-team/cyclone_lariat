@@ -23,8 +23,13 @@ RSpec.describe CycloneLariat::Middleware do
         expect(notifier).to receive(:info).with(
           'Receive message',
           queue: 'create_message',
-          aws_message_id: 12,
-          message: msg
+          message: {
+            data: { foo: 1 },
+            publisher: 'pilot',
+            type: 'event_test',
+            uuid: 'fcc3644b-f42c-4068-9ef9-06ceaa62b44d',
+            version: 1
+          }
         )
 
         receive_event
@@ -33,24 +38,6 @@ RSpec.describe CycloneLariat::Middleware do
 
     context 'when errors_notifier is defined' do
       let(:middleware) { described_class.new(errors_notifier: notifier) }
-
-      context 'when message empty' do
-        let(:msg) { '' }
-
-        it 'should write ERROR notify' do
-          expect(notifier).to receive(:error)
-          receive_event
-        end
-      end
-
-      context 'when message nil' do
-        let(:msg) { nil }
-
-        it 'should write ERROR notify' do
-          expect(notifier).to receive(:error)
-          receive_event
-        end
-      end
 
       context 'no any one exception is handled' do
         it 'should not write log message' do

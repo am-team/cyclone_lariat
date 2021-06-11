@@ -9,13 +9,8 @@ module CycloneLariat
       attr :uuid,      String, :new
       attr :publisher, String, :new
       attr :type,      String, :new
-      attr :client_error
-      attr :version
-      attr :data
-
-      attr_reader :sent_at,
-                  :processed_at,
-                  :received_at
+      attrs :client_error, :version, :data,
+            :sent_at, :processed_at, :received_at
 
       def kind
         raise LunaPark::Errors::AbstractMethod
@@ -35,6 +30,10 @@ module CycloneLariat
 
       def processed_at=(value)
         @processed_at = wrap_time(value)
+      end
+
+      def processed?
+        !@processed_at.nil?
       end
 
       def client_error_message=(txt)
@@ -77,7 +76,7 @@ module CycloneLariat
         when String   then Time.parse(value)
         when Time     then value
         when NilClass then nil
-        else raise Argumentevent.rbError, "Unknown type `#{value.class}`"
+        else raise ArgumentError, "Unknown type `#{value.class}`"
         end
       end
     end

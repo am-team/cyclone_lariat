@@ -13,12 +13,12 @@ module CycloneLariat
     end
 
     def call(_worker_instance, queue, _sqs_msg, body, &block)
-      log_received_message queue, body
+      msg = receive_message(body)
 
-      catch_standard_error(queue, body) do
-        return true unless check(body[:Message])
+      message_notifier&.info 'Receive message', message: msg, queue: queue
 
-        event = Event.wrap(JSON.parse(body[:Message]))
+      catch_standard_error(queue, msg) do
+        event = Event.wrap(msg)
 
         catch_business_error(event) do
           store_in_dataset(event, &block)
@@ -30,8 +30,8 @@ module CycloneLariat
 
     attr_reader :errors_notifier, :message_notifier, :events_repo
 
-    def log_received_message(queue, body)
-      message_notifier&.info 'Receive message', queue: queue, aws_message_id: body[:MessageId], message: body[:Message]
+    def receive_message(body)
+      body[:Message] ? JSON.parse(body[:Message], symbolize_names: true ) : body
     end
 
     def store_in_dataset(event)
@@ -50,20 +50,11 @@ module CycloneLariat
       event.client_error = e
     end
 
-    def catch_standard_error(queue, body)
+    def catch_standard_error(queue, msg)
       yield
     rescue StandardError => e
-      errors_notifier&.error(e, queue: queue, aws_message_id: body[:MessageId], message: body[:Message])
+      errors_notifier&.error(e, queue: queue, message: msg)
       raise e
-    end
-
-    def check(msg)
-      if msg.nil? || msg.empty?
-        errors_notifier&.error(Errors::EmptyMessage.new)
-        false
-      else
-        true
-      end
     end
   end
 end

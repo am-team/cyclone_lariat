@@ -14,12 +14,15 @@ RSpec.describe CycloneLariat::SnsClient do
     let(:aws_sns_client_class)  { class_double(Aws::SNS::Client, new: aws_sns_client) }
     let(:aws_credentials_class) { class_double(Aws::Credentials, new: nil) }
     let(:event)                 { client.event('create_note', data: { text: 'Test note' }) }
+    let(:event_sent_at)         { Time.now }
 
     before do
       client.dependencies = {
         aws_client_class: -> { aws_sns_client_class },
         aws_credentials_class: -> { aws_credentials_class }
       }
+
+      Timecop.freeze event_sent_at
     end
 
     context 'when topic title is not defined' do
@@ -32,7 +35,8 @@ RSpec.describe CycloneLariat::SnsClient do
             publisher: 'sample_app',
             type: 'event_create_note',
             version: 1,
-            data: { text: 'Test note' }
+            data: { text: 'Test note' },
+            sent_at: event_sent_at
           }.to_json
         end
 
@@ -56,6 +60,7 @@ RSpec.describe CycloneLariat::SnsClient do
 
     context 'when topic title is defined' do
       subject(:publish_event) { client.publish event, topic: 'defined_topic' }
+      before { Timecop.freeze event_sent_at }
 
       context 'when topic exists' do
         let(:existed_topic) { double(topic_arn: 'defined_topic') }
@@ -66,7 +71,8 @@ RSpec.describe CycloneLariat::SnsClient do
             publisher: 'sample_app',
             type: 'event_create_note',
             version: 1,
-            data: { text: 'Test note' }
+            data: { text: 'Test note' },
+            sent_at: event_sent_at
           }.to_json
         end
 

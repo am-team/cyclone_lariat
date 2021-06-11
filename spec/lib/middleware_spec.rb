@@ -95,9 +95,10 @@ RSpec.describe CycloneLariat::Middleware do
       let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
       let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
       let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
+      let(:event) { instance_double CycloneLariat::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, exists?: true }
+        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: event }
         it { is_expected.to be true }
         it 'should not run business logic' do
           expect(business_logic).to_not receive(:call)
@@ -116,7 +117,7 @@ RSpec.describe CycloneLariat::Middleware do
       end
 
       context 'when event does not exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, exists?: false, create: nil, processed!: true }
+        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: true }
 
         it { is_expected.to be true }
 

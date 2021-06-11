@@ -128,7 +128,8 @@ As you see all params identity. And you can easily change your sqs-queue to sns-
 subscribes. But you should define destination.
 
 ```ruby
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, dest: 'notify_service'
+client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, dest: 'notify_service'  
+# prod-event-queue-pilot-email_is_created-notify_service
 ```
 
 Or you can define topic directly:

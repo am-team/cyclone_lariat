@@ -36,9 +36,11 @@ module CycloneLariat
 
     def store_in_dataset(event)
       return yield if events_repo.nil?
-      return true  if events_repo.exists?(uuid: event.uuid)
 
-      events_repo.create(event)
+      existed = events_repo.find(uuid: event.uuid)
+      return true if existed&.processed?
+
+      events_repo.create(event) unless existed
       yield
       events_repo.processed! uuid: event.uuid, error: event.client_error
     end
@@ -52,7 +54,7 @@ module CycloneLariat
 
     def catch_standard_error(queue, msg)
       yield
-    rescue StandardError => e
+    rescue Exception => e
       errors_notifier&.error(e, queue: queue, message: msg)
       raise e
     end

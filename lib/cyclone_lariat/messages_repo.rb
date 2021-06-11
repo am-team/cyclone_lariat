@@ -37,6 +37,8 @@ module CycloneLariat
 
     def find(uuid:)
       raw = dataset.where(uuid: uuid).first
+      return nil unless raw
+
       raw[:data] = JSON.parse(raw[:data], symbolize_names: true)
       if raw[:client_error_details]
         raw[:client_error_details] = JSON.parse(raw[:client_error_details], symbolize_names: true)

@@ -32,6 +32,10 @@ module CycloneLariat
         @processed_at = wrap_time(value)
       end
 
+      def processed?
+        !@processed_at.nil?
+      end
+
       def client_error_message=(txt)
         return unless txt
 
@@ -72,7 +76,7 @@ module CycloneLariat
         when String   then Time.parse(value)
         when Time     then value
         when NilClass then nil
-        else raise Argumentevent.rbError, "Unknown type `#{value.class}`"
+        else raise ArgumentError, "Unknown type `#{value.class}`"
         end
       end
     end

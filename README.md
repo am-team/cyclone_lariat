@@ -159,7 +159,6 @@ class Receiver
                     queue: 'your_sqs_queue_name'
 
   server_middleware do |chain|
-    
     # Options dataset, errors_notifier and message_notifier is optionals.
     # If you dont define notifiers - middleware does not notify
     # If you dont define dataset - middleware does store events in db

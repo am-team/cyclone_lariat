@@ -9,13 +9,8 @@ module CycloneLariat
       attr :uuid,      String, :new
       attr :publisher, String, :new
       attr :type,      String, :new
-      attr :client_error
-      attr :version
-      attr :data
-
-      attr_reader :sent_at,
-                  :processed_at,
-                  :received_at
+      attrs :client_error, :version, :data,
+            :sent_at, :processed_at, :received_at
 
       def kind
         raise LunaPark::Errors::AbstractMethod

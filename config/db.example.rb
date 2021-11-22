@@ -2,8 +2,8 @@
 
 DB_CONF = {
   adapter: 'postgresql',
-  host: 'host',
-  username: 'postgres',
-  password: 'password',
-  database: 'cyclone-lariat-test'
+  host: ENV.fetch('DB_HOST', 'host'),
+  username: ENV.fetch('DB_USER', 'postgres'),
+  password: ENV.fetch('DB_PASSWORD', 'password'),
+  database: ENV.fetch('DB_NAME', 'cyclone-lariat-test'
 }.freeze

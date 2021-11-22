@@ -16,3 +16,7 @@ config/db.rb
 
 # gem builds
 *.gem
+
+# docker-compose
+/local/
+/privatekey

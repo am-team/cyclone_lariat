@@ -1,0 +1,3 @@
+# Show differences between local Dockerfile and production Dockerfile
+
+diff Dockerfile local.Dockerfile -aBw

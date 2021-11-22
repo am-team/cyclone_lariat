@@ -1,0 +1,36 @@
+# Initialize project to use Docker and prepare app in Docker
+#
+# WARNING
+#   if your default ssh key `id_rsa` is protected by password,
+#   you need to create a new key without password only for Github (and authorize this key in github)
+#   @example
+#     `ssh-keygen -b 4096 -f ~/.ssh/id_rsa_git -N ""`
+#
+#   And define a name of new key when calling this script.
+#   @example:
+#     `bin/docker-init id_rsa_git`
+
+bin/docker-privatekey $@
+
+echo "> Preparing volume directories"
+mkdir local
+mkdir local/postgres
+mkdir local/postgres/pgdata
+grep -q "# docker-compose" .gitignore || echo "\n# docker-compose\n/local/\n/privatekey" >> .gitignore
+
+echo "> Build"
+docker compose down
+docker compose build
+docker compose up -d
+
+# Restart because of some problems with PG first startup
+echo "> Restart"
+docker compose down
+docker compose up -d
+sleep 3
+
+echo "> Create databases"
+docker compose exec app rake db:create
+docker compose exec app rake db:create INSTANCE=test
+docker compose exec app rake db:migrate
+docker compose exec app rake db:migrate INSTANCE=test

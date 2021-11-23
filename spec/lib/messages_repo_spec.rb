@@ -14,8 +14,9 @@ RSpec.describe CycloneLariat::MessagesRepo do
       type: 'create_user',
       version: 1,
       data: { email: 'john.doe@example.com', password: 'password' },
-      client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
-      sent_at: Time.now
+      client_error: LunaPark::Errors::Business.new('Something went wrong', some: 'thing'),
+      sent_at: Time.now,
+      received_at: Time.now
     )
   end
 
@@ -120,9 +121,16 @@ RSpec.describe CycloneLariat::MessagesRepo do
 
   describe '#find' do
     subject(:fined_event) { repo.find uuid: uuid }
+    let(:uuid) { repo.create event }
 
     context 'when event already exists' do
-      let(:uuid) { repo.create event }
+      it 'should be expected event' do
+        is_expected.to eq event
+      end
+    end
+
+    context 'when pg_json extension enabled' do
+      before { DB.extension :pg_json }
 
       it 'should be expected event' do
         is_expected.to eq event

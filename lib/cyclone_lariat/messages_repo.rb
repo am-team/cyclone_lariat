@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'event'
+require_relative 'utils/hash'
 
 module CycloneLariat
   class MessagesRepo
@@ -39,18 +40,19 @@ module CycloneLariat
       raw = dataset.where(uuid: uuid).first
       return nil unless raw
 
-      raw[:data] = JSON.parse(raw[:data], symbolize_names: true)
+      raw[:data] = json_column_to_hash(raw[:data])
+
       if raw[:client_error_details]
-        raw[:client_error_details] = JSON.parse(raw[:client_error_details], symbolize_names: true)
+        raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
       end
       build raw
     end
 
     def each_unprocessed
       dataset.where(processed_at: nil).each do |raw|
-        raw[:data]                 = JSON.parse(raw[:data], symbolize_names: true)
+        raw[:data] = json_column_to_hash(raw[:data])
         if raw[:client_error_details]
-          raw[:client_error_details] = JSON.parse(raw[:client_error_details], symbolize_names: true)
+          raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
         end
         msg = build raw
         yield(msg)
@@ -59,9 +61,9 @@ module CycloneLariat
 
     def each_with_client_errors
       dataset.where { (processed_at !~ nil) & (client_error_message !~ nil) }.each do |raw|
-        raw[:data] = JSON.parse(raw[:data], symbolize_names: true)
+        raw[:data] = json_column_to_hash(raw[:data])
         if raw[:client_error_details]
-          raw[:client_error_details] = JSON.parse(raw[:client_error_details], symbolize_names: true)
+          raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
         end
         msg = build raw
         yield(msg)
@@ -76,6 +78,22 @@ module CycloneLariat
       when 'command' then Command.wrap raw
       else raise ArgumentError, "Unknown kind `#{kind}` of message"
       end
+    end
+
+    def json_column_to_hash(data)
+      return JSON.parse(data, symbolize_names: true) if data.is_a?(String)
+      return Utils::Hash.deep_symbolize_keys(data)   if data.is_a?(Hash)
+
+      if pg_json_extension_enabled?
+        return Utils::Hash.deep_symbolize_keys(data.to_h)   if data.is_a?(Sequel::Postgres::JSONHash)
+        return JSON.parse(data.to_s, symbolize_names: true) if data.is_a?(Sequel::Postgres::JSONString)
+      end
+
+      raise ArgumentError, 'Unknown column type'
+    end
+
+    def pg_json_extension_enabled?
+      Object.const_defined?('Sequel::Postgres::JSONHash')
     end
   end
 end

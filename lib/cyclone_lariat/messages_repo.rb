@@ -40,19 +40,19 @@ module CycloneLariat
       raw = dataset.where(uuid: uuid).first
       return nil unless raw
 
-      raw[:data] = json_column_to_hash(raw[:data])
+      raw[:data] = hash_from_json_column(raw[:data])
 
       if raw[:client_error_details]
-        raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
+        raw[:client_error_details] = hash_from_json_column(raw[:client_error_details])
       end
       build raw
     end
 
     def each_unprocessed
       dataset.where(processed_at: nil).each do |raw|
-        raw[:data] = json_column_to_hash(raw[:data])
+        raw[:data] = hash_from_json_column(raw[:data])
         if raw[:client_error_details]
-          raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
+          raw[:client_error_details] = hash_from_json_column(raw[:client_error_details])
         end
         msg = build raw
         yield(msg)
@@ -61,9 +61,9 @@ module CycloneLariat
 
     def each_with_client_errors
       dataset.where { (processed_at !~ nil) & (client_error_message !~ nil) }.each do |raw|
-        raw[:data] = json_column_to_hash(raw[:data])
+        raw[:data] = hash_from_json_column(raw[:data])
         if raw[:client_error_details]
-          raw[:client_error_details] = json_column_to_hash(raw[:client_error_details])
+          raw[:client_error_details] = hash_from_json_column(raw[:client_error_details])
         end
         msg = build raw
         yield(msg)
@@ -80,16 +80,15 @@ module CycloneLariat
       end
     end
 
-    def json_column_to_hash(data)
+    def hash_from_json_column(data)
       return JSON.parse(data, symbolize_names: true) if data.is_a?(String)
-      return Utils::Hash.deep_symbolize_keys(data)   if data.is_a?(Hash)
 
       if pg_json_extension_enabled?
         return Utils::Hash.deep_symbolize_keys(data.to_h)   if data.is_a?(Sequel::Postgres::JSONHash)
         return JSON.parse(data.to_s, symbolize_names: true) if data.is_a?(Sequel::Postgres::JSONString)
       end
 
-      raise ArgumentError, 'Unknown column type'
+      raise ArgumentError, "Unknown type of `#{data}`"
     end
 
     def pg_json_extension_enabled?

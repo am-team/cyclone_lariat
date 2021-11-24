@@ -56,7 +56,6 @@ module CycloneLariat
           publisher == other.publisher &&
           type == other.type &&
           client_error&.message == other.client_error&.message &&
-          client_error&.details == other.client_error&.details &&
           version == other.version &&
           sent_at.to_i == other.sent_at.to_i &&
           received_at.to_i == other.received_at.to_i &&

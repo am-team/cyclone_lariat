@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cyclone_lariat (0.3.3)
+    cyclone_lariat (0.3.4)
       aws-sdk-sns
       aws-sdk-sqs
       luna_park (~> 0.11)

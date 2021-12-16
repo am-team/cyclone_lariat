@@ -27,7 +27,9 @@ docker compose up -d
 echo "> Restart"
 docker compose down
 docker compose up -d
-sleep 3
+
+echo "> Wait for pg startup"
+sleep 10
 
 echo "> Create databases"
 docker compose exec app rake db:create

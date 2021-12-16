@@ -28,6 +28,8 @@ module CycloneLariat
 
     def find(uuid:)
       row = dataset.where(uuid: uuid).first
+      return if row.nil?
+
       build MessagesMapper.from_row(row)
     end
 

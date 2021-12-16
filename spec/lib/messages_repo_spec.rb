@@ -120,12 +120,20 @@ RSpec.describe CycloneLariat::MessagesRepo do
   end
 
   describe '#find' do
-    subject(:fined_event) { repo.find uuid: uuid }
-    let(:uuid) { repo.create event }
+    subject(:found_event) { repo.find uuid: uuid }
+    let(:uuid)            { repo.create event }
 
-    context 'when event already exists' do
-      it 'should be expected event' do
+    context 'when event exists' do
+      it 'should return existent event' do
         is_expected.to eq event
+      end
+    end
+
+    context 'when event not exists' do
+      let(:uuid) { SecureRandom.uuid }
+
+      it 'returns nil' do
+        is_expected.to be_nil
       end
     end
 

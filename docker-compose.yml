@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    volumes:
+        - .:/gem
+    command: /bin/bash -c "while true; do sleep 1; done"
+    links:
+      - pg
+    environment:
+      - DB_HOST=pg
+      - DB_USER=ruby
+      - DB_PASSWORD=ruby
+    restart: always
+
+  pg:
+    image: postgres
+    volumes:
+      - ./local/postgres/pgdata:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_USER: ruby
+      POSTGRES_PASSWORD: ruby
+      PGDATA: /var/lib/postgresql/data/pgdata

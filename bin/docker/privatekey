@@ -1,0 +1,17 @@
+# Note:
+#   Docker needs for ssh privatekey to fetch data from github
+#   To do that, this script creates hardlink to privatekey
+#
+# WARNING
+#   privatekey MUST NOT be protected by password
+#   If your `id_rsa` is protected by password, you need to create new key without password (for example, `id_rsa_git`)
+#   And use that key when running this script:
+#     `bin/docker-init id_rsa_git`
+
+if test "$@"
+then privatekey_name="$@"
+else privatekey_name="id_rsa"
+fi
+
+echo "> Trying to create link 'privatekey'"
+ln ~/.ssh/$privatekey_name privatekey && echo "> Created link to '~/.ssh/$privatekey_name' named 'privatekey'"

@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-sdk-sqs'
   spec.add_dependency 'luna_park', '~> 0.11'
 
-  spec.add_development_dependency 'bundler', '~> 2.1'
+  spec.add_development_dependency 'bundler', '~> 1.17'
   spec.add_development_dependency 'byebug', '~> 11.1'
   spec.add_development_dependency 'database_cleaner-sequel', '~> 2.0'
   spec.add_development_dependency 'dry-validation', '~> 1.1'

@@ -12,18 +12,17 @@ module CycloneLariat
       end
 
       def to_row(input)
-        row = {
-          uuid:                   input.uuid,
-          kind:                   input.kind,
-          type:                   input.type,
-          publisher:              input.publisher,
-          data:                   JSON.generate(input.data),
-          client_error_message:   input.client_error&.message,
-          client_error_details:   JSON.generate(input.client_error&.details),
-          version:                input.version,
-          sent_at:                input.sent_at
+        {
+          uuid: input.uuid,
+          kind: input.kind,
+          type: input.type,
+          publisher: input.publisher,
+          data: JSON.generate(input.data),
+          client_error_message: input.client_error&.message,
+          client_error_details: JSON.generate(input.client_error&.details),
+          version: input.version,
+          sent_at: input.sent_at
         }
-        row
       end
 
       private
@@ -45,5 +44,3 @@ module CycloneLariat
     end
   end
 end
-
-

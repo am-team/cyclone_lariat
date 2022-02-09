@@ -147,6 +147,7 @@ If you use middleware:
 ```ruby
 require 'cyclone_lariat/middleware' # If require: false in Gemfile
 
+
 class Receiver
   include Shoryuken::Worker
   

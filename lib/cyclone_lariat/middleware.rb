@@ -31,7 +31,7 @@ module CycloneLariat
     attr_reader :errors_notifier, :message_notifier, :events_repo
 
     def receive_message(body)
-      body[:Message] ? JSON.parse(body[:Message], symbolize_names: true ) : body
+      body[:Message] ? JSON.parse(body[:Message], symbolize_names: true) : body
     end
 
     def store_in_dataset(event)

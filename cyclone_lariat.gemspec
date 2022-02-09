@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Shoryuken middleware for LunaPark based application.'
   spec.homepage      = 'https://am-team.github.io/cyclone_lariat/#/'
   spec.license       = 'MIT'
-  spec.required_ruby_version = '>= 2.6.0'
+  spec.required_ruby_version = '>= 2.4.0'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
@@ -39,7 +39,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '~> 1.17'
   spec.add_development_dependency 'byebug', '~> 11.1'
   spec.add_development_dependency 'database_cleaner-sequel', '~> 2.0'
-  spec.add_development_dependency 'dry-validation', '~> 1.1'
   spec.add_development_dependency 'pg', '~> 1.2'
   spec.add_development_dependency 'pry', '~> 0.13'
   spec.add_development_dependency 'pry-byebug', '~> 3.9'

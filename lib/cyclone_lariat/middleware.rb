@@ -13,9 +13,10 @@ module CycloneLariat
     end
 
     def call(_worker_instance, queue, _sqs_msg, body, &block)
-      msg = receive_message(body)
+      msg = receive_message!(body)
 
       message_notifier&.info 'Receive message', message: msg, queue: queue
+      return if msg.is_a? String
 
       catch_standard_error(queue, msg) do
         event = Event.wrap(msg)
@@ -30,8 +31,11 @@ module CycloneLariat
 
     attr_reader :errors_notifier, :message_notifier, :events_repo
 
-    def receive_message(body)
+    def receive_message!(body)
       body[:Message] ? JSON.parse(body[:Message], symbolize_names: true) : body
+    rescue JSON::ParserError => e
+      errors_notifier&.error(e, message: body[:Message])
+      body[:Message]
     end
 
     def store_in_dataset(event)

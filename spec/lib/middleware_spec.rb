@@ -88,6 +88,23 @@ RSpec.describe CycloneLariat::Middleware do
           expect { receive_event }.to raise_error(StandardError)
         end
       end
+
+      context 'receive bad JSON' do
+        subject(:receive_event) do
+          middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': 'I`m bad JSON`' }) do
+            true
+          end
+        end
+
+        it 'should write ERROR notify' do
+          expect(notifier).to receive(:error)
+          receive_event
+        end
+
+        it 'should not raise error' do
+          expect { receive_event }.to_not raise_error
+        end
+      end
     end
 
     context 'when messages_repo is defined' do

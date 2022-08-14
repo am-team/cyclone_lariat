@@ -31,9 +31,14 @@ module CycloneLariat
     private
 
     def topic_arn(topic_name)
-      list  = aws_client.list_topics.topics
-      topic = list.find { |t| t.topic_arn.match?(topic_name) }
-      raise Errors::TopicNotFound.new(expected_topic: topic_name, existed_topics: list.map(&:topic_arn)) if topic.nil?
+      token = ''
+      until(token.nil?)
+       list = aws_client.list_topics(next_token: token)
+       topic = list.topics.find { |t| t.topic_arn.match?(topic_name) }
+       break unless topic.nil?
+       token = list.next_token
+      end
+      raise Errors::TopicNotFound.new(expected_topic: topic_name) if topic.nil?
 
       topic.topic_arn
     end

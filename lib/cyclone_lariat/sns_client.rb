@@ -2,6 +2,7 @@
 
 require 'aws-sdk-sns'
 require_relative 'abstract/client'
+require_relative 'list_topics_store'
 
 module CycloneLariat
   class SnsClient < Abstract::Client
@@ -31,11 +32,21 @@ module CycloneLariat
     private
 
     def topic_arn(topic_name)
-      list  = aws_client.list_topics.topics
-      topic = list.find { |t| t.topic_arn.match?(topic_name) }
-      raise Errors::TopicNotFound.new(expected_topic: topic_name, existed_topics: list.map(&:topic_arn)) if topic.nil?
+      topics_store.add_topics(aws_client)
+      topic_arn = topics_store.topic_arn(topic_name)
 
-      topic.topic_arn
+      if topic_arn.nil?
+        raise Errors::TopicNotFound.new(
+          expected_topic: topic_name,
+          existed_topics: topics_store.list
+        )
+      end
+
+      topic_arn
+    end
+
+    def topics_store
+      ListTopicsStore.instance
     end
   end
 end

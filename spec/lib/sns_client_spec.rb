@@ -9,12 +9,19 @@ RSpec.describe CycloneLariat::SnsClient do
   end
 
   describe '#publish' do
-    let(:existed_topic)         { double(topic_arn: 'prod-event-fanout-sample_app-create_note') }
-    let(:aws_sns_client)        { instance_double(Aws::SNS::Client, list_topics: double(topics: [existed_topic])) }
-    let(:aws_sns_client_class)  { class_double(Aws::SNS::Client, new: aws_sns_client) }
+    let(:existed_topic) do
+      double(topic_arn: 'prod-event-fanout-sample_app-create_note')
+    end
+    let(:aws_sns_client) do
+      instance_double(
+        Aws::SNS::Client,
+        list_topics: double(topics: [existed_topic], next_token: nil)
+      )
+    end
+    let(:aws_sns_client_class) { class_double(Aws::SNS::Client, new: aws_sns_client) }
     let(:aws_credentials_class) { class_double(Aws::Credentials, new: nil) }
-    let(:event)                 { client.event('create_note', data: { text: 'Test note' }) }
-    let(:event_sent_at)         { Time.now }
+    let(:event) { client.event('create_note', data: { text: 'Test note' }) }
+    let(:event_sent_at) { Time.now }
 
     before do
       client.dependencies = {
@@ -23,6 +30,7 @@ RSpec.describe CycloneLariat::SnsClient do
       }
 
       Timecop.freeze event_sent_at
+      CycloneLariat::ListTopicsStore.instance.clear_store!
     end
 
     context 'when topic title is not defined' do

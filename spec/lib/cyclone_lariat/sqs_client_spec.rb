@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/sqs_client'
+require_relative '../../../lib/cyclone_lariat/sqs_client'
 require 'timecop'
 
 RSpec.describe CycloneLariat::SqsClient do
   let(:client) do
-    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app')
+    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app', instance: :test)
   end
 
   describe '#publish' do

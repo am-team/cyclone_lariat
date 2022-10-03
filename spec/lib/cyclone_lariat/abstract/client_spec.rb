@@ -1,18 +1,63 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/sns_client'
+require_relative '../../../../lib/cyclone_lariat'
 require 'timecop'
 
-RSpec.describe CycloneLariat::Abstract do
+RSpec.describe CycloneLariat::Abstract::Client do
   let(:client) do
     described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app')
   end
 
   describe '.version' do
-    after { described_class.version 1 }
+    subject(:version) { client.version }
 
-    it 'sets dependency' do
-      expect { described_class.version(42) }.to change { described_class.version }.from(1).to 42
+    context 'when it does not defined' do
+      it { is_expected.to eq 1 }
+    end
+
+    context 'when it defined in config' do
+      before { CycloneLariat.default_version = 13 }
+      after  { CycloneLariat.default_version = 1 }
+
+      it { is_expected.to eq 13 }
+    end
+
+    context 'when it is defined in class' do
+      after { described_class.version 1 }
+
+      it 'sets dependency' do
+        expect { described_class.version(42) }.to change { described_class.version }.from(1).to 42
+      end
+    end
+  end
+
+  describe '.instance' do
+    subject(:instance) { client.instance }
+
+    context 'when it does not defined' do
+      it 'should be defined' do
+        expect { instance }.to raise_error RuntimeError, 'You should define instance'
+      end
+    end
+
+    context 'when it defined in config' do
+      before { CycloneLariat.default_instance = :test }
+      after  { CycloneLariat.default_instance = nil }
+
+      it { is_expected.to eq :test }
+    end
+
+    context 'when it is defined in class' do
+      before { CycloneLariat.default_instance = :prod }
+
+      after  do
+        CycloneLariat.default_instance = nil
+        described_class.instance nil
+      end
+
+      it 'sets dependency' do
+        expect { described_class.instance(:stage) }.to change { described_class.instance }.from(:prod).to :stage
+      end
     end
   end
 
@@ -23,6 +68,13 @@ RSpec.describe CycloneLariat::Abstract do
       it 'should be defined' do
         expect { publisher }.to raise_error RuntimeError, 'You should define publisher'
       end
+    end
+
+    context 'when it defined in config' do
+      before { CycloneLariat.publisher = 'best_app'}
+      after  { CycloneLariat.publisher = nil }
+
+      it { is_expected.to eq 'best_app' }
     end
 
     context 'when it does defined' do

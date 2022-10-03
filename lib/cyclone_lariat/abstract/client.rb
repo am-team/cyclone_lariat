@@ -14,9 +14,6 @@ module CycloneLariat
       dependency(:aws_client_class)      { raise ArgumentError, 'Client class should be defined' }
       dependency(:aws_credentials_class) { Aws::Credentials }
 
-      DEFAULT_VERSION  = 1
-      DEFAULT_INSTANCE = :prod
-
       def initialize(key:, secret_key:, region:, version: nil, publisher: nil, instance: nil)
         @key = key
         @secret_key = secret_key
@@ -54,15 +51,15 @@ module CycloneLariat
 
       class << self
         def version(version = nil)
-          version.nil? ? @version || DEFAULT_VERSION : @version = version
+          version.nil? ? @version || CycloneLariat.default_version : @version = version
         end
 
         def instance(instance = nil)
-          instance.nil? ? @instance || DEFAULT_INSTANCE : @instance = instance
+          instance.nil? ? @instance || CycloneLariat.default_instance || (raise 'You should define instance') : @instance = instance
         end
 
         def publisher(publisher = nil)
-          publisher.nil? ? @publisher || (raise 'You should define publisher') : @publisher = publisher
+          publisher.nil? ? @publisher || CycloneLariat.publisher || (raise 'You should define publisher') : @publisher = publisher
         end
       end
 
@@ -78,9 +75,19 @@ module CycloneLariat
         @instance ||= self.class.instance
       end
 
-      private
+      def key
+        @key ||= CycloneLariat.key
+      end
 
-      attr_reader :key, :secret_key, :region
+      def secret_key
+        @secret_key ||= CycloneLariat.secret_key
+      end
+
+      def region
+        @region ||= CycloneLariat.default_region
+      end
+
+      private
 
       def aws_client
         @aws_client ||= aws_client_class.new(credentials: aws_credentials, region: region)

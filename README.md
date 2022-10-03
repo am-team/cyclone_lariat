@@ -34,6 +34,19 @@ name where the change took place plus the verb past-participle. An event happens
 A command can emit any number of events. The sender of the event does not care who receives it or whether it has been 
 received at all.
 
+## Configure
+```ruby
+# 'config/initializers/cyclone_lariat.rb'
+CycloneLariat.tap do |cl|
+  cl.default_version  = 1 # api version default is 1
+  cl.key              = # aws key
+  cl.secret_key       = # aws secret
+  cl.default_region   = # aws default region
+  cl.publisher        = 'auth' # name of your publishers, usually name of your application 
+  cl.default_instance = APP_INSTANCE # stage, production, test
+end
+```
+
 ## SnsClient
 You can use client directly
 

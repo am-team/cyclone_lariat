@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/errors'
+require_relative '../../../lib/cyclone_lariat/errors'
 
 RSpec.describe CycloneLariat::Errors::TopicNotFound do
   let(:error) { described_class.new(expected_topic: :topic_name) }

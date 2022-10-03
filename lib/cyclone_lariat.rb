@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'cyclone_lariat/configure'
 require_relative 'cyclone_lariat/sns_client'
 require_relative 'cyclone_lariat/errors'
 require_relative 'cyclone_lariat/event'

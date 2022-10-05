@@ -7,7 +7,8 @@ require 'json'
 module CycloneLariat
   class Middleware
     def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: MessagesRepo)
-      @events_repo      = repo.new(dataset) if dataset
+      events_dataset    = dataset || CycloneLariat.events_dataset
+      @events_repo      = repo.new(events_dataset) if events_dataset
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
     end

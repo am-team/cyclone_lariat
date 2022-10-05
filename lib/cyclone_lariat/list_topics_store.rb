@@ -14,6 +14,10 @@ module CycloneLariat
       @topics.keys
     end
 
+    def exist?(topic_name)
+      @topics.key? topic_name.to_sym
+    end
+
     def add_topics(aws_client)
       @topics ||= {}
       @aws_client = aws_client

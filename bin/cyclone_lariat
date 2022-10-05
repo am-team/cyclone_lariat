@@ -1,0 +1,114 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/cyclone_lariat'
+require 'bundler/setup'
+require 'dry/cli'
+require 'fileutils'
+
+module CycloneLariat
+  module CLI
+    module Commands
+      extend Dry::CLI::Registry
+      
+      INITIALIZERS_DIR = './config/initializers'.freeze
+
+      class Version < Dry::CLI::Command
+        desc 'Print version'
+
+        def call(*)
+          puts CycloneLariat::VERSION
+        end
+      end
+
+      class Install < Dry::CLI::Command
+        desc 'Install cyclone lariat to current directory'
+
+        def call(*)
+          create_config
+        end
+
+        def create_config
+          FileUtils.mkdir_p INITIALIZERS_DIR unless Dir.exist? INITIALIZERS_DIR
+          config_path = "#{INITIALIZERS_DIR}/cyclone_lariat.rb"
+          config_file = File.open(config_path, 'w')
+          config_file.puts config_contents
+          puts "Created config: #{config_path}"
+        end
+
+        def config_contents
+          <<~EOS
+            # frozen_string_literal: true
+
+            require_relative 'sequel'
+
+            CycloneLariat.tap do |cl|
+              cl.default_version  = 1                       # api version
+              cl.key              = ENV['AWS_KEY']          # aws key
+              cl.secret_key       = ENV['AWS_SECRET_KEY']   # aws secret
+              cl.default_region   = ENV['AWS_REGION']       # aws default region
+              cl.publisher        = ENV['APP_NAME']         # name of your publishers, usually name of your application 
+              cl.default_instance = ENV['INSTANCE']         # stage, production, test
+              cl.events_dataset   = DB[:events]
+              cl.versions_dataset = DB[:lariat_versions]
+            end
+          EOS
+        end
+      end
+
+      module Generate
+        class Migration < Dry::CLI::Command
+          desc 'Generate migration'
+
+          argument :title, type: :string, required: true, desc: 'Title of migration use only a-z and _'
+
+          def call(title:, **)
+            abort('Use only a-z and _ in your title') unless title_correct? title
+
+            FileUtils.mkdir_p CycloneLariat::Migration::DIR unless Dir.exist? CycloneLariat::Migration::DIR
+
+            file_name  = generate_filename title
+            class_name = generate_class_name title
+            file       = File.open(file_name, 'w')
+            file.puts file_contents(class_name)
+          end
+
+          private
+
+          def title_correct?(title)
+            /^(?!.*__.*)[a-z]?[a-z_]+[a-z]+$/.match? title
+          end
+
+          def generate_filename(title)
+            "#{CycloneLariat::Migration::DIR}/#{Time.now.to_i}_#{title}.rb"
+          end
+
+          def generate_class_name(title)
+            title.split('_').collect(&:capitalize).join
+          end
+
+          def file_contents(klass_name)
+            <<~EOS
+              # frozen_string_literal: true
+
+              class #{klass_name} < CycloneLariat::Migration
+                def up
+                end
+              
+                def down
+                end
+              end
+            EOS
+          end
+        end
+      end
+
+      register 'version', Version, aliases: %w[v -v --version]
+      register 'install', Install
+      register 'generate', aliases: %w[g] do |prefix|
+        prefix.register 'migration', Generate::Migration
+      end
+    end
+  end
+end
+
+Dry::CLI.new(CycloneLariat::CLI::Commands).call

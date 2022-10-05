@@ -16,6 +16,20 @@ RSpec.describe CycloneLariat::Errors::TopicNotFound do
   end
 end
 
+RSpec.describe CycloneLariat::Errors::TopicAlreadyExists do
+  let(:error) { described_class.new(expected_topic: :topic_name) }
+
+  it { expect(error).to be_a(LunaPark::Errors::System) }
+
+  describe '#message' do
+    subject(:error_message) { error.message }
+
+    it 'should be eq expected message' do
+      is_expected.to eq 'Topic already exists: `topic_name`'
+    end
+  end
+end
+
 RSpec.describe CycloneLariat::Errors::ClientError do
   let(:error) { described_class.new('Could not found user', email: 'john.doe@example.com') }
 

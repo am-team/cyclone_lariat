@@ -9,11 +9,12 @@ module CycloneLariat
     include LunaPark::Extensions::Injector
 
     dependency(:aws_client_class) { Aws::SNS::Client }
+    # dependency(:topics_store)     { ListTopicsStore.instance }
 
     SNS_SUFFIX = :fanout
 
     def publish(msg, topic: nil)
-      topic ||= [instance, msg.kind, SNS_SUFFIX, publisher, msg.type].join('-')
+      topic ||= generate_topic_name(kind: msg.kind, type: msg.type)
 
       aws_client.publish(
         topic_arn: topic_arn(topic),
@@ -29,7 +30,42 @@ module CycloneLariat
       publish command(type, data: data, version: version, uuid: uuid), topic: topic
     end
 
+    def create_event_topic!(type)
+      create_topic! generate_topic_name(kind: 'event', type: type)
+    end
+
+    def create_command_topic(type)
+      create_topic generate_topic_name(kind: 'command', type: type)
+    end
+
+
+    # Unsafify
+    def create_topic!(name)
+      # raise Errors::TopicAlreadyExists if topics_story.exists?(name)
+      puts arn = aws_client.create_topic(name: name)
+      # topics_story.cleargit
+    end
+
+    def delete_event_topic!(type)
+      topic ||= generate_topic_name(kind: 'event', type: type)
+      delete_custom_topic! topic
+    end
+
+    def delete_command_topic!(type)
+      topic ||= generate_topic_name(kind: 'command', type: type)
+      delete_custom_topic! topic
+    end
+
+    def delete_custom_topic!(topic)
+      aws_client.delete_topic topic_arn: topic_arn(topic)
+      topics_store.clear_store!
+    end
+
     private
+
+    def generate_topic_name(kind:, type:)
+      [instance, kind, SNS_SUFFIX, publisher, type].join('-')
+    end
 
     def topic_arn(topic_name)
       topics_store.add_topics(aws_client)

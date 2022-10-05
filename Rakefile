@@ -7,9 +7,6 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 
 # tasks from lib directory
-Dir[File.expand_path('lib/tasks/**/*.rake', __dir__)].each do |entity|
-  print "#{entity} : "
-  puts load entity
-end
+Rake.add_rakelib 'lib/tasks'
 
-task default: %i[spec] # rubocop]
+task default: %i[spec]

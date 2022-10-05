@@ -38,12 +38,13 @@ received at all.
 ```ruby
 # 'config/initializers/cyclone_lariat.rb'
 CycloneLariat.tap do |cl|
-  cl.default_version  = 1 # api version default is 1
-  cl.key              = # aws key
-  cl.secret_key       = # aws secret
-  cl.default_region   = # aws default region
-  cl.publisher        = 'auth' # name of your publishers, usually name of your application 
-  cl.default_instance = APP_INSTANCE # stage, production, test
+  cl.default_version    = 1 # api version default is 1
+  cl.aws_key            = # aws key
+  cl.aws_secret_key     = # aws secret
+  cl.aws_client_id      = # aws secret
+  cl.aws_default_region = # aws default region
+  cl.publisher          = 'auth' # name of your publishers, usually name of your application 
+  cl.default_instance   = APP_INSTANCE # stage, production, test
 end
 ```
 

@@ -4,11 +4,11 @@ RSpec.describe CycloneLariat do
   # You should clone it for each test do reset do default state
   let(:cyclone_lariat) { described_class.clone }
 
-  describe 'key' do
-    subject { cyclone_lariat.key }
+  describe 'aws_key' do
+    subject { cyclone_lariat.aws_key }
 
     context 'when it is defined' do
-      before { cyclone_lariat.key = 'foobar' }
+      before { cyclone_lariat.aws_key = 'foobar' }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
@@ -20,14 +20,30 @@ RSpec.describe CycloneLariat do
     end
   end
 
-  describe 'secret_key' do
-    subject { cyclone_lariat.secret_key }
+  describe 'aws_secret_key' do
+    subject { cyclone_lariat.aws_secret_key }
 
     context 'when it is defined' do
-      before { cyclone_lariat.secret_key = 'foobar' }
+      before { cyclone_lariat.aws_secret_key = 'foobar' }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
+      end
+    end
+
+    context 'when it is not defined' do
+      it { is_expected.to be_nil }
+    end
+  end
+
+  describe 'aws_client_id' do
+    subject { cyclone_lariat.aws_client_id }
+
+    context 'when it is defined' do
+      before { cyclone_lariat.aws_client_id = 123 }
+
+      it 'should eq defined value' do
+        is_expected.to eq 123
       end
     end
 
@@ -52,11 +68,11 @@ RSpec.describe CycloneLariat do
     end
   end
 
-  describe 'default_region' do
-    subject { cyclone_lariat.default_region }
+  describe 'aws_default_region' do
+    subject { cyclone_lariat.aws_default_region }
 
     context 'when it is defined' do
-      before { cyclone_lariat.default_region = 'foobar' }
+      before { cyclone_lariat.aws_default_region = 'foobar' }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'

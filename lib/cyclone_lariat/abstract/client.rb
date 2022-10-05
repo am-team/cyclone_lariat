@@ -14,13 +14,14 @@ module CycloneLariat
       dependency(:aws_client_class)      { raise ArgumentError, 'Client class should be defined' }
       dependency(:aws_credentials_class) { Aws::Credentials }
 
-      def initialize(key:, secret_key:, region:, version: nil, publisher: nil, instance: nil)
+      def initialize(key:, secret_key:, region:, version: nil, publisher: nil, instance: nil, client_id: nil)
         @key = key
         @secret_key = secret_key
         @region = region
         @version = version
         @publisher = publisher
         @instance = instance
+        @client_id = client_id
       end
 
       def event(type, data: {}, version: self.version, uuid: SecureRandom.uuid)
@@ -76,15 +77,19 @@ module CycloneLariat
       end
 
       def key
-        @key ||= CycloneLariat.key
+        @key ||= CycloneLariat.aws_key
       end
 
       def secret_key
-        @secret_key ||= CycloneLariat.secret_key
+        @secret_key ||= CycloneLariat.aws_secret_key
       end
 
       def region
-        @region ||= CycloneLariat.default_region
+        @region ||= CycloneLariat.aws_default_region
+      end
+
+      def client_id
+        @client_id ||= CycloneLariat.aws_client_id
       end
 
       private

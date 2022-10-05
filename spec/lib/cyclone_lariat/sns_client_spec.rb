@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/sns_client'
+require_relative '../../../lib/cyclone_lariat/sns_client'
 require 'timecop'
 
 RSpec.describe CycloneLariat::SnsClient do
   let(:client) do
-    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app')
+    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app', instance: :test)
   end
 
   describe '#publish' do
     let(:existed_topic) do
-      double(topic_arn: 'prod-event-fanout-sample_app-create_note')
+      double(topic_arn: 'test-event-fanout-sample_app-create_note')
     end
     let(:aws_sns_client) do
       instance_double(
@@ -51,7 +51,7 @@ RSpec.describe CycloneLariat::SnsClient do
         it 'should be sent to topic expected message' do
           expect(aws_sns_client).to receive(:publish).with(
             message: message,
-            topic_arn: 'prod-event-fanout-sample_app-create_note'
+            topic_arn: 'test-event-fanout-sample_app-create_note'
           )
           publish_event
         end

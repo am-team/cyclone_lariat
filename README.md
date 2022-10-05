@@ -44,6 +44,8 @@ CycloneLariat.tap do |cl|
   cl.default_region   = # aws default region
   cl.publisher        = 'auth' # name of your publishers, usually name of your application 
   cl.default_instance = APP_INSTANCE # stage, production, test
+  cl.events_dataset   = DB[:events]
+  cl.versions_dataset = DB[:lariat_versions]
 end
 ```
 
@@ -175,7 +177,7 @@ class Receiver
   server_middleware do |chain|
     # Options dataset, errors_notifier and message_notifier is optionals.
     # If you dont define notifiers - middleware does not notify
-    # If you dont define dataset - middleware does store events in db
+    # If you dont define dataset - middleware does not store events in db
     chain.add CycloneLariat::Middleware,
               dataset: DB[:events],
               errors_notifier: LunaPark::Notifiers::Sentry.new,

@@ -13,6 +13,10 @@ module CycloneLariat
       message { |d| "Could not found topic: `#{d[:expected_topic]}`" }
     end
 
+    class TopicAlreadyExists < LunaPark::Errors::System
+      message { |d| "Topic already exists: `#{d[:expected_topic]}`" }
+    end
+
     class ClientError < LunaPark::Errors::Business
       attr_writer :message, :details
 

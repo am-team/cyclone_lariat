@@ -1,4 +1,4 @@
-require_relative '../../lib/cyclone_lariat'
+require_relative '../../lib/cyclone_lariat/configure'
 
 RSpec.describe CycloneLariat do
   # You should clone it for each test do reset do default state

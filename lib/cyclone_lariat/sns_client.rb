@@ -12,7 +12,8 @@ module CycloneLariat
     SNS_SUFFIX = :fanout
 
     def publish(msg, topic: nil)
-      arn = get_arn msg.kind, msg.type
+      topic ||= get_topic(msg.kind, msg.type)
+      arn     = get_arn(topic)
       aws_client.publish(topic_arn: arn, message: msg.to_json)
     end
 
@@ -26,8 +27,8 @@ module CycloneLariat
 
     private
 
-    def get_arn(kind, type)
-      ['arn', 'aws', 'sns', region, client_id, get_topic(kind, type)].join ':'
+    def get_arn(topic)
+      ['arn', 'aws', 'sns', region, client_id, topic].join ':'
     end
 
     def get_topic(kind, type)

@@ -14,7 +14,7 @@ module CycloneLariat
       dependency(:aws_client_class)      { raise ArgumentError, 'Client class should be defined' }
       dependency(:aws_credentials_class) { Aws::Credentials }
 
-      def initialize(key:, secret_key:, region:, version: nil, publisher: nil, instance: nil, client_id: nil)
+      def initialize(key: nil, secret_key: nil, region: nil, version: nil, publisher: nil, instance: nil, client_id: nil)
         @key = key
         @secret_key = secret_key
         @region = region

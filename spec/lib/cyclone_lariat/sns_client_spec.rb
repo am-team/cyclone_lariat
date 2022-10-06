@@ -1,24 +1,18 @@
 # frozen_string_literal: true
 
+require_relative '../../../lib/cyclone_lariat/configure'
+# require_relative '../../config/initializers/cyclone_lariat'
 require_relative '../../../lib/cyclone_lariat/sns_client'
 require 'timecop'
 
 RSpec.describe CycloneLariat::SnsClient do
   let(:client) do
-    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app', instance: :test)
+    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app', instance: :test, client_id: 42)
   end
 
   describe '#publish' do
-    let(:existed_topic) do
-      double(topic_arn: 'test-event-fanout-sample_app-create_note')
-    end
-    let(:aws_sns_client) do
-      instance_double(
-        Aws::SNS::Client,
-        list_topics: double(topics: [existed_topic], next_token: nil)
-      )
-    end
-    let(:aws_sns_client_class) { class_double(Aws::SNS::Client, new: aws_sns_client) }
+    let(:aws_sns_client)        { instance_double(Aws::SNS::Client) }
+    let(:aws_sns_client_class)  { class_double(Aws::SNS::Client, new: aws_sns_client) }
     let(:aws_credentials_class) { class_double(Aws::Credentials, new: nil) }
     let(:event) { client.event('create_note', data: { text: 'Test note' }) }
     let(:event_sent_at) { Time.now }
@@ -30,7 +24,6 @@ RSpec.describe CycloneLariat::SnsClient do
       }
 
       Timecop.freeze event_sent_at
-      CycloneLariat::ListTopicsStore.instance.clear_store!
     end
 
     context 'when topic title is not defined' do
@@ -51,17 +44,17 @@ RSpec.describe CycloneLariat::SnsClient do
         it 'should be sent to topic expected message' do
           expect(aws_sns_client).to receive(:publish).with(
             message: message,
-            topic_arn: 'test-event-fanout-sample_app-create_note'
+            topic_arn: 'arn:aws:sns:region:42:test-event-fanout-sample_app-create_note'
           )
           publish_event
         end
       end
 
       context 'when topic does not exists' do
-        let(:existed_topic) { double(topic_arn: 'foobar') }
+        before { allow(aws_sns_client).to receive(:publish).and_raise(Aws::SNS::Errors::NotFound.new('context', 'message')) }
 
         it 'should be sent to topic expected message' do
-          expect { publish_event }.to raise_error CycloneLariat::Errors::TopicNotFound
+          expect { publish_event }.to raise_error Aws::SNS::Errors::NotFound
         end
       end
     end
@@ -71,8 +64,6 @@ RSpec.describe CycloneLariat::SnsClient do
       before { Timecop.freeze event_sent_at }
 
       context 'when topic exists' do
-        let(:existed_topic) { double(topic_arn: 'defined_topic') }
-
         let(:message) do
           {
             uuid: event.uuid,
@@ -87,17 +78,17 @@ RSpec.describe CycloneLariat::SnsClient do
         it 'should be sent to topic expected message' do
           expect(aws_sns_client).to receive(:publish).with(
             message: message,
-            topic_arn: 'defined_topic'
+            topic_arn: 'arn:aws:sns:region:42:defined_topic'
           )
           publish_event
         end
       end
 
       context 'when topic does not exists' do
-        let(:existed_topic) { double(topic_arn: 'foobar') }
+        before { allow(aws_sns_client).to receive(:publish).and_raise(Aws::SNS::Errors::NotFound.new('context', 'message')) }
 
         it 'should be sent to topic expected message' do
-          expect { publish_event }.to raise_error CycloneLariat::Errors::TopicNotFound
+          expect { publish_event }.to raise_error Aws::SNS::Errors::NotFound
         end
       end
     end

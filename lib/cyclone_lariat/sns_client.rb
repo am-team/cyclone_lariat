@@ -2,7 +2,6 @@
 
 require 'aws-sdk-sns'
 require_relative 'abstract/client'
-require_relative 'list_topics_store'
 
 module CycloneLariat
   class SnsClient < Abstract::Client
@@ -13,12 +12,9 @@ module CycloneLariat
     SNS_SUFFIX = :fanout
 
     def publish(msg, topic: nil)
-      topic ||= [instance, msg.kind, SNS_SUFFIX, publisher, msg.type].join('-')
-
-      aws_client.publish(
-        topic_arn: topic_arn(topic),
-        message: msg.to_json
-      )
+      topic ||= get_topic(msg.kind, msg.type)
+      arn     = get_arn(topic)
+      aws_client.publish(topic_arn: arn, message: msg.to_json)
     end
 
     def publish_event(type, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
@@ -31,22 +27,12 @@ module CycloneLariat
 
     private
 
-    def topic_arn(topic_name)
-      topics_store.add_topics(aws_client)
-      topic_arn = topics_store.topic_arn(topic_name)
-
-      if topic_arn.nil?
-        raise Errors::TopicNotFound.new(
-          expected_topic: topic_name,
-          existed_topics: topics_store.list
-        )
-      end
-
-      topic_arn
+    def get_arn(topic)
+      ['arn', 'aws', 'sns', region, client_id, topic].join ':'
     end
 
-    def topics_store
-      ListTopicsStore.instance
+    def get_topic(kind, type)
+      [instance, kind, SNS_SUFFIX, publisher, type].join '-'
     end
   end
 end

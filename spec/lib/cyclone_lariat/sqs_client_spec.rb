@@ -50,14 +50,12 @@ RSpec.describe CycloneLariat::SqsClient do
       end
 
       context 'when topic does not exists' do
-        let(:aws_sqs_client) { instance_double(Aws::SQS::Client, list_queues: []) }
-
         before do
           allow(aws_sqs_client).to receive(:get_queue_url).and_raise(Aws::SQS::Errors::NonExistentQueue.new([], []))
         end
 
         it 'should be sent to topic expected message' do
-          expect { publish_event }.to raise_error CycloneLariat::Errors::TopicNotFound
+          expect { publish_event }.to raise_error Aws::SQS::Errors::NonExistentQueue
         end
       end
     end

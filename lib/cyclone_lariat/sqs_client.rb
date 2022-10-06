@@ -34,8 +34,6 @@ module CycloneLariat
 
     def url(topic_name)
       aws_client.get_queue_url(queue_name: topic_name).queue_url
-    rescue Aws::SQS::Errors::NonExistentQueue => _e
-      raise Errors::TopicNotFound.new(expected_topic: topic_name, existed_topics: aws_client.list_queues)
     end
   end
 end

@@ -9,14 +9,6 @@ module CycloneLariat
       message 'Received message is empty'
     end
 
-    class TopicNotFound < LunaPark::Errors::System
-      message { |d| "Could not found topic: `#{d[:expected_topic]}`" }
-    end
-
-    class TopicAlreadyExists < LunaPark::Errors::System
-      message { |d| "Topic already exists: `#{d[:expected_topic]}`" }
-    end
-
     class ClientError < LunaPark::Errors::Business
       attr_writer :message, :details
 
@@ -25,6 +17,14 @@ module CycloneLariat
           other.message == message &&
           other.details == details
       end
+    end
+
+    class TopicAlreadyExists < LunaPark::Errors::System
+      message { |d| "Topic already exists: `#{d[:expected_topic]}`" }
+    end
+
+    class TopicDoesNotExists < LunaPark::Errors::System
+      message { |d| "Topic does not exists: `#{d[:expected_topic]}`" }
     end
   end
 end

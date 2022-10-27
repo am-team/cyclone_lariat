@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require 'luna_park/notifiers/log'
-require_relative '../../../lib/cyclone_lariat'
+require_relative '../../../lib/cyclone_lariat/middleware'
+require_relative '../../../lib/cyclone_lariat/messages_repo'
 
 RSpec.describe CycloneLariat::Middleware do
   describe '#call' do

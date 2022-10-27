@@ -38,12 +38,13 @@ received at all.
 ```ruby
 # 'config/initializers/cyclone_lariat.rb'
 CycloneLariat.tap do |cl|
-  cl.default_version  = 1 # api version default is 1
-  cl.key              = # aws key
-  cl.secret_key       = # aws secret
-  cl.default_region   = # aws default region
-  cl.publisher        = 'auth' # name of your publishers, usually name of your application 
-  cl.default_instance = APP_INSTANCE # stage, production, test
+  cl.default_version    = 1 # api version default is 1
+  cl.aws_key            = # aws key
+  cl.aws_secret_key     = # aws secret
+  cl.aws_client_id      = # aws client id
+  cl.aws_default_region = # aws default region
+  cl.publisher          = 'auth' # name of your publishers, usually name of your application 
+  cl.default_instance   = APP_INSTANCE # stage, production, test
   cl.events_dataset   = DB[:events]
   cl.versions_dataset = DB[:lariat_versions]
 end
@@ -152,6 +153,73 @@ Or you can define topic directly:
 client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
 ```
 
+# Migration
+
+Cyclone lariat can create migrations, which can help you create, delete and link new SQS\SNS topics.
+
+At first generate your migration file.
+
+```bash
+$ cyclone_lariat generate add_notes_queue
+```
+
+It should be created file like that:
+```ruby
+# frozen_string_literal: true
+
+class AddNotesQueue < CycloneLariat::Migration
+  def up
+    sns.create_event_topic! :notes
+  end
+
+  def down
+    sns.delete_event_topic! :notes
+  end
+end
+```
+
+List migration commands:
+
+```ruby
+# config/initializers/cyclone_lariat.rb
+
+CycloneLariat.tap do |cl|
+  cl.publisher        = 'pet_project' 
+  cl.default_instance = 'stage'
+  # ...
+end
+```
+
+```ruby
+# SNS raw
+sns.create_topic! 'example_topic', fifo: true                                       # example_topic
+sns.delete_topic! 'example_topic', fifo: true                                       # example_topic
+
+# SNS events
+sns.create_event_topic!   type: 'user_is_created', fifo: true                       # stage-event-fanout-pet_project-user_is_created
+sns.delete_event_topic!   type: 'user_is_created'                                   # stage-event-fanout-pet_project-user_is_created
+
+# SNS commands
+sns.create_command_topic! type: 'create_new_user', fifo: true                       # stage-command-fanout-pet_project-create_new_use                     r
+sns.delete_command_topic! type: 'create_new_user'                                   # stage-command-fanout-pet_project-create_new_user
+
+# SQS raw
+sqs.create_topic! 'example_topic', fifo: true                                       # example_topic
+sqs.delete_topic! 'example_topic', fifo: true                                       # example_topic
+
+# default type is all - all type of messages can be received 
+# default dest is nil - not only one receivers can read messages form this query 
+sns.create_event_topic! type: 'user_is_created', dest: 'auth_service', fifo: true   # stage-event-queue-pet_project-user_is_created-auth_service
+sns.delete_event_topic! type: 'user_is_created', dest: 'auth_service'               # stage-event-queue-pet_project-user_is_created-auth_service
+
+# SNS commands
+# default type is all - all type of messages can be received 
+# default dest is nil - not only one receivers can read messages form this query
+sns.create_command_topic! type: 'create_new_user', dest: 'auth_service', fifo: true # stage-command-queue-pet_project-create_new_user
+sns.delete_command_topic! type: 'create_new_user', dest: 'auth_service'             # stage-command-queue-pet_project-create_new_user
+
+# Link queue to fanout
+```
 
 # Middleware
 If you use middleware:

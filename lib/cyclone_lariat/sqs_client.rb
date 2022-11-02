@@ -2,6 +2,7 @@
 
 require 'aws-sdk-sqs'
 require_relative 'abstract/client'
+require_relative 'queue'
 
 module CycloneLariat
   class SqsClient < Abstract::Client
@@ -9,72 +10,72 @@ module CycloneLariat
 
     dependency(:aws_client_class) { Aws::SQS::Client }
 
-    SQS_SUFFIX = :queue
+    def custom_queue(name)
+      Queue.from_name(name, client_id: client_id, region: region)
+    end
 
-    def exists?(topic_name)
-      url(topic_name) && true
+    def queue(type = :all, fifo:, dest: nil, kind: :event)
+      Queue.new(instance: instance, publisher: publisher, region: region, client_id: client_id, kind: kind, type: type, fifo: fifo, dest: dest)
+    end
+
+    def get_url(queue)
+      raise ArgumentError, 'Should be queue' unless queue.is_a? Queue
+
+      aws_client.get_queue_url(queue_name: queue.to_s).queue_url
+    end
+
+    def exists?(queue)
+      raise ArgumentError, 'Should be queue' unless queue.is_a? Queue
+
+      get_url(queue) && true
     rescue Aws::SQS::Errors::NonExistentQueue
       false
     end
 
-    def publish(msg, dest: nil, topic: nil)
-      raise ArgumentError, 'You should define dest or topic' if dest.nil? && topic.nil?
-
-      topic ||= get_topic(kind: msg.kind, type: msg.type, dest: dest)
-
-      aws_client.send_message(
-        queue_url: url(topic),
-        message_body: msg.to_json
-      )
+    def publish(msg, fifo:, dest: nil, queue: nil)
+      queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
+      aws_client.send_message( queue_url: get_url(queue), message_body: msg.to_json )
     end
 
-    def publish_event(type, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish event(type, data: data, version: version, uuid: uuid), dest: dest, topic: topic
-    end
-
-    def publish_command(type, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish command(type, data: data, version: version, uuid: uuid), dest: dest, topic: topic
-    end
-
-    def create_topic!(topic_name, fifo:, tags: nil)
-      raise Errors::TopicAlreadyExists.new(expected_topic: topic_name) if exists?(topic_name)
+    def create(queue)
+      raise ArgumentError, 'Should be queue' unless queue.is_a? Queue
+      raise Errors::QueueAlreadyExists.new(expected_queue: queue.name) if exists?(queue)
 
       attrs = {}
-      attrs['FifoQueue'] = true if fifo
+      attrs['FifoQueue'] = 'true' if queue.fifo
 
-      aws_client.create_queue(queue_name: topic_name, attributes: attrs)
+      aws_client.create_queue(queue_name: queue.name, attributes: attrs, tags: queue.tags)
+      queue
     end
 
-    def create_event_topic!(fifo:, type: :all, dest: nil)
-      create_topic! get_topic(kind: 'event', type: type, dest: dest), fifo: fifo
+    def delete(queue)
+      raise ArgumentError, 'Should be queue' unless queue.is_a? Queue
+      raise Errors::QueueDoesNotExists.new(expected_queue: queue.name) unless exists?(queue)
+
+      aws_client.delete_queue queue_url: queue.url
+      queue
     end
 
-    def create_command_topic!(fifo:, type: :all, dest: nil)
-      create_topic! get_topic(kind: 'command', type: type, dest: dest), fifo: fifo
-    end
+    def list_all
+      queues = []
+      resp = aws_client.list_queues
 
-    def delete_topic!(topic_name)
-      raise Errors::TopicDoesNotExists.new(expected_topic: topic_name) unless exists?(topic_name)
+      loop do
+        next_token = resp[:next_token]
 
-      aws_client.delete_queue queue_url: url(topic_name)
-    end
+        resp[:queue_urls].map do |url|
+          queues << Queue.from_url(url)
+        end
 
-    def delete_event_topic!(type: :all, dest: nil)
-      delete_topic! get_topic(kind: :event, type: type, dest: dest)
-    end
+        break if next_token.nil?
 
-    def delete_command_topic!(type: :all, dest: nil)
-      delete_topic! get_topic(kind: :command, type: type, dest: dest)
-    end
+        resp = aws_client.list_queues(next_token: next_token)
+      end
 
-    private
 
-    def url(topic_name)
-      aws_client.get_queue_url(queue_name: topic_name).queue_url
-    end
-
-    def get_topic(kind:, type:, dest:)
-      [instance, kind, SQS_SUFFIX, publisher, type, dest].compact.join('-')
+      queues.group_by { |topic| topic.shift }.transform_values do |values|
+        values.flatten
+      end
     end
   end
 end

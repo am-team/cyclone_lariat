@@ -204,19 +204,19 @@ sns.create_command_topic! type: 'create_new_user', fifo: true                   
 sns.delete_command_topic! type: 'create_new_user'                                   # stage-command-fanout-pet_project-create_new_user
 
 # SQS raw
-sqs.create_topic! 'example_topic', fifo: true                                       # example_topic
-sqs.delete_topic! 'example_topic', fifo: true                                       # example_topic
+sqs.create_queue! 'example_queue', fifo: true                                       # example_queue
+sqs.delete_queue! 'example_queue', fifo: true                                       # example_queue
 
 # default type is all - all type of messages can be received 
 # default dest is nil - not only one receivers can read messages form this query 
-sns.create_event_topic! type: 'user_is_created', dest: 'auth_service', fifo: true   # stage-event-queue-pet_project-user_is_created-auth_service
-sns.delete_event_topic! type: 'user_is_created', dest: 'auth_service'               # stage-event-queue-pet_project-user_is_created-auth_service
+sns.create_event_queue! type: 'user_is_created', dest: 'auth_service', fifo: true   # stage-event-queue-pet_project-user_is_created-auth_service
+sns.delete_event_queue! type: 'user_is_created', dest: 'auth_service'               # stage-event-queue-pet_project-user_is_created-auth_service
 
 # SNS commands
 # default type is all - all type of messages can be received 
 # default dest is nil - not only one receivers can read messages form this query
-sns.create_command_topic! type: 'create_new_user', dest: 'auth_service', fifo: true # stage-command-queue-pet_project-create_new_user
-sns.delete_command_topic! type: 'create_new_user', dest: 'auth_service'             # stage-command-queue-pet_project-create_new_user
+sns.create_command_queue! type: 'create_new_user', dest: 'auth_service', fifo: true # stage-command-queue-pet_project-create_new_user
+sns.delete_command_queue! type: 'create_new_user', dest: 'auth_service'             # stage-command-queue-pet_project-create_new_user
 
 # Link queue to fanout
 ```

@@ -2,6 +2,9 @@
 
 require 'aws-sdk-sns'
 require_relative 'abstract/client'
+require_relative 'topic'
+
+require 'byebug'
 
 module CycloneLariat
   class SnsClient < Abstract::Client
@@ -9,77 +12,101 @@ module CycloneLariat
 
     dependency(:aws_client_class) { Aws::SNS::Client }
 
-    SNS_SUFFIX = :fanout
+    def custom_topic(name)
+      Topic.from_name(name, client_id: client_id, region: region)
+    end
 
-    def publish(msg, topic: nil)
-      topic ||= get_topic(msg.kind, msg.type)
-      arn     = get_arn(topic)
-      aws_client.publish(topic_arn: arn, message: msg.to_json)
+    def topic(type, fifo:, kind: :event)
+      Topic.new(instance: instance, publisher: publisher, region: region, client_id: client_id, kind: kind, type: type, fifo: fifo)
+    end
+
+    def publish(msg, fifo:, topic: nil)
+      topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)
+      aws_client.publish(topic_arn: topic.arn, message: msg.to_json)
     end
 
     def exists?(topic)
-      aws_client.get_topic_attributes({topic_arn: get_arn(topic)}) && true
+      raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
+
+      aws_client.get_topic_attributes({ topic_arn: topic.arn }) && true
     rescue Aws::SNS::Errors::NotFound
       false
     end
 
-    def publish_event(type, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish event(type, data: data, version: version, uuid: uuid), topic: topic
+    def publish_event(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
+      publish event(type, data: data, version: version, uuid: uuid), topic: topic, fifo: fifo
     end
 
-    def publish_command(type, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish command(type, data: data, version: version, uuid: uuid), topic: topic
+    def publish_command(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
+      publish command(type, data: data, version: version, uuid: uuid), topic: topic, fifo: fifo
     end
 
-    def create_event_topic!(type:, fifo:)
-      create_topic! get_topic('event', type), fifo: fifo
+    def create(topic)
+      raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
+      raise Errors::TopicAlreadyExists.new(expected_topic: topic.name) if exists?(topic)
+      # byebug
+      aws_client.create_topic(name: topic.name, attributes: topic.attributes, tags: topic.tags)
+      topic
     end
 
-    def create_command_topic!(type:, fifo:)
-      create_topic! get_topic('command', type), fifo: fifo
+    def delete(topic)
+      raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
+      raise Errors::TopicDoesNotExists.new(expected_topic: topic.name) unless exists?(topic)
+
+      aws_client.delete_topic topic_arn: topic.arn
+      topic
     end
 
-    def create_topic!(topic, fifo:)
-      raise Errors::TopicAlreadyExists.new(expected_topic: topic) if exists?(topic)
-
-      attrs = {}
-      attrs['FifoTopic'] = true if fifo
-
-      aws_client.create_topic(name: topic, attributes: attrs)
-    end
-
-    def delete_event_topic!(type)
-      delete_topic! get_topic('event', type)
-    end
-
-    def delete_command_topic!(type)
-      delete_topic! get_topic('command', type)
-    end
-
-    def delete_topic!(topic)
-      raise Errors::TopicDoesNotExists.new(expected_topic: topic) unless exists?(topic)
-
-      aws_client.delete_topic topic_arn: get_arn(topic)
-    end
-
-    def subscribe(kind:, sns_topic:, sqs_topic:)
+    def subscribe(topic:, queue:)
+      byebug
       aws_client.subscribe(
         {
-          topic_arn: get_arn(sns_topic),
+          topic_arn: topic.arn,
           protocol: 'sqs',
-          endpoint: 'que_arn'
+          endpoint: queue.arn
         }
       )
     end
 
-    private
+    def list_all
+      topics = []
+      resp = aws_client.list_topics
 
-    def get_arn(topic)
-      ['arn', 'aws', 'sns', region, client_id, topic].join ':'
+      loop do
+        next_token = resp[:next_token]
+
+        resp[:topics].map do |t|
+          topics << Topic.from_arn(t[:topic_arn])
+        end
+
+        break if next_token.nil?
+
+        resp = aws_client.list_topics(next_token: next_token)
+      end
+
+      topics
     end
 
-    def get_topic(kind, type)
-      [instance, kind, SNS_SUFFIX, publisher, type].join '-'
+    def list_subscriptions
+      subscriptions = []
+      resp = aws_client.list_subscriptions
+
+      loop do
+        next_token = resp[:next_token]
+
+        resp[:subscriptions].each do |s|
+          endpoint = s.endpoint.split(':')[2] == 'sqs' ? Queue.from_arn(s.endpoint) : Topic.from_arn(s.endpoint)
+          subscriptions << [Topic.from_arn(s.topic_arn).name, endpoint]
+        end
+
+        break if next_token.nil?
+
+        resp = aws_client.list_subscriptions(next_token: next_token)
+      end
+
+      subscriptions
     end
   end
 end
+
+

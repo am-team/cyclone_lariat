@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0]
+Changed
+- rename `topic` to `queue` for SQS operations, in fact it changed only in methods `publish_event`, `publish_command`
+  if you defined custom queue name
+Added
+- Migrations for create, delete and subscribe topics and queues
+
 ## [0.3.10] - 2022-10-05
 Added
 - Added aws_client_od options

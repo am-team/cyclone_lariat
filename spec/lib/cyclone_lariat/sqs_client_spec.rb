@@ -26,11 +26,11 @@ RSpec.describe CycloneLariat::SqsClient do
   describe '#exists?' do
     subject(:exists?) { client.exists? :create_note }
 
-    context 'when topic already exists' do
+    context 'when queue already exists' do
       it { is_expected.to be true }
     end
 
-    context 'when topic does not exists' do
+    context 'when queue does not exists' do
       before do
         error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
         allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
@@ -40,163 +40,163 @@ RSpec.describe CycloneLariat::SqsClient do
     end
   end
 
-  describe 'create_topic!' do
-    subject(:create_topic!) { client.create_topic! 'test-event-queue-sample_app-create_note', fifo: true }
+  describe 'create_queue!' do
+    subject(:create_queue!) { client.create_queue! 'test-event-queue-sample_app-create_note', fifo: true }
 
-    context 'when topic already exists' do
+    context 'when queue already exists' do
       it 'should raise error' do
-        expect { create_topic! }.to raise_error CycloneLariat::Errors::TopicAlreadyExists
+        expect { create_queue! }.to raise_error CycloneLariat::Errors::QueueAlreadyExists
       end
     end
 
-    context 'when topic does not exists and create FIFO' do
+    context 'when queue does not exists and create FIFO' do
       before do
         error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
         allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
       end
 
-      it 'should create new one FIFO topic' do
+      it 'should create new one FIFO queue' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-create_note',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_topic!
+        create_queue!
       end
     end
 
-    context 'when topic does not exists and create non-FIFO' do
-      subject(:create_topic!) { client.create_topic! 'test-event-queue-sample_app-create_note', fifo: false }
+    context 'when queue does not exists and create non-FIFO' do
+      subject(:create_queue!) { client.create_queue! 'test-event-queue-sample_app-create_note', fifo: false }
 
       before do
         error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
         allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
       end
 
-      it 'should create new one FIFO topic' do
+      it 'should create new one FIFO queue' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-create_note',
           attributes: {}
         )
 
-        create_topic!
+        create_queue!
       end
     end
   end
 
-  describe 'create_event_topic!' do
+  describe 'create_event_queue!' do
     before do
       error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
       allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
     end
 
     context 'type & destination is defined' do
-      subject(:create_event_topic!) { client.create_event_topic! type: :new_user, dest: :notify_service, fifo: true }
+      subject(:create_event_queue!) { client.create_event_queue! type: :new_user, dest: :notify_service, fifo: true }
 
-      it 'should create topic <instance>-event-queue-<application>-<event_type>-<destination_service>' do
+      it 'should create queue <instance>-event-queue-<application>-<event_type>-<destination_service>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-new_user-notify_service',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_event_topic!
+        create_event_queue!
       end
     end
 
     context 'type is defined, dest is undefined' do
-      subject(:create_event_topic!) { client.create_event_topic! type: :new_user, fifo: true }
+      subject(:create_event_queue!) { client.create_event_queue! type: :new_user, fifo: true }
 
-      it 'should create topic <instance>-event-queue-<application>-<event_type>' do
+      it 'should create queue <instance>-event-queue-<application>-<event_type>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-new_user',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_event_topic!
+        create_event_queue!
       end
     end
 
     context 'type is undefined, dest is defined' do
-      subject(:create_event_topic!) { client.create_event_topic! fifo: true, dest: :notify_service }
+      subject(:create_event_queue!) { client.create_event_queue! fifo: true, dest: :notify_service }
 
-      it 'should create topic <instance>-event-queue-<application>-all-<destination_service>' do
+      it 'should create queue <instance>-event-queue-<application>-all-<destination_service>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-all-notify_service',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_event_topic!
+        create_event_queue!
       end
     end
   end
 
-  describe 'create_command_topic!' do
+  describe 'create_command_queue!' do
     before do
       error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
       allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
     end
 
     context 'type & destination is defined' do
-      subject(:create_command_topic!) { client.create_command_topic! type: :create_user, dest: :notify_service, fifo: true }
+      subject(:create_command_queue!) { client.create_command_queue! type: :create_user, dest: :notify_service, fifo: true }
 
-      it 'should create topic <instance>-event-queue-<application>-<event_type>-<destination_service>' do
+      it 'should create queue <instance>-event-queue-<application>-<event_type>-<destination_service>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-command-queue-sample_app-create_user-notify_service',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_command_topic!
+        create_command_queue!
       end
     end
 
     context 'type is defined, dest is undefined' do
-      subject(:create_command_topic!) { client.create_command_topic! type: :create_user, fifo: true }
+      subject(:create_command_queue!) { client.create_command_queue! type: :create_user, fifo: true }
 
-      it 'should create topic <instance>-command-queue-<application>-<command_type>' do
+      it 'should create queue <instance>-command-queue-<application>-<command_type>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-command-queue-sample_app-create_user',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_command_topic!
+        create_command_queue!
       end
     end
 
     context 'type is undefined, dest is defined' do
-      subject(:create_command_topic!) { client.create_command_topic! fifo: true, dest: :notify_service }
+      subject(:create_command_queue!) { client.create_command_queue! fifo: true, dest: :notify_service }
 
-      it 'should create topic <instance>-command-queue-<application>-all-<destination_service>' do
+      it 'should create queue <instance>-command-queue-<application>-all-<destination_service>' do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-command-queue-sample_app-all-notify_service',
           attributes: { 'FifoQueue' => true }
         )
 
-        create_command_topic!
+        create_command_queue!
       end
     end
   end
 
-  describe 'delete_topic!' do
-    subject(:delete_topic!) { client.delete_topic! 'test-event-queue-sample_app-new_user' }
+  describe 'delete_queue!' do
+    subject(:delete_queue!) { client.delete_queue! 'test-event-queue-sample_app-new_user' }
 
-    context 'when topic does not exists' do
+    context 'when queue does not exists' do
       before do
         error = Aws::SQS::Errors.error_class('NonExistentQueue').new('message', 'context')
         allow(aws_sqs_client).to receive(:get_queue_url).and_raise error
       end
 
       it 'should raise error' do
-        expect { delete_topic! }.to raise_error CycloneLariat::Errors::TopicDoesNotExists
+        expect { delete_queue! }.to raise_error CycloneLariat::Errors::QueueDoesNotExists
       end
     end
 
-    context 'when topic already exists' do
-      it 'should delete new one topic' do
+    context 'when queue already exists' do
+      it 'should delete new one queue' do
         expect(aws_sqs_client).to receive(:delete_queue).with(
           queue_url: 'test-event-queue-sample_app-create_note'
         )
 
-        delete_topic!
+        delete_queue!
       end
     end
   end
@@ -204,10 +204,10 @@ RSpec.describe CycloneLariat::SqsClient do
   describe '#publish' do
     let(:event) { client.event('create_note', data: { text: 'Test note' }) }
 
-    context 'when topic title is not defined' do
+    context 'when queue title is not defined' do
       subject(:publish_event) { client.publish event, dest: 'destination' }
 
-      context 'when topic exists' do
+      context 'when queue exists' do
         let(:message) do
           {
             uuid: event.uuid,
@@ -219,7 +219,7 @@ RSpec.describe CycloneLariat::SqsClient do
           }.to_json
         end
 
-        it 'should be sent to topic expected message' do
+        it 'should be sent to queue expected message' do
           expect(aws_sqs_client).to receive(:send_message).with(
             message_body: message,
             queue_url: 'test-event-queue-sample_app-create_note'
@@ -228,22 +228,22 @@ RSpec.describe CycloneLariat::SqsClient do
         end
       end
 
-      context 'when topic does not exists' do
+      context 'when queue does not exists' do
         before do
           allow(aws_sqs_client).to receive(:get_queue_url).and_raise(Aws::SQS::Errors::NonExistentQueue.new([], []))
         end
 
-        it 'should be sent to topic expected message' do
+        it 'should be sent to queue expected message' do
           expect { publish_event }.to raise_error Aws::SQS::Errors::NonExistentQueue
         end
       end
     end
 
-    context 'when topic title is defined' do
-      subject(:publish_event) { client.publish event, topic: 'defined_topic', dest: 'destination' }
+    context 'when queue title is defined' do
+      subject(:publish_event) { client.publish event, queue: 'defined_topic', dest: 'destination' }
       before { Timecop.freeze event_sent_at }
 
-      context 'when topic exists' do
+      context 'when queue exists' do
         let(:message) do
           {
             uuid: event.uuid,
@@ -256,7 +256,7 @@ RSpec.describe CycloneLariat::SqsClient do
           }.to_json
         end
 
-        it 'should be sent to topic expected message' do
+        it 'should be sent to queue expected message' do
           expect(aws_sqs_client).to receive(:send_message).with(
             queue_url: 'test-event-queue-sample_app-create_note',
             message_body: message

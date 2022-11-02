@@ -26,5 +26,13 @@ module CycloneLariat
     class TopicDoesNotExists < LunaPark::Errors::System
       message { |d| "Topic does not exists: `#{d[:expected_topic]}`" }
     end
+
+    class QueueAlreadyExists < LunaPark::Errors::System
+      message { |d| "Queue already exists: `#{d[:expected_queue]}`" }
+    end
+
+    class QueueDoesNotExists < LunaPark::Errors::System
+      message { |d| "Queue does not exists: `#{d[:expected_queue]}`" }
+    end
   end
 end

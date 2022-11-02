@@ -1,12 +1,18 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require 'forwardable'
 require_relative 'sns_client'
 require_relative 'sqs_client'
 require 'luna_park/errors'
+require 'terminal-table'
+require 'byebug'
+
 
 module CycloneLariat
   class Migration
+    extend Forwardable
+
     attr_reader :sns, :sqs
 
     DIR = './lariat/migrations'
@@ -22,6 +28,64 @@ module CycloneLariat
 
     def down
       raise LunaPark::Errors::Abstract, "Down method should be defined in #{self.class.name}"
+    end
+
+    def_delegators :sqs, :queue, :custom_queue
+    def_delegators :sns, :topic, :custom_topic
+
+    def create(subject)
+      process(
+        subject: subject,
+        for_topic: ->(topic){ sns.create(topic) },
+        for_queue: ->(queue){ sqs.create(queue) }
+      )
+    end
+
+    def delete(subject)
+      process(
+        subject: subject,
+        for_topic: ->(topic){ sns.delete(topic) },
+        for_queue: ->(queue){ sqs.delete(queue) }
+      )
+    end
+
+    def exists?(subject)
+      process(
+        subject: subject,
+        for_topic: ->(topic){ sns.exists?(topic) },
+        for_queue: ->(queue){ sqs.exists?(queue) }
+      )
+    end
+
+    def subscribe(topic:, queue:)
+      sns.subscribe topic: topic, queue: queue
+    end
+
+    def unsubscribe(topic:, queue:)
+      # sns.subscribe topic: topic, queue: queue
+    end
+
+    def topics
+      sns.list_all
+    end
+
+    def queues
+      sqs.list_all
+    end
+
+    def subscriptions
+      sns.list_subscriptions
+    end
+
+    private
+
+    def process(subject:, for_topic:, for_queue:)
+      case subject
+      when Topic then for_topic.(subject)
+      when Queue then for_queue.(subject)
+      else
+        raise ArgumentError, "Unknown subject class #{subject.class}"
+      end
     end
 
     class << self
@@ -67,6 +131,49 @@ module CycloneLariat
           Object.const_get(class_name).new.down
           dataset.filter(version: version).delete
         end
+      end
+
+      def list_topics
+        rows = []
+        new.topics.each do |topic|
+          rows << [
+            topic.custom? ? 'custom' : 'standard',
+            topic.region,
+            topic.client_id,
+            topic.name,
+            topic.instance,
+            topic.kind,
+            topic.publisher,
+            topic.type,
+            topic.fifo
+          ]
+        end
+
+        puts Terminal::Table.new :rows => rows, headings: %w{valid region client_id name instance kind publisher type fifo}
+      end
+
+      def list_queues
+        rows = []
+        new.queues.each do |queue|
+          rows << [
+            queue.custom? ? 'custom' : 'standard',
+            queue.region,
+            queue.client_id,
+            queue.name,
+            queue.instance,
+            queue.kind,
+            queue.publisher,
+            queue.type,
+            queue.dest,
+            queue.fifo
+          ]
+        end
+
+        puts Terminal::Table.new :rows => rows, headings: %w{valid region client_id name instance kind publisher type destination fifo}
+      end
+
+      def list_subscriptions
+        pp new.subscriptions
       end
     end
   end

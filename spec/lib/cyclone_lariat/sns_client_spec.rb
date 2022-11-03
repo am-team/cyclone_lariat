@@ -13,7 +13,7 @@ RSpec.describe CycloneLariat::SnsClient do
       region: 'region',
       publisher: 'sample_app',
       instance: :test,
-      client_id: 42
+      account_id: 42
     )
   end
 

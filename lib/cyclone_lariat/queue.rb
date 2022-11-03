@@ -4,14 +4,14 @@ module CycloneLariat
   class Queue
     SNS_SUFFIX = :queue
 
-    attr_reader :instance, :kind, :region, :dest, :client_id, :publisher, :type, :fifo, :tags
+    attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo, :tags
 
-    def initialize(instance:, kind:, region:, dest:, client_id:, publisher:, type:, fifo:, tags: nil, name: nil)
+    def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:, tags: nil, name: nil)
       @instance  = instance
       @kind      = kind
       @region    = region
       @dest      = dest
-      @client_id = client_id
+      @account_id = account_id
       @publisher = publisher
       @type      = type
       @fifo      = fifo
@@ -20,14 +20,14 @@ module CycloneLariat
     end
 
     def arn
-      ['arn', 'aws', 'sqs', region, client_id, name].join ':'
+      ['arn', 'aws', 'sqs', region, account_id, name].join ':'
     end
 
     ##
     # Url example:
     #  https://sqs.eu-west-1.amazonaws.com/247606935658/stage-event-queue
     def url
-      "https://sqs.#{region}.amazonaws.com/#{client_id}/#{name}"
+      "https://sqs.#{region}.amazonaws.com/#{account_id}/#{name}"
     end
 
     def custom?
@@ -57,7 +57,7 @@ module CycloneLariat
       # type: note_added
       # dest: nil
       # fifo: true
-      def from_name(name, region:, client_id:)
+      def from_name(name, region:, account_id:)
         is_fifo_array  = name.split('.')
         full_name      = is_fifo_array[0]
         fifo_suffix    = is_fifo_array[-1]
@@ -75,7 +75,7 @@ module CycloneLariat
           kind: queue_array[1],
           region: region,
           dest: queue_array[5],
-          client_id: client_id,
+          account_id: account_id,
           publisher: queue_array[3],
           type: queue_array[4],
           fifo: fifo,
@@ -88,7 +88,7 @@ module CycloneLariat
       # url_array[0]  => https
       # host_array[0] => sqs
       # host_array[1] => eu-west-1
-      # url_array[3]  => 247606935658 # client_id
+      # url_array[3]  => 247606935658 # account_id
       # url_array[4]  => test-event-queue-cyclone_lariat-note_added.fifo # name
       def from_url(url)
         url_array = url.split('/')
@@ -96,7 +96,7 @@ module CycloneLariat
         raise ArgumentError, 'Url is not http format'      unless url_array[1] == ''
         host_array = url_array[2].split('.')
         raise ArgumentError, 'It is not queue url'         unless host_array[0] == 'sqs'
-        from_name(url_array[4], region: host_array[1] , client_id: url_array[3])
+        from_name(url_array[4], region: host_array[1] , account_id: url_array[3])
       end
 
       ##
@@ -105,7 +105,7 @@ module CycloneLariat
       # arn_array[1] => 'aws'
       # arn_array[2] => 'sqs'
       # arn_array[3] => 'eu-west-1'     # region
-      # arn_array[4] => '247606935658'  # client_id
+      # arn_array[4] => '247606935658'  # account_id
       # arn_array[5] => 'alexey_test2'  # name
       def from_arn(arn)
         arn_array = arn.split(':')
@@ -114,7 +114,7 @@ module CycloneLariat
         raise ArgumentError, "Arn `#{arn}` should consists `aws`" unless arn_array[1] == 'aws'
         raise ArgumentError, "Arn `#{arn}` should consists `sqs`" unless arn_array[2] == 'sqs'
 
-        from_name(arn_array[5], region: arn_array[3], client_id: arn_array[4])
+        from_name(arn_array[5], region: arn_array[3], account_id: arn_array[4])
       end
     end
 

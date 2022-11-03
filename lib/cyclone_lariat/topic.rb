@@ -4,13 +4,13 @@ module CycloneLariat
   class Topic
     SNS_SUFFIX = :fanout
 
-    attr_reader :instance, :kind, :region, :client_id, :publisher, :type, :fifo, :tags
+    attr_reader :instance, :kind, :region, :account_id, :publisher, :type, :fifo, :tags
 
-    def initialize(instance:, kind:, region:, client_id:, publisher:, type:, fifo:, tags: nil, name: nil)
+    def initialize(instance:, kind:, region:, account_id:, publisher:, type:, fifo:, tags: nil, name: nil)
       @instance  = instance
       @kind      = kind
       @region    = region
-      @client_id = client_id
+      @account_id = account_id
       @publisher = publisher
       @type      = type
       @fifo      = fifo
@@ -19,7 +19,7 @@ module CycloneLariat
     end
 
     def arn
-      ['arn', 'aws', 'sns', region, client_id, to_s].join ':'
+      ['arn', 'aws', 'sns', region, account_id, to_s].join ':'
     end
 
     def custom?
@@ -48,8 +48,12 @@ module CycloneLariat
       arn == other.arn
     end
 
+    def <=>(other)
+
+    end
+
     class << self
-      def from_name(name, region:, client_id:)
+      def from_name(name, region:, account_id:)
         is_fifo_array  = name.split('.')
         full_name      = is_fifo_array[0]
         fifo_suffix    = is_fifo_array[-1]
@@ -68,7 +72,7 @@ module CycloneLariat
           publisher: topic_array[3],
           type: topic_array[4],
           region: region,
-          client_id: client_id,
+          account_id: account_id,
           fifo: fifo,
           name: name
         )
@@ -80,7 +84,7 @@ module CycloneLariat
         raise ArgumentError, 'Arn should consists `aws`' unless arn_array[1] == 'aws'
         raise ArgumentError, 'Arn should consists `aws`' unless arn_array[2] == 'sns'
 
-        from_name(arn_array[5], region: arn_array[3], client_id: arn_array[4])
+        from_name(arn_array[5], region: arn_array[3], account_id: arn_array[4])
       end
     end
 

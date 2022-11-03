@@ -13,11 +13,11 @@ module CycloneLariat
     dependency(:aws_client_class) { Aws::SNS::Client }
 
     def custom_topic(name)
-      Topic.from_name(name, client_id: client_id, region: region)
+      Topic.from_name(name, account_id: account_id, region: region)
     end
 
     def topic(type, fifo:, kind: :event)
-      Topic.new(instance: instance, publisher: publisher, region: region, client_id: client_id, kind: kind, type: type, fifo: fifo)
+      Topic.new(instance: instance, publisher: publisher, region: region, account_id: account_id, kind: kind, type: type, fifo: fifo)
     end
 
     def publish(msg, fifo:, topic: nil)
@@ -96,7 +96,7 @@ module CycloneLariat
 
         resp[:subscriptions].each do |s|
           endpoint = s.endpoint.split(':')[2] == 'sqs' ? Queue.from_arn(s.endpoint) : Topic.from_arn(s.endpoint)
-          subscriptions << [Topic.from_arn(s.topic_arn).name, endpoint]
+          subscriptions << [Topic.from_arn(s.topic_arn), endpoint]
         end
 
         break if next_token.nil?

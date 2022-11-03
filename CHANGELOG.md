@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Changed
 - rename `topic` to `queue` for SQS operations, in fact it changed only in methods `publish_event`, `publish_command`
   if you defined custom queue name
+- rename client_id to account_id
 Added
 - Migrations for create, delete and subscribe topics and queues
 

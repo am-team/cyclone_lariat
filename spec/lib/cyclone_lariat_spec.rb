@@ -36,11 +36,11 @@ RSpec.describe CycloneLariat do
     end
   end
 
-  describe 'aws_client_id' do
-    subject { cyclone_lariat.aws_client_id }
+  describe 'aws_account_id' do
+    subject { cyclone_lariat.aws_account_id }
 
     context 'when it is defined' do
-      before { cyclone_lariat.aws_client_id = 123 }
+      before { cyclone_lariat.aws_account_id = 123 }
 
       it 'should eq defined value' do
         is_expected.to eq 123

@@ -3,13 +3,13 @@
 require 'cyclone_lariat'
 
 namespace :cyclone_lariat do
-  desc 'Migrate topics for SQS\SNS'
+  desc 'Migrate topics for SQSSNS'
   task migrate: :config do
     require_relative '../../config/initializers/cyclone_lariat'
     CycloneLariat::Migration.migrate
   end
 
-  desc 'Rollback topics for SQS\SNS'
+  desc 'Rollback topics for SQSSNS'
   task :rollback, [:version] => :config do |_, args|
     require_relative '../../config/initializers/cyclone_lariat'
     target_version = args[:version] ? args[:version].to_i : nil

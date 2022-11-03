@@ -139,7 +139,7 @@ module CycloneLariat
           rows << [
             topic.custom? ? 'custom' : 'standard',
             topic.region,
-            topic.client_id,
+            topic.account_id,
             topic.name,
             topic.instance,
             topic.kind,
@@ -149,7 +149,7 @@ module CycloneLariat
           ]
         end
 
-        puts Terminal::Table.new :rows => rows, headings: %w{valid region client_id name instance kind publisher type fifo}
+        puts Terminal::Table.new :rows => rows, headings: %w{valid region account_id name instance kind publisher type fifo}
       end
 
       def list_queues
@@ -158,7 +158,7 @@ module CycloneLariat
           rows << [
             queue.custom? ? 'custom' : 'standard',
             queue.region,
-            queue.client_id,
+            queue.account_id,
             queue.name,
             queue.instance,
             queue.kind,
@@ -169,11 +169,16 @@ module CycloneLariat
           ]
         end
 
-        puts Terminal::Table.new :rows => rows, headings: %w{valid region client_id name instance kind publisher type destination fifo}
+        puts Terminal::Table.new :rows => rows, headings: %w{valid region account_id name instance kind publisher type destination fifo}
       end
 
       def list_subscriptions
-        pp new.subscriptions
+        puts 'digraph G {'
+        puts '  rankdir=LR;'
+        new.subscriptions.each do |s|
+          puts "  \"#{s.first.name}\" -> \"#{s.last.name}\";"
+        end
+        puts '}'
       end
     end
   end

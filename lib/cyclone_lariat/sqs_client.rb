@@ -11,11 +11,11 @@ module CycloneLariat
     dependency(:aws_client_class) { Aws::SQS::Client }
 
     def custom_queue(name)
-      Queue.from_name(name, client_id: client_id, region: region)
+      Queue.from_name(name, account_id: account_id, region: region)
     end
 
     def queue(type = :all, fifo:, dest: nil, kind: :event)
-      Queue.new(instance: instance, publisher: publisher, region: region, client_id: client_id, kind: kind, type: type, fifo: fifo, dest: dest)
+      Queue.new(instance: instance, publisher: publisher, region: region, account_id: account_id, kind: kind, type: type, fifo: fifo, dest: dest)
     end
 
     def get_url(queue)
@@ -71,11 +71,8 @@ module CycloneLariat
 
         resp = aws_client.list_queues(next_token: next_token)
       end
-
-
-      queues.group_by { |topic| topic.shift }.transform_values do |values|
-        values.flatten
-      end
+      
+      queues
     end
   end
 end

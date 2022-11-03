@@ -11,6 +11,7 @@ module CycloneLariat
       extend Dry::CLI::Registry
       
       INITIALIZERS_DIR = './config/initializers'.freeze
+      RAKE_TASKS_DIR = './lib/tasks'.freeze
 
       class Version < Dry::CLI::Command
         desc 'Print version'
@@ -25,9 +26,18 @@ module CycloneLariat
 
         def call(*)
           create_config
+          create_rake_task
         end
 
         def create_config
+          FileUtils.mkdir_p RAKE_TASKS_DIR unless Dir.exist? RAKE_TASKS_DIR
+          config_path = "#{RAKE_TASKS_DIR}/cyclone_lariat.rake"
+          config_file = File.open(config_path, 'w')
+          config_file.puts rake_task_context
+          puts "Created rake task: #{config_path}"
+        end
+
+        def create_rake_task
           FileUtils.mkdir_p INITIALIZERS_DIR unless Dir.exist? INITIALIZERS_DIR
           config_path = "#{INITIALIZERS_DIR}/cyclone_lariat.rb"
           config_file = File.open(config_path, 'w')
@@ -39,17 +49,59 @@ module CycloneLariat
           <<~EOS
             # frozen_string_literal: true
 
-            require_relative 'sequel'
-
             CycloneLariat.tap do |cl|
-              cl.default_version  = 1                       # api version
-              cl.key              = ENV['AWS_KEY']          # aws key
-              cl.secret_key       = ENV['AWS_SECRET_KEY']   # aws secret
-              cl.default_region   = ENV['AWS_REGION']       # aws default region
-              cl.publisher        = ENV['APP_NAME']         # name of your publishers, usually name of your application 
-              cl.default_instance = ENV['INSTANCE']         # stage, production, test
-              cl.events_dataset   = DB[:events]
-              cl.versions_dataset = DB[:lariat_versions]
+              cl.default_version    = 1                       # api version
+              cl.aws_key            = ENV['AWS_KEY']          # aws key
+              cl.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
+              cl.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
+              cl.aws_default_region = ENV['AWS_REGION']       # aws default region
+              cl.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application 
+              cl.default_instance   = ENV['INSTANCE']         # stage, production, test
+              cl.events_dataset     = DB[:events]
+              cl.versions_dataset   = DB[:lariat_versions]
+            end
+          EOS
+        end
+
+        def rake_task_context
+          <<~EOS
+            # frozen_string_literal: true
+
+            require 'cyclone_lariat'
+            
+            namespace :cyclone_lariat do
+              desc 'Migrate topics for SQS\SNS'
+              task migrate: :config do
+                require_relative '../../config/initializers/cyclone_lariat'
+                CycloneLariat::Migration.migrate
+              end
+            
+              desc 'Rollback topics for SQS\SNS'
+              task :rollback, [:version] => :config do |_, args|
+                require_relative '../../config/initializers/cyclone_lariat'
+                target_version = args[:version] ? args[:version].to_i : nil
+                CycloneLariat::Migration.rollback(target_version)
+              end
+            
+              namespace :list do
+                desc 'List all topics'
+                task :topics do
+                  require_relative '../../config/initializers/cyclone_lariat'
+                  CycloneLariat::Migration.list_topics
+                end
+            
+                desc 'List all queues'
+                task :queues do
+                  require_relative '../../config/initializers/cyclone_lariat'
+                  CycloneLariat::Migration.list_queues
+                end
+            
+                desc 'List all subscriptions'
+                task :subscriptions do
+                  require_relative '../../config/initializers/cyclone_lariat'
+                  CycloneLariat::Migration.list_subscriptions
+                end
+              end
             end
           EOS
         end

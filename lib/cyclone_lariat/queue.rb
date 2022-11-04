@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'uri'
 
 module CycloneLariat
   class Queue
@@ -35,7 +36,7 @@ module CycloneLariat
     end
 
     def standard?
-      instance && kind && publisher && type
+      instance && kind && publisher && type && true
     end
 
     def name
@@ -91,16 +92,19 @@ module CycloneLariat
       # url_array[3]  => 247606935658 # account_id
       # url_array[4]  => test-event-queue-cyclone_lariat-note_added.fifo # name
       def from_url(url)
+        raise ArgumentError, 'Url is not http format' unless url =~ URI.regexp
+
         url_array = url.split('/')
         raise ArgumentError, 'Url should start from https' unless url_array[0] == 'https:'
-        raise ArgumentError, 'Url is not http format'      unless url_array[1] == ''
+
         host_array = url_array[2].split('.')
-        raise ArgumentError, 'It is not queue url'         unless host_array[0] == 'sqs'
+        raise ArgumentError, 'It is not queue url' unless host_array[0] == 'sqs'
+
         from_name(url_array[4], region: host_array[1] , account_id: url_array[3])
       end
 
       ##
-      # Arn example: "arn:aws:sqs:eu-west-1:247606935658:alexey_test2"
+      # Arn example: "arn:aws:sqs:eu-west-1:247606935658:custom_queue"
       # arn_array[0] => 'arn'
       # arn_array[1] => 'aws'
       # arn_array[2] => 'sqs'

@@ -27,7 +27,7 @@ module CycloneLariat
     end
 
     def standard?
-      instance && kind && publisher && type
+      instance && kind && publisher && type && true
     end
 
     def name
@@ -46,10 +46,6 @@ module CycloneLariat
 
     def ==(other)
       arn == other.arn
-    end
-
-    def <=>(other)
-
     end
 
     class << self
@@ -82,7 +78,7 @@ module CycloneLariat
         arn_array = arn.split(':')
         raise ArgumentError, 'Arn should consists `arn`' unless arn_array[0] == 'arn'
         raise ArgumentError, 'Arn should consists `aws`' unless arn_array[1] == 'aws'
-        raise ArgumentError, 'Arn should consists `aws`' unless arn_array[2] == 'sns'
+        raise ArgumentError, 'Arn should consists `sns`' unless arn_array[2] == 'sns'
 
         from_name(arn_array[5], region: arn_array[3], account_id: arn_array[4])
       end

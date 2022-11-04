@@ -6,8 +6,6 @@ require_relative 'sns_client'
 require_relative 'sqs_client'
 require 'luna_park/errors'
 require 'terminal-table'
-require 'byebug'
-
 
 module CycloneLariat
   class Migration
@@ -39,6 +37,8 @@ module CycloneLariat
         for_topic: ->(topic){ sns.create(topic) },
         for_queue: ->(queue){ sqs.create(queue) }
       )
+
+      puts "  #{subject.class.name.split('::').last} was created `#{subject.name}`"
     end
 
     def delete(subject)
@@ -47,6 +47,7 @@ module CycloneLariat
         for_topic: ->(topic){ sns.delete(topic) },
         for_queue: ->(queue){ sqs.delete(queue) }
       )
+      puts "  #{subject.class.name.split('::').last} was deleted `#{subject.name}`"
     end
 
     def exists?(subject)
@@ -57,12 +58,14 @@ module CycloneLariat
       )
     end
 
-    def subscribe(topic:, queue:)
-      sns.subscribe topic: topic, queue: queue
+    def subscribe(topic:, endpoint:)
+      sns.subscribe topic: topic, endpoint: endpoint
+      puts "  Subscription was created `#{topic.name} -> #{endpoint.name}`"
     end
 
-    def unsubscribe(topic:, queue:)
-      # sns.subscribe topic: topic, queue: queue
+    def unsubscribe(topic:, endpoint:)
+      sns.unsubscribe topic: topic, endpoint: endpoint
+      puts "  Subscription was deleted `#{topic.name} -> #{endpoint.name}`"
     end
 
     def topics

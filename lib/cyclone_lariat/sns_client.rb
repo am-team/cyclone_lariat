@@ -3,6 +3,7 @@
 require 'aws-sdk-sns'
 require_relative 'abstract/client'
 require_relative 'topic'
+require_relative 'queue'
 
 require 'byebug'
 
@@ -44,7 +45,7 @@ module CycloneLariat
     def create(topic)
       raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
       raise Errors::TopicAlreadyExists.new(expected_topic: topic.name) if exists?(topic)
-      # byebug
+
       aws_client.create_topic(name: topic.name, attributes: topic.attributes, tags: topic.tags)
       topic
     end
@@ -57,15 +58,24 @@ module CycloneLariat
       topic
     end
 
-    def subscribe(topic:, queue:)
-      byebug
+    def subscribe(topic:, endpoint:)
+      subscription_arn = find_subscription_arn(topic: topic, endpoint: endpoint)
+      raise Errors::SubscriptionAlreadyExists.new(topic: topic, endpoint: endpoint) if subscription_arn
+
       aws_client.subscribe(
         {
           topic_arn: topic.arn,
           protocol: 'sqs',
-          endpoint: queue.arn
+          endpoint: endpoint.arn
         }
       )
+    end
+
+    def unsubscribe(topic:, endpoint:)
+      subscription_arn = find_subscription_arn(topic: topic, endpoint: endpoint)
+      raise Errors::SubscriptionDoesNotExists.new(topic: topic, endpoint: endpoint) unless subscription_arn
+
+      aws_client.unsubscribe(subscription_arn: subscription_arn)
     end
 
     def list_all
@@ -105,6 +115,35 @@ module CycloneLariat
       end
 
       subscriptions
+    end
+
+    def topic_subscriptions(topic)
+      raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
+
+      subscriptions = []
+      resp = aws_client.list_subscriptions_by_topic(topic_arn: topic.arn)
+
+      loop do
+        next_token = resp[:next_token]
+        subscriptions += resp[:subscriptions]
+
+        break if next_token.nil?
+
+        resp = aws_client.list_subscriptions_by_topic(topic_arn: topic.arn, next_token: next_token)
+      end
+
+      subscriptions
+    end
+
+    def find_subscription_arn(topic:, endpoint:)
+      raise ArgumentError, 'Should be Topic' unless topic.is_a? Topic
+      raise ArgumentError, 'Endpoint should be Topic or Queue' unless [Topic, Queue].include? endpoint.class
+
+      found_subscription = topic_subscriptions(topic).select do |subscription|
+        subscription.endpoint == endpoint.arn
+      end.first
+
+      found_subscription ? found_subscription.subscription_arn : nil
     end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../../lib/cyclone_lariat/configure'
 
 RSpec.describe CycloneLariat do
@@ -51,7 +53,6 @@ RSpec.describe CycloneLariat do
       it { is_expected.to be_nil }
     end
   end
-
 
   describe 'publisher' do
     subject { cyclone_lariat.publisher }

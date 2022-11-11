@@ -128,7 +128,13 @@ RSpec.describe CycloneLariat::SnsClient do
         expect(aws_sns_client).to receive(:create_topic).with(
           name: 'test-event-fanout-sample_app-create_note.fifo',
           attributes: { 'FifoTopic' => 'true' },
-
+          tags: [
+            { key: 'instance', value: 'test' },
+            { key: 'kind', value: 'event' },
+            { key: 'publisher', value: 'sample_app' },
+            { key: 'type', value: 'create_note' },
+            { key: 'fifo', value: 'true' }
+          ]
         )
 
         create_topic
@@ -180,7 +186,8 @@ RSpec.describe CycloneLariat::SnsClient do
   end
 
   describe '#publish' do
-    let(:event) { client.event('create_note', data: { text: 'Test note' }) }
+    let(:event) { client.event('create_note', data: { text: 'Test note' }, request_id: request_id) }
+    let(:request_id) { SecureRandom.uuid }
     let(:event_sent_at) { Time.now }
 
     context 'when topic title is not defined' do
@@ -194,7 +201,8 @@ RSpec.describe CycloneLariat::SnsClient do
             type: 'event_create_note',
             version: 1,
             data: { text: 'Test note' },
-            sent_at: event_sent_at
+            request_id: request_id,
+            sent_at: event_sent_at.iso8601(3)
           }.to_json
         end
 
@@ -228,7 +236,8 @@ RSpec.describe CycloneLariat::SnsClient do
             type: 'event_create_note',
             version: 1,
             data: { text: 'Test note' },
-            sent_at: event_sent_at
+            request_id: request_id,
+            sent_at: event_sent_at.iso8601(3)
           }.to_json
         end
 
@@ -265,11 +274,9 @@ RSpec.describe CycloneLariat::SnsClient do
     end
 
     let(:queue) { sqs_client.queue(:note_added, fifo: true) }
-
     subject(:subscribe) { client.subscribe(topic: topic, endpoint: queue) }
 
     context 'when subscription already exists' do
-
       before do
         allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
           {
@@ -280,11 +287,122 @@ RSpec.describe CycloneLariat::SnsClient do
       end
 
       it 'should raise error' do
-        # expect(subscribe).to eq true
         expect { subscribe }.to raise_error CycloneLariat::Errors::SubscriptionAlreadyExists
       end
     end
 
+    context 'when subscription is not exists' do
+      before do
+        allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
+          {
+            subscriptions: [],
+            next_token: nil
+          }
+        )
+      end
 
+      it 'should create new subscription' do
+        expect(aws_sns_client).to receive(:subscribe).with(
+          {
+            topic_arn: 'arn:aws:sns:region:42:test-event-fanout-sample_app-note_added.fifo',
+            protocol: 'sqs',
+            endpoint: 'arn:aws:sqs:region:42:test-event-queue-sample_app-note_added.fifo'
+          }
+        )
+        subscribe
+      end
+    end
+  end
+
+  describe '#unsubscribe' do
+    let(:topic) { client.topic(:note_added, fifo: true) }
+    let(:sqs_client) do
+      CycloneLariat::SqsClient.new(
+        key: 'key',
+        secret_key: 'secret_key',
+        region: 'region',
+        publisher: 'sample_app',
+        instance: :test,
+        account_id: 42
+      )
+    end
+
+    let(:queue) { sqs_client.queue(:note_added, fifo: true) }
+    subject(:unsubscribe) { client.unsubscribe(topic: topic, endpoint: queue) }
+
+    context 'when subscription already exists' do
+      before do
+        allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
+          {
+            subscriptions: [instance_double(Aws::SNS::Types::Subscription, endpoint: queue.arn, subscription_arn: 'subscription_arn')],
+            next_token: nil
+          }
+        )
+      end
+
+      it 'should raise error' do
+        expect(aws_sns_client).to receive(:unsubscribe).with(
+          {
+            subscription_arn: 'subscription_arn'
+          }
+        )
+        unsubscribe
+      end
+    end
+
+    context 'when subscription is not exists' do
+      before do
+        allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
+          {
+            subscriptions: [],
+            next_token: nil
+          }
+        )
+      end
+
+      it 'should create new subscription' do
+        expect { unsubscribe }.to raise_error CycloneLariat::Errors::SubscriptionDoesNotExists
+      end
+    end
+  end
+
+  describe '#list_all' do
+    let(:first_page) do
+      {
+        topics: [
+          { topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-note_added.fifo' },
+          { topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-cubs_added.fifo' }
+        ],
+        next_token: 'page_2'
+      }
+    end
+
+    let(:second_page) do
+      {
+        topics: [
+          { topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-chip_added.fifo' }
+        ],
+        next_token: nil
+      }
+    end
+
+    before do
+      allow(aws_sns_client).to receive(:list_topics).with(next_token: 'page_2').and_return(second_page)
+      allow(aws_sns_client).to receive(:list_topics).with(no_args).and_return(first_page)
+    end
+
+    subject(:list_all) { client.list_all }
+
+    it 'should return array of Topics' do
+      is_expected.to all(be_an(CycloneLariat::Topic))
+    end
+
+    it 'should generate list of expected queues' do
+      expect(list_all.map(&:arn)).to eq %w[
+        arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-note_added.fifo
+        arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-cubs_added.fifo
+        arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-chip_added.fifo
+      ]
+    end
   end
 end

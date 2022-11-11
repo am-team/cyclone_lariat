@@ -63,7 +63,7 @@ RSpec.describe CycloneLariat::Queue do
   end
 
   describe '.from_name' do
-    subject(:queue) { described_class.from_name 'test-event-queue-cyclone_lariat-note_added.fifo', region: 'eu-west-1', account_id: 247606935658 }
+    subject(:queue) { described_class.from_name 'test-event-queue-cyclone_lariat-note_added.fifo', region: 'eu-west-1', account_id: 247_606_935_658 }
 
     it { is_expected.to be_a CycloneLariat::Queue }
 

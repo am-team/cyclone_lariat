@@ -9,8 +9,10 @@ Changed
 - rename `topic` to `queue` for SQS operations, in fact it changed only in methods `publish_event`, `publish_command`
   if you defined custom queue name
 - rename client_id to account_id
+- send_at no iso8601 format
 Added
 - Migrations for create, delete and subscribe topics and queues
+- request_id for Event and Command
 
 ## [0.3.10] - 2022-10-05
 Added

@@ -55,7 +55,9 @@ module CycloneLariat
         fifo_suffix    = is_fifo_array[-1]
         suffix_exists  = fifo_suffix != full_name
 
-        raise ArgumentError, "Topic name #{name} consists unexpected suffix #{fifo_suffix}" if suffix_exists && fifo_suffix != 'fifo'
+        if suffix_exists && fifo_suffix != 'fifo'
+          raise ArgumentError, "Topic name #{name} consists unexpected suffix #{fifo_suffix}"
+        end
 
         fifo = suffix_exists
         topic_array = full_name.split('-')
@@ -92,7 +94,7 @@ module CycloneLariat
         { key: 'kind',      value: String(kind) },
         { key: 'publisher', value: String(publisher) },
         { key: 'type',      value: String(type) },
-        { key: 'fifo',      value: fifo ? 'true' : 'false' },
+        { key: 'fifo',      value: fifo ? 'true' : 'false' }
       ]
     end
   end

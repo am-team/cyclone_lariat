@@ -71,7 +71,7 @@ RSpec.describe CycloneLariat::Abstract::Client do
     end
 
     context 'when it defined in config' do
-      before { CycloneLariat.publisher = 'best_app'}
+      before { CycloneLariat.publisher = 'best_app' }
       after  { CycloneLariat.publisher = nil }
 
       it { is_expected.to eq 'best_app' }

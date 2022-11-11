@@ -10,15 +10,12 @@ require 'terminal-table'
 module CycloneLariat
   class Migration
     extend Forwardable
+    include LunaPark::Extensions::Injector
 
-    attr_reader :sns, :sqs
+    dependency(:sns) { CycloneLariat::SnsClient.new }
+    dependency(:sqs) { CycloneLariat::SqsClient.new }
 
-    DIR = './lariat/migrations'
-
-    def initialize
-      @sns = CycloneLariat::SnsClient.new
-      @sqs = CycloneLariat::SqsClient.new
-    end
+    DIR = './lariat/migrate'
 
     def up
       raise LunaPark::Errors::Abstract, "Up method should be defined in #{self.class.name}"
@@ -31,30 +28,30 @@ module CycloneLariat
     def_delegators :sqs, :queue, :custom_queue
     def_delegators :sns, :topic, :custom_topic
 
-    def create(subject)
+    def create(resource)
       process(
-        subject: subject,
-        for_topic: ->(topic){ sns.create(topic) },
-        for_queue: ->(queue){ sqs.create(queue) }
+        resource: resource,
+        for_topic: ->(topic) { sns.create(topic) },
+        for_queue: ->(queue) { sqs.create(queue) }
       )
 
-      puts "  #{subject.class.name.split('::').last} was created `#{subject.name}`"
+      puts "  #{resource.class.name.split('::').last} was created `#{resource.name}`"
     end
 
-    def delete(subject)
+    def delete(resource)
       process(
-        subject: subject,
-        for_topic: ->(topic){ sns.delete(topic) },
-        for_queue: ->(queue){ sqs.delete(queue) }
+        resource: resource,
+        for_topic: ->(topic) { sns.delete(topic) },
+        for_queue: ->(queue) { sqs.delete(queue) }
       )
-      puts "  #{subject.class.name.split('::').last} was deleted `#{subject.name}`"
+      puts "  #{resource.class.name.split('::').last} was deleted `#{resource.name}`"
     end
 
-    def exists?(subject)
+    def exists?(resource)
       process(
-        subject: subject,
-        for_topic: ->(topic){ sns.exists?(topic) },
-        for_queue: ->(queue){ sqs.exists?(queue) }
+        resource: resource,
+        for_topic: ->(topic) { sns.exists?(topic) },
+        for_queue: ->(queue) { sqs.exists?(queue) }
       )
     end
 
@@ -82,18 +79,18 @@ module CycloneLariat
 
     private
 
-    def process(subject:, for_topic:, for_queue:)
-      case subject
-      when Topic then for_topic.(subject)
-      when Queue then for_queue.(subject)
+    def process(resource:, for_topic:, for_queue:)
+      case resource
+      when Topic then for_topic.call(resource)
+      when Queue then for_queue.call(resource)
       else
-        raise ArgumentError, "Unknown subject class #{subject.class}"
+        raise ArgumentError, "Unknown resource class #{resource.class}"
       end
     end
 
     class << self
       def migrate(dataset: CycloneLariat.versions_dataset, dir: DIR)
-        alert('No one migration exists') if !Dir.exists?(dir) || Dir.empty?(dir)
+        alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
 
         Dir.glob("#{dir}/*.rb") do |path|
           filename = File.basename(path, '.rb')
@@ -152,7 +149,7 @@ module CycloneLariat
           ]
         end
 
-        puts Terminal::Table.new :rows => rows, headings: %w{valid region account_id name instance kind publisher type fifo}
+        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type fifo]
       end
 
       def list_queues
@@ -172,7 +169,7 @@ module CycloneLariat
           ]
         end
 
-        puts Terminal::Table.new :rows => rows, headings: %w{valid region account_id name instance kind publisher type destination fifo}
+        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type destination fifo]
       end
 
       def list_subscriptions

@@ -24,26 +24,32 @@ module CycloneLariat
         @account_id = account_id
       end
 
-      def event(type, data: {}, version: self.version, uuid: SecureRandom.uuid)
-        Event.wrap(
+      def event(type, data: {}, version: self.version, request_id: nil, uuid: SecureRandom.uuid)
+        params = {
           uuid: uuid,
           type: type,
-          sent_at: Time.now.iso8601,
+          sent_at: Time.now.iso8601(3),
           version: version,
           publisher: publisher,
-          data: data
-        )
+          data: data,
+          request_id: request_id
+        }
+
+        Event.wrap(params.compact)
       end
 
-      def command(type, data: {}, version: self.version, uuid: SecureRandom.uuid)
-        Command.wrap(
+      def command(type, data: {}, version: self.version, request_id: nil, uuid: SecureRandom.uuid)
+        params = {
           uuid: uuid,
           type: type,
-          sent_at: Time.now.iso8601,
+          sent_at: Time.now.iso8601(3),
           version: version,
           publisher: publisher,
-          data: data
-        )
+          data: data,
+          request_id: request_id
+        }
+
+        Command.wrap(params.compact)
       end
 
       def publish

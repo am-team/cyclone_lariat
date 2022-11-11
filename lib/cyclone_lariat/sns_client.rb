@@ -5,8 +5,6 @@ require_relative 'abstract/client'
 require_relative 'topic'
 require_relative 'queue'
 
-require 'byebug'
-
 module CycloneLariat
   class SnsClient < Abstract::Client
     include LunaPark::Extensions::Injector
@@ -18,7 +16,14 @@ module CycloneLariat
     end
 
     def topic(type, fifo:, kind: :event)
-      Topic.new(instance: instance, publisher: publisher, region: region, account_id: account_id, kind: kind, type: type, fifo: fifo)
+      Topic.new(
+        instance: instance,
+        publisher: publisher,
+        region: region,
+        account_id: account_id,
+        kind: kind,
+        type: type, fifo: fifo
+      )
     end
 
     def publish(msg, fifo:, topic: nil)
@@ -34,12 +39,12 @@ module CycloneLariat
       false
     end
 
-    def publish_event(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish event(type, data: data, version: version, uuid: uuid), topic: topic, fifo: fifo
+    def publish_event(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
+      publish event(type, data: data, version: version, uuid: uuid, request_id: request_id), topic: topic, fifo: fifo
     end
 
-    def publish_command(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, topic: nil)
-      publish command(type, data: data, version: version, uuid: uuid), topic: topic, fifo: fifo
+    def publish_command(type, fifo:, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
+      publish command(type, data: data, version: version, uuid: uuid, request_id: request_id), topic: topic, fifo: fifo
     end
 
     def create(topic)
@@ -83,17 +88,14 @@ module CycloneLariat
       resp = aws_client.list_topics
 
       loop do
-        next_token = resp[:next_token]
-
         resp[:topics].map do |t|
           topics << Topic.from_arn(t[:topic_arn])
         end
 
-        break if next_token.nil?
+        break if resp[:next_token].nil?
 
-        resp = aws_client.list_topics(next_token: next_token)
+        resp = aws_client.list_topics(next_token: resp[:next_token])
       end
-
       topics
     end
 
@@ -102,18 +104,15 @@ module CycloneLariat
       resp = aws_client.list_subscriptions
 
       loop do
-        next_token = resp[:next_token]
-
         resp[:subscriptions].each do |s|
           endpoint = s.endpoint.split(':')[2] == 'sqs' ? Queue.from_arn(s.endpoint) : Topic.from_arn(s.endpoint)
           subscriptions << [Topic.from_arn(s.topic_arn), endpoint]
         end
 
-        break if next_token.nil?
+        break if resp[:next_token].nil?
 
-        resp = aws_client.list_subscriptions(next_token: next_token)
+        resp = aws_client.list_subscriptions(next_token: resp[:next_token])
       end
-
       subscriptions
     end
 
@@ -131,7 +130,6 @@ module CycloneLariat
 
         resp = aws_client.list_subscriptions_by_topic(topic_arn: topic.arn, next_token: next_token)
       end
-
       subscriptions
     end
 
@@ -147,5 +145,3 @@ module CycloneLariat
     end
   end
 end
-
-

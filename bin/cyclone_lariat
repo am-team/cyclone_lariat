@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require_relative '../lib/cyclone_lariat'
 require 'bundler/setup'
@@ -9,9 +10,9 @@ module CycloneLariat
   module CLI
     module Commands
       extend Dry::CLI::Registry
-      
-      INITIALIZERS_DIR = './config/initializers'.freeze
-      RAKE_TASKS_DIR = './lib/tasks'.freeze
+
+      INITIALIZERS_DIR = './config/initializers'
+      RAKE_TASKS_DIR = './lib/tasks'
 
       class Version < Dry::CLI::Command
         desc 'Print version'
@@ -46,7 +47,7 @@ module CycloneLariat
         end
 
         def config_contents
-          <<~EOS
+          <<~CONFIG
             # frozen_string_literal: true
 
             CycloneLariat.tap do |cl|
@@ -57,14 +58,14 @@ module CycloneLariat
               cl.aws_default_region = ENV['AWS_REGION']       # aws default region
               cl.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application 
               cl.default_instance   = ENV['INSTANCE']         # stage, production, test
-              cl.events_dataset     = DB[:events]
-              cl.versions_dataset   = DB[:lariat_versions]
+              cl.events_dataset     = DB[:events]             # sequel dataset for store income messages, for receiver
+              cl.versions_dataset   = DB[:lariat_versions]    # sequel dataset for migrations, for publisher
             end
-          EOS
+          CONFIG
         end
 
         def rake_task_context
-          <<~EOS
+          <<~TASKS
             # frozen_string_literal: true
 
             require 'cyclone_lariat'
@@ -103,7 +104,7 @@ module CycloneLariat
                 end
               end
             end
-          EOS
+          TASKS
         end
       end
 
@@ -140,7 +141,7 @@ module CycloneLariat
           end
 
           def file_contents(klass_name)
-            <<~EOS
+            <<~MIGRATION
               # frozen_string_literal: true
 
               class #{klass_name} < CycloneLariat::Migration
@@ -150,7 +151,7 @@ module CycloneLariat
                 def down
                 end
               end
-            EOS
+            MIGRATION
           end
         end
       end

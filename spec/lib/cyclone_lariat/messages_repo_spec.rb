@@ -81,11 +81,11 @@ RSpec.describe CycloneLariat::MessagesRepo do
       end
 
       it 'should not set error' do
-        expect { event_processed! }.not_to change { repo.find(uuid: uuid).client_error }
+        expect { event_processed! }.not_to(change { repo.find(uuid: uuid).client_error })
       end
 
       it 'should mark event as processed' do
-        expect { event_processed! }.to change { repo.find(uuid: uuid).processed_at }.from(nil).to(Time)
+        expect { event_processed! }.to(change { repo.find(uuid: uuid).processed_at }.from(nil).to(Time))
       end
     end
 

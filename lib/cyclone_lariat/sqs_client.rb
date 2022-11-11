@@ -15,7 +15,10 @@ module CycloneLariat
     end
 
     def queue(type = :all, fifo:, dest: nil, kind: :event)
-      Queue.new(instance: instance, publisher: publisher, region: region, account_id: account_id, kind: kind, type: type, fifo: fifo, dest: dest)
+      Queue.new(
+        instance: instance, publisher: publisher, region: region,
+        account_id: account_id, kind: kind, type: type, fifo: fifo, dest: dest
+      )
     end
 
     def get_url(queue)
@@ -34,7 +37,17 @@ module CycloneLariat
 
     def publish(msg, fifo:, dest: nil, queue: nil)
       queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
-      aws_client.send_message( queue_url: get_url(queue), message_body: msg.to_json )
+      aws_client.send_message(queue_url: get_url(queue), message_body: msg.to_json)
+    end
+
+    def publish_event(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)
+      publish event(type, data: data, version: version, uuid: uuid, request_id: request_id),
+              fifo: fifo, dest: dest, queue: queue
+    end
+
+    def publish_command(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)
+      publish command(type, data: data, version: version, uuid: uuid, request_id: request_id),
+              fifo: fifo, dest: dest, queue: queue
     end
 
     def create(queue)
@@ -71,7 +84,7 @@ module CycloneLariat
 
         resp = aws_client.list_queues(next_token: next_token)
       end
-      
+
       queues
     end
   end

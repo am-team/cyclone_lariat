@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'uri'
 
 module CycloneLariat
@@ -64,23 +65,18 @@ module CycloneLariat
         fifo_suffix    = is_fifo_array[-1]
         suffix_exists  = fifo_suffix != full_name
 
-        raise ArgumentError, "Queue name #{name} consists unexpected suffix #{fifo_suffix}" if suffix_exists && fifo_suffix != 'fifo'
+        if suffix_exists && fifo_suffix != 'fifo'
+          raise ArgumentError, "Queue name #{name} consists unexpected suffix #{fifo_suffix}"
+        end
 
-        fifo = suffix_exists
+        fifo        = suffix_exists
         queue_array = full_name.split('-')
 
         raise ArgumentError, "Topic name should consists `#{SNS_SUFFIX}`" unless queue_array[2] != SNS_SUFFIX
 
         new(
-          instance: queue_array[0],
-          kind: queue_array[1],
-          region: region,
-          dest: queue_array[5],
-          account_id: account_id,
-          publisher: queue_array[3],
-          type: queue_array[4],
-          fifo: fifo,
-          name: name
+          instance: queue_array[0], kind: queue_array[1], region: region, dest: queue_array[5],
+          account_id: account_id, publisher: queue_array[3], type: queue_array[4], fifo: fifo, name: name
         )
       end
 
@@ -92,7 +88,7 @@ module CycloneLariat
       # url_array[3]  => 247606935658 # account_id
       # url_array[4]  => test-event-queue-cyclone_lariat-note_added.fifo # name
       def from_url(url)
-        raise ArgumentError, 'Url is not http format' unless url =~ URI.regexp
+        raise ArgumentError, 'Url is not http format' unless url =~ URI::DEFAULT_PARSER.make_regexp
 
         url_array = url.split('/')
         raise ArgumentError, 'Url should start from https' unless url_array[0] == 'https:'
@@ -100,7 +96,7 @@ module CycloneLariat
         host_array = url_array[2].split('.')
         raise ArgumentError, 'It is not queue url' unless host_array[0] == 'sqs'
 
-        from_name(url_array[4], region: host_array[1] , account_id: url_array[3])
+        from_name(url_array[4], region: host_array[1], account_id: url_array[3])
       end
 
       ##
@@ -126,10 +122,10 @@ module CycloneLariat
 
     def default_tags(instance, kind, publisher, type, dest, fifo)
       {
-        instance:    String(instance),
-        kind:        String(kind),
-        publisher:   String(publisher),
-        type:        String(type),
+        instance: String(instance),
+        kind: String(kind),
+        publisher: String(publisher),
+        type: String(type),
         dest: dest ? String(dest) : 'undefined',
         fifo: fifo ? 'true' : 'false'
       }

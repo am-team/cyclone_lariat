@@ -14,7 +14,9 @@ module CycloneLariat
       Queue.from_name(name, account_id: account_id, region: region)
     end
 
-    def queue(type = :all, fifo:, dest: nil, kind: :event)
+    def queue(type = :all, fifo:, dest: nil, publisher: nil, kind: :event)
+      publisher ||= self.publisher
+
       Queue.new(
         instance: instance, publisher: publisher, region: region,
         account_id: account_id, kind: kind, type: type, fifo: fifo, dest: dest

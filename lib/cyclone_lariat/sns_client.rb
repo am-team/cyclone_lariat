@@ -15,7 +15,9 @@ module CycloneLariat
       Topic.from_name(name, account_id: account_id, region: region)
     end
 
-    def topic(type, fifo:, kind: :event)
+    def topic(type, fifo:, publisher: nil, kind: :event)
+      publisher ||= self.publisher
+
       Topic.new(
         instance: instance,
         publisher: publisher,
@@ -70,7 +72,7 @@ module CycloneLariat
       aws_client.subscribe(
         {
           topic_arn: topic.arn,
-          protocol: 'sqs',
+          protocol: endpoint.protocol,
           endpoint: endpoint.arn
         }
       )
@@ -106,7 +108,7 @@ module CycloneLariat
       loop do
         resp[:subscriptions].each do |s|
           endpoint = s.endpoint.split(':')[2] == 'sqs' ? Queue.from_arn(s.endpoint) : Topic.from_arn(s.endpoint)
-          subscriptions << [Topic.from_arn(s.topic_arn), endpoint]
+          subscriptions << { topic: Topic.from_arn(s.topic_arn), endpoint: endpoint, arn: s.subscription_arn }
         end
 
         break if resp[:next_token].nil?

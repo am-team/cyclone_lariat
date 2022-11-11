@@ -35,4 +35,10 @@ namespace :cyclone_lariat do
       CycloneLariat::Migration.list_subscriptions
     end
   end
+
+  desc 'Build graphviz graph for whole system'
+  task :graph do
+    require_relative '../../config/initializers/cyclone_lariat'
+    CycloneLariat::Migration.build_graph
+  end
 end

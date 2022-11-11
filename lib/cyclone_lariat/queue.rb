@@ -50,6 +50,19 @@ module CycloneLariat
 
     alias to_s name
 
+
+    def topic?
+      false
+    end
+
+    def queue?
+      true
+    end
+
+    def protocol
+      'sqs'
+    end
+
     class << self
       ##
       # Name example: test-event-queue-cyclone_lariat-note_added.fifo

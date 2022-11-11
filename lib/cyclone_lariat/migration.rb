@@ -6,6 +6,7 @@ require_relative 'sns_client'
 require_relative 'sqs_client'
 require 'luna_park/errors'
 require 'terminal-table'
+require 'set'
 
 module CycloneLariat
   class Migration
@@ -173,10 +174,38 @@ module CycloneLariat
       end
 
       def list_subscriptions
+        rows = []
+        new.subscriptions.each do |subscription|
+          rows << [
+            subscription[:topic].name,
+            subscription[:endpoint].name,
+            subscription[:arn]
+          ]
+        end
+
+        puts Terminal::Table.new rows: rows, headings: %w[topic endpoint subscription_arn]
+      end
+
+      def build_graph
+        subscriptions = new.subscriptions
+        resources_set = Set.new
+
+        subscriptions.each do |subscription|
+          resources_set << subscription[:topic]
+          resources_set << subscription[:endpoint]
+        end
+
         puts 'digraph G {'
         puts '  rankdir=LR;'
-        new.subscriptions.each do |s|
-          puts "  \"#{s.first.name}\" -> \"#{s.last.name}\";"
+
+        resources_set.each do |resource|
+          color = resource.custom? ? ', fillcolor=grey' : ', fillcolor=white'
+          style = resource.topic? ? "[shape=component style=filled#{color}]" : "[shape=record, style=\"rounded,filled\"#{color}]"
+          puts "  \"#{resource.name}\" #{style};"
+        end
+
+        subscriptions.each do |subscription|
+          puts "  \"#{subscription[:topic].name}\" -> \"#{subscription[:endpoint].name}\";"
         end
         puts '}'
       end

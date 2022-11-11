@@ -42,6 +42,18 @@ module CycloneLariat
       fifo ? { 'FifoTopic' => 'true' } : {}
     end
 
+    def topic?
+      true
+    end
+
+    def queue?
+      false
+    end
+
+    def protocol
+      'sns'
+    end
+
     alias to_s name
 
     def ==(other)

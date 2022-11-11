@@ -1,7 +1,8 @@
 # Cyclone lariat
 
 This gem work in few scenarios:
-- like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. And catch and produce all exceptions.  
+- like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. 
+And catch and produce all exceptions.  
 - like middleware it can record all incoming messages
 - like client which can send message to SNS topics and SQS queues
 - also it can hep you with CI\CD to manage topics, queues and subscription like database migration 
@@ -11,7 +12,8 @@ This gem work in few scenarios:
 
 # Client / Publisher
 At first lets understand what the difference between SQS and SNS:  
-- Amazon Simple Queue Service (SQS) lets you send, store, and receive messages between software components at any volume, without losing messages or requiring other services to be available.
+- Amazon Simple Queue Service (SQS) lets you send, store, and receive messages between software components at any 
+volume, without losing messages or requiring other services to be available.
 - Amazon Simple Notification Service (SNS) sends notifications two ways Application2Person (like send sms).
 And the second way is Application2Application, that's way more important for us. In this way you case use
 SNS service like fanout.
@@ -80,7 +82,8 @@ data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_la
 }
 ```
 
-Idea about X-Request-Id you can see at [StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
+Idea about X-Request-Id you can see at 
+[StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
 
 As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Event_ and _Command_. 
 
@@ -182,10 +185,13 @@ arn:aws:sqs:eu-west-1:247602342345:test-event-queue-cyclone_lariat-note_added-no
 Split ARN:
 - `arn:aws:sns`  - Prefix for SNS Topics
 - `arn:aws:sqs`  - Prefix for SQS Queues
-- `eu-west-1`    - [AWS Region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-regions)
+- `eu-west-1`    - 
+[AWS Region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-regions)
 - `247602342345` - [AWS account](https://docs.aws.amazon.com/IAM/latest/UserGuide/console_account-alias.html)
 - `test-event-fanout-cyclone_lariat-note_added` - Topic \ Queue name
-- `.fifo` - if Topic or queue is [FIFO](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/), they must has that suffix. 
+- `.fifo` - if Topic or queue is 
+[FIFO](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/), they must 
+has that suffix. 
 
 Region and client_id usually set using the **cyclone_lariat** [configuration](#Configuration).
 
@@ -405,185 +411,128 @@ subscribe topic:    topic(:user_created, fifo: true),
 
 #### Example: many-to-one
 
-The first example is when your registration service create new user. Also you have two services: 
-mailer - send welcome email, and statistic service.
+The second example is when your have three services: registration - create new user, orders - creates new order also
+statistic service collect all statistic.
 
 ```ruby
-create topic(:user_created, fifo: true)
-create queue(:user_created, dest: :mailer, fifo: true)
-create queue(:user_created, dest: :stat, fifo: true)
+create topic(:user_created, fifo: false)
+create topic(:order_created, fifo: false)
+create queue(publisher: :any, dest: :statistic, fifo: false)
 
-subscribe topic:    topic(:user_created, fifo: true), 
-          endpoint: queue(:user_created, dest: :mailer, fifo: true)
+subscribe topic:    topic(:user_created, fifo: false), 
+          endpoint: queue(publisher: :any, dest: :statistic, fifo: false)
 
-
-subscribe topic:    topic(:user_created, fifo: true),
-          endpoint: queue(:user_created, dest: :statistic, fifo: true)
+subscribe topic:    topic(:order_created, fifo: false), 
+          endpoint: queue(publisher: :any, dest: :statistic, fifo: false)
 ```
-![one2many](docs/_imgs/graphviz_01.png)
+![one2many](docs/_imgs/graphviz_02.png)
 
+If queue receive messages from multiple source you should define publisher as `:any`. If subscribe receive multiple 
+messages with different types, `cyclone_lariat` use deffined world - `all`.
 
+#### Example fanout-to-faunout
 
-
-
-![diagram](docs/_imgs/diagram.png)
-
-## Configure
-```ruby
-# 'config/initializers/cyclone_lariat.rb'
-CycloneLariat.tap do |cl|
-  cl.events_dataset   = DB[:events]
-end
-```
-
-## SnsClient
-You can use client directly
+For better organisation you can subscribe topic on topic. For example you has management_panel and client_panel 
+services. Each of this services can register user wth predefined roles. And you want to send this information to mailer 
+and statistics services.
 
 ```ruby
-require 'cyclone_lariat/sns_client' # If require: false in Gemfile 
+create topic(:client_created, fifo: false)
+create topic(:manager_created, fifo: false)
+create topic(:user_created, publisher: :any, fifo: false)
+create queue(:user_created, publisher: :any, dest: :mailer, fifo: false)
+create queue(:user_created, publisher: :any, dest: :stat, fifo: false)
 
-client = CycloneLariat::SnsClient.new(
-  key: APP_CONF.aws.key,
-  secret_key: APP_CONF.aws.secret_key,
-  region: APP_CONF.aws.region,
-  version: 1, # at default 1
-  publisher: 'pilot',
-  instance: INSTANCE # at default :prod
-)
+subscribe topic:    topic(:user_created, fifo: false), 
+          endpoint: topic(:user_created, publisher: :any, fifo: false)
+
+subscribe topic:    topic(:manager_created, fifo: false), 
+          endpoint: topic(:user_created, publisher: :any, fifo: false)
+
+subscribe topic:    topic(:user_created, publisher: :any, fifo: false), 
+          endpoint: queue(:user_created, publisher: :any, dest: :mailer, fifo: false)
+
+subscribe topic:    topic(:user_created, publisher: :any, fifo: false),
+          endpoint: queue(:user_created, publisher: :any, dest: :stat, fifo: false)
 ```
 
-You can don't define topic, and it's name will be defined automatically 
-```ruby
-                     # event_type        data                                    topic
-client.publish_event   'email_is_created', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_created
-client.publish_event   'email_is_removed', data: { mail: 'john.doe@example.com' } # prod-event-fanout-pilot-email_is_removed
-client.publish_command 'delete_user',      data: { mail: 'john.doe@example.com' } # prod-command-fanout-pilot-delete_user
-```
-Or you can define it by handle. For example, if you want to send different events to same channel.
-```ruby
-                     # event_type        data                                    topic
-client.publish_event   'email_is_created', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
-client.publish_event   'email_is_removed', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
-client.publish_command 'delete_user',      data: { mail: 'john.doe@example.com' }, topic: 'prod-command-fanout-pilot-emails'
-```
+![one2many](docs/_imgs/graphviz_03.png)
 
-# SqsClient
-SqsClient is really similar to SnsClient. It can be initialized in same way:
+### Create and remove custom Topics and Queues
+
+You can create Topic and Queues with custom names. That way recommended for:
+- Remove old resources
+- Receive messages from external sources
 
 ```ruby
-require 'cyclone_lariat/sns_client' # If require: false in Gemfile 
-
-client = CycloneLariat::SqsClient.new(
-  key: APP_CONF.aws.key,
-  secret_key: APP_CONF.aws.secret_key,
-  region: APP_CONF.aws.region,
-  version: 1, # at default 1
-  publisher: 'pilot',
-  instance: INSTANCE # at default :prod
-)
+create custom_topic('custom_topic_name')
+delete custom_queue('custom_topic_name')
 ```
 
-As you see all params identity. And you can easily change your sqs-queue to sns-topic when you start work with more
-subscribes. But you should define destination.
+### Where migration should be located?
 
-```ruby
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, dest: 'notify_service'  
-# prod-event-queue-pilot-email_is_created-notify_service
-```
+We recommend locate migration on:
+- **topic** - on Publisher side;
+- **queue** - on Subscriber side;
+- **subscription** - on Subscriber side.
 
-Or you can define topic directly:
-```ruby
-client.publish_event 'email_is_created', data: { mail: 'john.doe@example.com' }, topic: 'prod-event-fanout-pilot-emails'
-```
-
-# Migration
-
-Cyclone lariat can create migrations, which can help you create, delete and link new SQS\SNS topics.
-
-At first generate your migration file.
+# Console tasks
 
 ```bash
-$ cyclone_lariat generate add_notes_queue
+$ cyclone_lariat install - install cyclone_lariat
+$ cyclone_lariat generate migration - generate new migration
+
+$ rake cyclone_lariat:list:queues         # List all queues
+$ rake cyclone_lariat:list:subscriptions  # List all subscriptions
+$ rake cyclone_lariat:list:topics         # List all topics
+$ rake cyclone_lariat:migrate             # Migrate topics for SQS/SNS
+$ rake cyclone_lariat:rollback[version]   # Rollback topics for SQS/SNS
+$ rake cyclone_lariat:graph               # Make graph
 ```
 
-It should be created file like that:
-```ruby
-# frozen_string_literal: true
-
-class AddNotesQueue < CycloneLariat::Migration
-  def up
-    sns.create_event_topic! :notes
-  end
-
-  def down
-    sns.delete_event_topic! :notes
-  end
-end
+Graph generated in [grpahviz](https://graphviz.org/) format for whole schema. You should install it on your system. For 
+convert it in png use:
+```bash
+$ rake cyclone_lariat:list:subscriptions | dot -Tpng -o foo.png
 ```
 
-List migration commands:
+# Subscriber
 
-```ruby
-# config/initializers/cyclone_lariat.rb
+This is gem work like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to 
+database. And catch and produce all exceptions.
 
-CycloneLariat.tap do |cl|
-  cl.publisher        = 'pet_project' 
-  cl.default_instance = 'stage'
-  # ...
-end
-```
+The logic of lariat as a subscriber. Imagine that you are working with an http server. And it gives you various response
+codes. You have the following processing:
 
-```ruby
-# SNS raw
-sns.create_topic! 'example_topic', fifo: true                                       # example_topic
-sns.delete_topic! 'example_topic', fifo: true                                       # example_topic
+- 2xx - success, we process the page.
+- 4хх - Logic error send the error to the developer and wait until he fixes it
+- 5xx - Send an error and try again
 
-# SNS events
-sns.create_event_topic!   type: 'user_is_created', fifo: true                       # stage-event-fanout-pet_project-user_is_created
-sns.delete_event_topic!   type: 'user_is_created'                                   # stage-event-fanout-pet_project-user_is_created
 
-# SNS commands
-sns.create_command_topic! type: 'create_new_user', fifo: true                       # stage-command-fanout-pet_project-create_new_use                     r
-sns.delete_command_topic! type: 'create_new_user'                                   # stage-command-fanout-pet_project-create_new_user
-
-# SQS raw
-sqs.create_queue! 'example_queue', fifo: true                                       # example_queue
-sqs.delete_queue! 'example_queue', fifo: true                                       # example_queue
-
-# default type is all - all type of messages can be received 
-# default dest is nil - not only one receivers can read messages form this query 
-sns.create_event_queue! type: 'user_is_created', dest: 'auth_service', fifo: true   # stage-event-queue-pet_project-user_is_created-auth_service
-sns.delete_event_queue! type: 'user_is_created', dest: 'auth_service'               # stage-event-queue-pet_project-user_is_created-auth_service
-
-# SNS commands
-# default type is all - all type of messages can be received 
-# default dest is nil - not only one receivers can read messages form this query
-sns.create_command_queue! type: 'create_new_user', dest: 'auth_service', fifo: true # stage-command-queue-pet_project-create_new_user
-sns.delete_command_queue! type: 'create_new_user', dest: 'auth_service'             # stage-command-queue-pet_project-create_new_user
-
-# Link queue to fanout
-```
+![diagram](docs/_imgs/logic.png)
 
 # Middleware
 If you use middleware:
 - Store all events to dataset
 - Notify every input sqs message
-- Notify every error 
+- Notify every error
 
 ```ruby
 require 'cyclone_lariat/middleware' # If require: false in Gemfile
-
+require 'cyclone_lariat/sqs_client' # If you want use queue name helper
 
 class Receiver
   include Shoryuken::Worker
-  
+
   DB = Sequel.connect(host: 'localhost', user: 'ruby')
 
   shoryuken_options auto_delete: true,
                     body_parser: ->(sqs_msg) {
                       JSON.parse(sqs_msg.body, symbolize_names: true)
                     },
-                    queue: 'your_sqs_queue_name'
+                    queue: 'your_sqs_queue_name.fifo'
+                    # or
+                    # queue: CycloneLariat::SqsClient.new.queue('user_added', fifo: true)
 
   server_middleware do |chain|
     # Options dataset, errors_notifier and message_notifier is optionals.
@@ -595,8 +544,14 @@ class Receiver
               message_notifier: LunaPark::Notifiers::Log.new(min_lvl: :debug, format: :pretty_json)
   end
 
+  class UserIsNotRegistered < LunaPark::Errors::Business
+  end
+
   def perform(sqs_message, sqs_message_body)
     # Your logic here
+    
+    # If you want to raise business error
+    raise UserIsNotRegistered.new(first_name: 'John', last_name: 'Doe')
   end
 end
 ```
@@ -638,6 +593,15 @@ Sequel.migration do
       DateTime :processed_at,                 null: true,  default: nil
     end
   end
+end
+```
+
+And dont forget add it to configuration file.
+
+```ruby
+# 'config/initializers/cyclone_lariat.rb'
+CycloneLariat.tap do |cl|
+  cl.events_dataset   = DB[:async_messages]
 end
 ```
 

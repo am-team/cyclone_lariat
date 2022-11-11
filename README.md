@@ -532,7 +532,7 @@ class Receiver
                     },
                     queue: 'your_sqs_queue_name.fifo'
                     # or
-                    # queue: CycloneLariat::SqsClient.new.queue('user_added', fifo: true)
+                    # queue: CycloneLariat::SqsClient.new.queue('user_added', fifo: true).name
 
   server_middleware do |chain|
     # Options dataset, errors_notifier and message_notifier is optionals.

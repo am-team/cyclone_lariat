@@ -71,13 +71,13 @@ module CycloneLariat
             require 'cyclone_lariat'
             
             namespace :cyclone_lariat do
-              desc 'Migrate topics for SQS\SNS'
+              desc 'Migrate topics for SQS/SNS'
               task migrate: :config do
                 require_relative '../../config/initializers/cyclone_lariat'
                 CycloneLariat::Migration.migrate
               end
             
-              desc 'Rollback topics for SQS\SNS'
+              desc 'Rollback topics for SQS/SNS'
               task :rollback, [:version] => :config do |_, args|
                 require_relative '../../config/initializers/cyclone_lariat'
                 target_version = args[:version] ? args[:version].to_i : nil
@@ -102,6 +102,12 @@ module CycloneLariat
                   require_relative '../../config/initializers/cyclone_lariat'
                   CycloneLariat::Migration.list_subscriptions
                 end
+              end
+            
+              desc 'Build graphviz graph for whole system'
+              task :graph do
+                require_relative '../../config/initializers/cyclone_lariat'
+                CycloneLariat::Migration.build_graph
               end
             end
           TASKS

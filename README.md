@@ -1,11 +1,10 @@
 # Cyclone lariat
 
 This gem work in few scenarios:
-- like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to database. 
-And catch and produce all exceptions.  
-- like middleware it can record all incoming messages
-- like client which can send message to SNS topics and SQS queues
-- also it can hep you with CI\CD to manage topics, queues and subscription like database migration 
+- As middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It saves all events to the database and also catches and throws all exceptions.
+- As a middleware, it can log all incoming messages.
+- As a client that can send messages to SNS topics and SQS queues.
+- Also it can help you with CI\CD for theme, queue and subscription management like database migration. 
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
 
@@ -55,7 +54,7 @@ CycloneLariat.tap do |cl|
   cl.versions_dataset   = DB[:lariat_versions]    # sequel dataset for migrations, for publisher
 end
 ```
-If you are only using your application as a publisher, you may not need to set the events_dataset
+If you are only using your application as a publisher, you may not need to set the `events_dataset`
 parameter.
 
 Before creating the first migration, let's explain what `CycloneLariat::Message` is.
@@ -121,7 +120,7 @@ client.publish_command('register_user', data: {
 )
 ```
 
-That's call, will generate message body: 
+That's call, will generate a message body: 
 ```json
 {
   "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",
@@ -137,7 +136,7 @@ That's call, will generate message body:
 }
 ```
 
-Or better way is make custom client, as [Repository](https://deviq.com/design-patterns/repository-pattern) pattern.
+Or is it better to make your own client, like a [Repository](https://deviq.com/design-patterns/repository-pattern) pattern.
 
 ```ruby
 require 'cyclone_lariat/sns_client' # If require: false in Gemfile
@@ -196,8 +195,8 @@ has that suffix.
 Region and client_id usually set using the **cyclone_lariat** [configuration](#Configuration).
 
 ## Declaration for topic and queues name
-In **cyclone_lariat** we have a declaration for defining topic and queues names. 
-This can help with organizing order.
+In **cyclone_lariat** we have a declaration for defining topic and queue names.
+This can help in organizing the order.
 
 ```ruby
 CycloneLariat.tap do |cfg|
@@ -223,9 +222,9 @@ end
 ```
 
 
-Will publish message on this topic: `test-command-fanout-cyclone_lariat-register_user`.
+We will publish a message on this topic: `test-command-fanout-cyclone_lariat-register_user`.
 
-Split topic name:
+Let's split the topic title:
 - `test` - instance;
 - `command` - kind - [event or command](#command-vs-event);
 - `fanount` - resource type - fanout for SNS topics; 
@@ -251,9 +250,9 @@ class YourClient < CycloneLariat::SnsClient
 end
 ```
 
-Will publish message on queue: `test-event-queue-cyclone_lariat-register_user-mailer`.
+We will publish a message on this queue: `test-event-queue-cyclone_lariat-register_user-mailer`.
 
-Split queue name:
+Let's split the queue title:
 - `test` - instance;
 - `event` - kind - [event or command](#command-vs-event);
 - `queue` - resource type - queue for SQS;
@@ -284,8 +283,8 @@ Will publish message on queue: `custom_topic` with fifo suffix.
 
 # Migrations
 
-With `ciclone_lariat` you can create, delete and subscribe you queues with migration, like database migration. 
-For storing versions of **cyclone_lariat** migrations you should create database table. 
+With **cyclone_lariat** you can use migrations that can create, delete, and subscribe to your queues and topics, just like database migrations do.
+To store versions of **cyclone_lariat** migrations, you need to create a database table.
 
 ```ruby
 # frozen_string_literal: true
@@ -304,7 +303,7 @@ After migrate this database migration, create **cyclone_lariat** migration.
 $ cyclone_lariat generate migration user_created
 ```
 
-That is command should create migration file, lets edit it.
+This command should create a migration file, let's edit it.
 
 ```ruby
 # ./lariat/migrate/1668097991_user_created_queue.rb
@@ -322,12 +321,12 @@ class UserCreatedQueue < CycloneLariat::Migration
 end
 ```
 
-For apply migration use:
+To apply migration use:
 ```bash
 $ rake cyclone_lariat:migrate
 ```
 
-For decline migration use:
+To decline migration use:
 ```bash
 $ rake cyclone_lariat:rollback
 ```
@@ -392,8 +391,8 @@ end
 
 #### Example: one-to-many
 
-The first example is when your registration service create new user. Also you have two services: 
-mailer - send welcome email, and statistic service.
+The first example is when your _registration_ service creates new user. You also have two services: 
+_mailer_ - sending a welcome email, and _statistics_ service.
 
 ```ruby
 create topic(:user_created, fifo: true)
@@ -411,8 +410,8 @@ subscribe topic:    topic(:user_created, fifo: true),
 
 #### Example: many-to-one
 
-The second example is when your have three services: registration - create new user, orders - creates new order also
-statistic service collect all statistic.
+The second example is when you have three services: _registration_ - creates new users, _order_ 
+service - allows you to create new orders, _statistics_ service collects all statistics.
 
 ```ruby
 create topic(:user_created, fifo: false)
@@ -427,14 +426,14 @@ subscribe topic:    topic(:order_created, fifo: false),
 ```
 ![one2many](docs/_imgs/graphviz_02.png)
 
-If queue receive messages from multiple source you should define publisher as `:any`. If subscribe receive multiple 
-messages with different types, `cyclone_lariat` use deffined world - `all`.
+If queue receives messages from multiple sources you must specify publisher as `:any`. If the 
+subscriber receives messages with different types, `cyclone_lariat` uses a specific keyword - `all`.
 
-#### Example fanout-to-faunout
+#### Example fanout-to-fanout
 
-For better organisation you can subscribe topic on topic. For example you has management_panel and client_panel 
-services. Each of this services can register user wth predefined roles. And you want to send this information to mailer 
-and statistics services.
+For better organisation you can subscribe topic on topic. For example, you have _management_panel_ 
+and _client_panel_ services. Each of these services can register a user with predefined roles. 
+And you want to send this information to the _mailer_ and _statistics_ services.
 
 ```ruby
 create topic(:client_created, fifo: false)
@@ -469,7 +468,7 @@ create custom_topic('custom_topic_name')
 delete custom_queue('custom_topic_name')
 ```
 
-### Where migration should be located?
+### Where should the migration be?
 
 We recommend locate migration on:
 - **topic** - on Publisher side;
@@ -490,8 +489,8 @@ $ rake cyclone_lariat:rollback[version]   # Rollback topics for SQS/SNS
 $ rake cyclone_lariat:graph               # Make graph
 ```
 
-Graph generated in [grpahviz](https://graphviz.org/) format for whole schema. You should install it on your system. For 
-convert it in png use:
+Graph generated in [grpahviz](https://graphviz.org/) format for the entry scheme. You should install 
+it on your system. For convert it in png use:
 ```bash
 $ rake cyclone_lariat:list:subscriptions | dot -Tpng -o foo.png
 ```
@@ -557,7 +556,7 @@ end
 ```
 
 ## Migrations
-Before use events storage add and apply this two migrations
+Before using the event store, add and apply these two migrations:
 
 ```ruby
 
@@ -596,7 +595,7 @@ Sequel.migration do
 end
 ```
 
-And dont forget add it to configuration file.
+And don't forget to add it to the config file:
 
 ```ruby
 # 'config/initializers/cyclone_lariat.rb'
@@ -607,7 +606,7 @@ end
 
 ### Rake tasks
 
-For simplify write some Rake tasks you can use CycloneLariat::Repo.
+For simplify write some Rake tasks you can use `CycloneLariat::Repo`.
 
 ```ruby
 # For retry all unprocessed

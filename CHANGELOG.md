@@ -10,6 +10,7 @@ Changed
   if you defined custom queue name
 - rename client_id to account_id
 - send_at no iso8601 format
+- A lot of changes, see README.md
 Added
 - Migrations for create, delete and subscribe topics and queues
 - request_id for Event and Command

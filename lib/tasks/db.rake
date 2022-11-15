@@ -22,7 +22,7 @@ namespace :db do
     puts "Database `#{DB_CONF[:database]}` successfully dropped" if system(cmd)
   end
 
-  desc 'Apply migrations'
+  desc 'Apply migrate'
   task :migrate, [:version] => :config do |_, args|
     require 'logger'
     require 'sequel/core'

@@ -6,10 +6,10 @@ require_relative '../errors'
 module CycloneLariat
   module Abstract
     class Message < LunaPark::Entities::Attributable
-      attr :uuid,      String, :new
-      attr :publisher, String, :new
-      attr :type,      String, :new
-      attrs :client_error, :version, :data,
+      attr :uuid,       String, :new
+      attr :publisher,  String, :new
+      attr :type,       String, :new
+      attrs :client_error, :version, :data, :request_id,
             :sent_at, :processed_at, :received_at
 
       def kind
@@ -30,6 +30,10 @@ module CycloneLariat
 
       def processed_at=(value)
         @processed_at = wrap_time(value)
+      end
+
+      def request_at=(value)
+        @request_id = wrap_string(value)
       end
 
       def processed?
@@ -64,7 +68,10 @@ module CycloneLariat
 
       def to_json(*args)
         hash = serialize
-        hash[:type] = [kind, hash[:type]].join '_'
+        hash[:type]         = [kind, hash[:type]].join '_'
+        hash[:sent_at]      = hash[:sent_at].iso8601(3)      if hash[:sent_at]
+        hash[:received_at]  = hash[:received_at].iso8601(3)  if hash[:received_at]
+        hash[:processed_at] = hash[:processed_at].iso8601(3) if hash[:processed_at]
         hash.to_json(*args)
       end
 
@@ -74,6 +81,14 @@ module CycloneLariat
         case value
         when String   then Time.parse(value)
         when Time     then value
+        when NilClass then nil
+        else raise ArgumentError, "Unknown type `#{value.class}`"
+        end
+      end
+
+      def wrap_string(value)
+        case value
+        when String then String(value)
         when NilClass then nil
         else raise ArgumentError, "Unknown type `#{value.class}`"
         end

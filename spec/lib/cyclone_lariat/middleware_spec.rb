@@ -165,5 +165,21 @@ RSpec.describe CycloneLariat::Middleware do
         receive_event
       end
     end
+
+    context 'when dataset is defined in config' do
+      before { CycloneLariat.events_dataset = double }
+      after  { CycloneLariat.events_dataset = nil }
+
+      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: :result }
+      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
+      let(:middleware) { described_class.new(dataset: nil, repo: messages_repo_class) }
+
+      it { is_expected.to be(:result) }
+
+      it 'should run business logic' do
+        expect(business_logic).to receive(:call)
+        receive_event
+      end
+    end
   end
 end

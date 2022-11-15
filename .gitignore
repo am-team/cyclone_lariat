@@ -20,3 +20,9 @@ config/db.rb
 # docker-compose
 /local/
 /privatekey
+
+# lariat initializer
+config/initializers/cyclone_lariat.rb
+
+# lariat migrate
+lariat/**/*

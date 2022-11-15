@@ -5,7 +5,7 @@ module CycloneLariat
     DEFAULT_VERSION = 1
 
     attr_accessor :aws_key, :aws_secret_key, :publisher, :aws_default_region, :default_instance,
-                  :aws_client_id
+                  :aws_account_id, :events_dataset, :versions_dataset
     attr_writer :default_version
 
     def default_version

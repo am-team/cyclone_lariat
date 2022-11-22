@@ -2,8 +2,8 @@
 
 require 'fileutils'
 require 'forwardable'
-require_relative 'sns_client'
-require_relative 'sqs_client'
+require_relative 'clients/sns'
+require_relative 'clients/sqs'
 require 'luna_park/errors'
 require 'terminal-table'
 require 'set'
@@ -13,8 +13,8 @@ module CycloneLariat
     extend Forwardable
     include LunaPark::Extensions::Injector
 
-    dependency(:sns) { CycloneLariat::SnsClient.new }
-    dependency(:sqs) { CycloneLariat::SqsClient.new }
+    dependency(:sns) { CycloneLariat::Clients::Sns.new }
+    dependency(:sqs) { CycloneLariat::Clients::Sqs.new }
 
     DIR = './lariat/migrate'
 
@@ -56,7 +56,9 @@ module CycloneLariat
       )
     end
 
-    def subscribe(topic:, endpoint:)
+    def subscribe(topic:, endpoint:, policy: nil)
+      policy ||= default_policy(topic, endpoint)
+      sqs.add_policy(queue: endpoint, policy: policy) if endpoint.queue?
       sns.subscribe topic: topic, endpoint: endpoint
       puts "  Subscription was created `#{topic.name} -> #{endpoint.name}`"
     end
@@ -64,6 +66,23 @@ module CycloneLariat
     def unsubscribe(topic:, endpoint:)
       sns.unsubscribe topic: topic, endpoint: endpoint
       puts "  Subscription was deleted `#{topic.name} -> #{endpoint.name}`"
+    end
+
+    def default_policy(topic, queue)
+      {
+        'Sid' => topic.name,
+        'Effect' => 'Allow',
+        'Principal' => {
+          'AWS' => CycloneLariat.config.aws_account_id.to_s
+        },
+        'Action' => 'SQS:*',
+        'Resource' => queue.arn,
+        'Condition' => {
+          'ArnEquals' => {
+            'aws:SourceArn' => topic.arn
+          }
+        }
+      }
     end
 
     def topics
@@ -82,8 +101,8 @@ module CycloneLariat
 
     def process(resource:, for_topic:, for_queue:)
       case resource
-      when Topic then for_topic.call(resource)
-      when Queue then for_queue.call(resource)
+      when Resources::Topic then for_topic.call(resource)
+      when Resources::Queue then for_queue.call(resource)
       else
         raise ArgumentError, "Unknown resource class #{resource.class}"
       end
@@ -93,7 +112,7 @@ module CycloneLariat
       def migrate(dataset: CycloneLariat.versions_dataset, dir: DIR)
         alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
 
-        Dir.glob("#{dir}/*.rb") do |path|
+        Dir.glob("#{dir}/*.rb").sort_by {|f| f.split('/')[-1].split('_').first.to_i }.each do |path|
           filename = File.basename(path, '.rb')
           version, title = filename.split('_', 2)
 

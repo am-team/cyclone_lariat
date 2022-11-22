@@ -40,5 +40,9 @@ module CycloneLariat
     class SubscriptionDoesNotExists < LunaPark::Errors::System
       message { |d| "Subscription for topic `#{d[:topic].name}`, on endpoint `#{d[:endpoint].name}` does not exists" }
     end
+
+    class PolicyAlreadyExists < LunaPark::Errors::System
+      message { |d| "Policy with sid: `#{d[:sid]}` already exists" }
+    end
   end
 end

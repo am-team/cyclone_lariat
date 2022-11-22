@@ -3,85 +3,78 @@
 require_relative '../../../../lib/cyclone_lariat'
 require 'timecop'
 
-RSpec.describe CycloneLariat::Abstract::Client do
+RSpec.describe CycloneLariat::Clients::Abstract do
   let(:client) do
-    described_class.new(key: 'key', secret_key: 'secret_key', region: 'region', publisher: 'sample_app')
+    described_class.new(aws_key: 'key', aws_secret_key: 'secret_key', aws_region: 'region', publisher: 'sample_app')
   end
 
   describe '.version' do
-    subject(:version) { client.version }
+    subject(:version) { client.config.version }
 
     context 'when it does not defined' do
-      it { is_expected.to eq 1 }
+      it { is_expected.to be_nil }
     end
 
     context 'when it defined in config' do
-      before { CycloneLariat.default_version = 13 }
-      after  { CycloneLariat.default_version = 1 }
+      before { CycloneLariat.config.version = 13 }
+      after  { CycloneLariat.config.version = 1 }
 
       it { is_expected.to eq 13 }
     end
 
     context 'when it is defined in class' do
-      after { described_class.version 1 }
+      let(:abstract_client) { described_class.new }
 
       it 'sets dependency' do
-        expect { described_class.version(42) }.to change { described_class.version }.from(1).to 42
+        expect { abstract_client.config.version = 42 }.to change { abstract_client.config.version }.from(1).to 42
       end
     end
   end
 
   describe '.instance' do
-    subject(:instance) { client.instance }
+    subject(:instance) { client.config.instance }
 
     context 'when it does not defined' do
-      it 'should be defined' do
-        expect { instance }.to raise_error RuntimeError, 'You should define instance'
-      end
+      it { is_expected.to be_nil }
     end
 
-    context 'when it defined in config' do
-      before { CycloneLariat.default_instance = :test }
-      after  { CycloneLariat.default_instance = nil }
+    context 'when it defined in lariat config' do
+      before { CycloneLariat.config.instance = :prod }
+      after  { CycloneLariat.config.instance = :test }
 
-      it { is_expected.to eq :test }
+      it { is_expected.to eq :prod }
     end
 
     context 'when it is defined in class' do
-      before { CycloneLariat.default_instance = :prod }
-
-      after  do
-        CycloneLariat.default_instance = nil
-        described_class.instance nil
-      end
+      let(:abstract_client) { described_class.new }
 
       it 'sets dependency' do
-        expect { described_class.instance(:stage) }.to change { described_class.instance }.from(:prod).to :stage
+        expect { abstract_client.config.instance = :stage }.to change { abstract_client.config.instance }.from(:test).to :stage
       end
     end
   end
 
   describe '.publisher' do
-    subject(:publisher) { described_class.publisher }
+    subject(:publisher) { client.config.publisher }
+
+    let(:client) { described_class.new(aws_key: 'key', aws_secret_key: 'secret_key', aws_region: 'region') }
 
     context 'when it does not defined' do
-      it 'should be defined' do
-        expect { publisher }.to raise_error RuntimeError, 'You should define publisher'
-      end
+      it { is_expected.to be_nil }
     end
 
-    context 'when it defined in config' do
-      before { CycloneLariat.publisher = 'best_app' }
-      after  { CycloneLariat.publisher = nil }
+    context 'when it defined in lariat config' do
+      before { CycloneLariat.config.publisher = 'auth' }
+      after  { CycloneLariat.config.publisher = nil }
 
-      it { is_expected.to eq 'best_app' }
+      it { is_expected.to eq 'auth' }
     end
 
-    context 'when it does defined' do
-      before { described_class.publisher 'you_app' }
+    context 'when it is defined in class' do
+      let(:abstract_client) { described_class.new }
 
-      it 'should be defined' do
-        expect(publisher).to eq 'you_app'
+      it 'sets dependency' do
+        expect { abstract_client.config.instance = 'stat' }.to change { abstract_client.config.instance }.from(:test).to 'stat'
       end
     end
   end
@@ -96,7 +89,7 @@ RSpec.describe CycloneLariat::Abstract::Client do
       after  { Timecop.return }
 
       it 'should build expected event' do
-        is_expected.to eq CycloneLariat::Event.new(
+        is_expected.to eq CycloneLariat::Messages::Event.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: event_sent_at,
@@ -116,7 +109,7 @@ RSpec.describe CycloneLariat::Abstract::Client do
       after  { Timecop.return }
 
       it 'should build expected event with defined version' do
-        is_expected.to eq CycloneLariat::Event.new(
+        is_expected.to eq CycloneLariat::Messages::Event.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: event_sent_at,
@@ -138,7 +131,7 @@ RSpec.describe CycloneLariat::Abstract::Client do
       after  { Timecop.return }
 
       it 'should build expected command' do
-        is_expected.to eq CycloneLariat::Command.new(
+        is_expected.to eq CycloneLariat::Messages::Command.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: command_sent_at,
@@ -158,7 +151,7 @@ RSpec.describe CycloneLariat::Abstract::Client do
       after  { Timecop.return }
 
       it 'should build expected command with defined version' do
-        is_expected.to eq CycloneLariat::Command.new(
+        is_expected.to eq CycloneLariat::Messages::Command.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: command_sent_at,

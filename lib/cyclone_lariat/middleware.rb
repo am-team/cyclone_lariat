@@ -7,7 +7,7 @@ require 'json'
 module CycloneLariat
   class Middleware
     def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: MessagesRepo)
-      events_dataset    = dataset || CycloneLariat.events_dataset
+      events_dataset    = dataset || CycloneLariat.config.events_dataset
       @events_repo      = repo.new(events_dataset) if events_dataset
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
@@ -20,7 +20,7 @@ module CycloneLariat
       return if msg.is_a? String
 
       catch_standard_error(queue, msg) do
-        event = Event.wrap(msg)
+        event = Messages::Event.wrap(msg)
 
         store_in_dataset(event) do
           catch_business_error(event, &block)

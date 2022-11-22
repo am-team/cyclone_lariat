@@ -8,7 +8,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
   let(:dataset) { DB[:async_messages] }
   let(:repo) { described_class.new dataset }
   let(:event) do
-    CycloneLariat::Event.new(
+    CycloneLariat::Messages::Event.new(
       uuid: SecureRandom.uuid,
       publisher: 'users',
       type: 'create_user',
@@ -70,7 +70,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
     context 'when event with expected uuid is exists and event does not has error' do
       let(:uuid) { repo.create event }
       let(:event) do
-        CycloneLariat::Event.new(
+        CycloneLariat::Messages::Event.new(
           uuid: SecureRandom.uuid,
           publisher: 'users',
           type: 'create_user',
@@ -93,7 +93,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
       subject(:event_processed!) { repo.processed! uuid: uuid, error: CycloneLariat::Errors::ClientError.new }
       let(:uuid) { repo.create event }
       let(:event) do
-        CycloneLariat::Event.new(
+        CycloneLariat::Messages::Event.new(
           uuid: SecureRandom.uuid,
           publisher: 'users',
           type: 'create_user',
@@ -149,7 +149,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
   describe '#each_unprocessed' do
     let!(:unprocessed_event) { repo.find uuid: repo.create(event) }
     let!(:processed_event) do
-      uuid = repo.create CycloneLariat::Event.new(
+      uuid = repo.create CycloneLariat::Messages::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
         type: 'create_user',
@@ -170,7 +170,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
   describe '#each_with_client_errors' do
     let!(:unprocessed_event) { repo.find uuid: repo.create(event) }
     let!(:processed_event) do
-      uuid = repo.create CycloneLariat::Event.new(
+      uuid = repo.create CycloneLariat::Messages::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
         type: 'create_user',
@@ -184,7 +184,7 @@ RSpec.describe CycloneLariat::MessagesRepo do
     end
 
     let!(:processed_event_with_error) do
-      uuid = repo.create CycloneLariat::Event.new(
+      uuid = repo.create CycloneLariat::Messages::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
         type: 'create_user',

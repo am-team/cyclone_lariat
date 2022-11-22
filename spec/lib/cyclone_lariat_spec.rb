@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/configure'
+require_relative '../../lib/cyclone_lariat/config'
 
 RSpec.describe CycloneLariat do
   # You should clone it for each test do reset do default state
   let(:cyclone_lariat) { described_class.clone }
 
   describe 'aws_key' do
-    subject { cyclone_lariat.aws_key }
+    subject { cyclone_lariat.config.aws_key }
 
     context 'when it is defined' do
-      before { cyclone_lariat.aws_key = 'foobar' }
+      before { cyclone_lariat.config.aws_key = 'foobar' }
+      after  { cyclone_lariat.config.aws_key = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
@@ -23,10 +24,11 @@ RSpec.describe CycloneLariat do
   end
 
   describe 'aws_secret_key' do
-    subject { cyclone_lariat.aws_secret_key }
+    subject { cyclone_lariat.config.aws_secret_key }
 
     context 'when it is defined' do
-      before { cyclone_lariat.aws_secret_key = 'foobar' }
+      before { cyclone_lariat.config.aws_secret_key = 'foobar' }
+      after  { cyclone_lariat.config.aws_secret_key = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
@@ -39,10 +41,11 @@ RSpec.describe CycloneLariat do
   end
 
   describe 'aws_account_id' do
-    subject { cyclone_lariat.aws_account_id }
+    subject { cyclone_lariat.config.aws_account_id }
 
     context 'when it is defined' do
-      before { cyclone_lariat.aws_account_id = 123 }
+      before { cyclone_lariat.config.aws_account_id = 123 }
+      after  { cyclone_lariat.config.aws_account_id = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 123
@@ -55,10 +58,11 @@ RSpec.describe CycloneLariat do
   end
 
   describe 'publisher' do
-    subject { cyclone_lariat.publisher }
+    subject { cyclone_lariat.config.publisher }
 
     context 'when it is defined' do
-      before { cyclone_lariat.publisher = 'foobar' }
+      before { cyclone_lariat.config.publisher = 'foobar' }
+      after  { cyclone_lariat.config.publisher = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
@@ -71,10 +75,11 @@ RSpec.describe CycloneLariat do
   end
 
   describe 'aws_default_region' do
-    subject { cyclone_lariat.aws_default_region }
+    subject { cyclone_lariat.config.aws_region }
 
     context 'when it is defined' do
-      before { cyclone_lariat.aws_default_region = 'foobar' }
+      before { cyclone_lariat.config.aws_region = 'foobar' }
+      after  { cyclone_lariat.config.aws_region = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 'foobar'
@@ -87,10 +92,11 @@ RSpec.describe CycloneLariat do
   end
 
   describe 'default_version' do
-    subject { cyclone_lariat.default_version }
+    subject { cyclone_lariat.config.version }
 
     context 'when it is defined' do
-      before { cyclone_lariat.default_version = 2 }
+      before { cyclone_lariat.config.version = 2 }
+      after  { cyclone_lariat.config.version = nil }
 
       it 'should eq defined value' do
         is_expected.to eq 2
@@ -98,15 +104,16 @@ RSpec.describe CycloneLariat do
     end
 
     context 'when it is not defined' do
-      it { is_expected.to eq 1 }
+      it { is_expected.to be_nil }
     end
   end
 
   describe 'default_instance' do
-    subject { cyclone_lariat.default_instance }
+    subject { cyclone_lariat.config.instance }
 
     context 'when it is defined' do
-      before { cyclone_lariat.default_instance = :stage }
+      before { cyclone_lariat.config.instance = :stage }
+      after  { cyclone_lariat.config.instance = nil }
 
       it 'should eq defined value' do
         is_expected.to eq :stage

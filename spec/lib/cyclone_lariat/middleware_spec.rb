@@ -112,7 +112,7 @@ RSpec.describe CycloneLariat::Middleware do
       let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
       let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
       let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
-      let(:event) { instance_double CycloneLariat::Event, processed?: true }
+      let(:event) { instance_double CycloneLariat::Messages::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
         let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: event }
@@ -167,8 +167,8 @@ RSpec.describe CycloneLariat::Middleware do
     end
 
     context 'when dataset is defined in config' do
-      before { CycloneLariat.events_dataset = double }
-      after  { CycloneLariat.events_dataset = nil }
+      before { CycloneLariat.config.events_dataset = double }
+      after  { CycloneLariat.config.events_dataset = nil }
 
       let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: :result }
       let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }

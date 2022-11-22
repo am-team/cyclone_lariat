@@ -57,7 +57,7 @@ end
 If you are only using your application as a publisher, you may not need to set the `events_dataset`
 parameter.
 
-Before creating the first migration, let's explain what `CycloneLariat::Message` is.
+Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
 
 ## Messages
 Message in Amazon SQS\SNS service it's a 
@@ -84,7 +84,7 @@ data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_la
 Idea about X-Request-Id you can see at 
 [StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
 
-As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Event_ and _Command_. 
+As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::Event_ and _Messages::Command_. 
 
 ### Command vs Event
 Commands and events are both simple domain structures that contain solely data for reading. That means
@@ -103,14 +103,14 @@ A command can emit any number of events. The sender of the event does not care w
 whether it has been received at all.
 
 ### Publish
-For publishing _Event_ or _Commands_, you have two ways, send _Message_ directly:
+For publishing _Messages::Event_ or _Messages::Commands_, you have two ways, send _Message_ directly:
 
 ```ruby
 CycloneLariat.tap do |cl|
   # Config app here
 end
 
-client = CycloneLariat::SnsClient.new(instance: 'auth', version: 2)
+client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)
 
 client.publish_command('register_user', data: {
     first_name: 'John', 
@@ -141,7 +141,7 @@ Or is it better to make your own client, like a [Repository](https://deviq.com/d
 ```ruby
 require 'cyclone_lariat/sns_client' # If require: false in Gemfile
 
-class YourClient < CycloneLariat::SnsClient
+class YourClient < CycloneLariat::Clients::Sns
   version 1
   publisher 'pilot'
   instance 'stage'
@@ -205,7 +205,7 @@ CycloneLariat.tap do |cfg|
   # ...
 end
 
-CycloneLariat::SnsClient.new.publish_command('register_user', data: {
+CycloneLariat::Clients::Sns.new.publish_command('register_user', data: {
     first_name: 'John', 
     last_name: 'Doe', 
     mail: 'john.doe@example.com' 
@@ -214,7 +214,7 @@ CycloneLariat::SnsClient.new.publish_command('register_user', data: {
 
 # or in repository-like style: 
 
-class YourClient < CycloneLariat::SnsClient
+class YourClient < CycloneLariat::Clients::Sns
   def register_user(first:, last:, mail:)
     publish command('register_user', data: { mail: mail }), fifo: true
   end
@@ -233,7 +233,7 @@ Let's split the topic title:
 
 For queues you also can define destination.
 ```ruby
-CycloneLariat::SqsClient.new.publish_event(
+CycloneLariat::Clients::Sqs.new.publish_event(
   'register_user', data: { mail: 'john.doe@example.com' }, 
                    dest: :mailer, fifo: true
 )
@@ -241,7 +241,7 @@ CycloneLariat::SqsClient.new.publish_event(
 
 # or in repository-like style: 
 
-class YourClient < CycloneLariat::SnsClient
+class YourClient < CycloneLariat::Clients::Sns
   # ...
   
   def register_user(first:, last:, mail:)
@@ -264,13 +264,13 @@ You also can sent message to queue with custom name. But this way does not recom
 
 ```ruby
 # Directly
-CycloneLariat::SqsClient.new.publish_event(
+CycloneLariat::Clients::Sqs.new.publish_event(
   'register_user', data: { mail: 'john.doe@example.com' }, 
                    dest: :mailer, topic: 'custom_topic_name.fifo', fifo: true
 )
 
 # Repository
-class YourClient < CycloneLariat::SnsClient
+class YourClient < CycloneLariat::Clients::Sns
   # ...
 
   def register_user(first:, last:, mail:)
@@ -518,7 +518,7 @@ If you use middleware:
 
 ```ruby
 require 'cyclone_lariat/middleware' # If require: false in Gemfile
-require 'cyclone_lariat/sqs_client' # If you want use queue name helper
+require 'cyclone_lariat/sqs' # If you want use queue name helper
 
 class Receiver
   include Shoryuken::Worker
@@ -530,8 +530,8 @@ class Receiver
                       JSON.parse(sqs_msg.body, symbolize_names: true)
                     },
                     queue: 'your_sqs_queue_name.fifo'
-                    # or
-                    # queue: CycloneLariat::SqsClient.new.queue('user_added', fifo: true).name
+  # or
+  # queue: CycloneLariat::Clients::Sqs.new.queue('user_added', fifo: true).name
 
   server_middleware do |chain|
     # Options dataset, errors_notifier and message_notifier is optionals.
@@ -548,7 +548,7 @@ class Receiver
 
   def perform(sqs_message, sqs_message_body)
     # Your logic here
-    
+
     # If you want to raise business error
     raise UserIsNotRegistered.new(first_name: 'John', last_name: 'Doe')
   end

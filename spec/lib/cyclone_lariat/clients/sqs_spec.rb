@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
-require_relative '../../../lib/cyclone_lariat/sqs_client'
+require_relative '../../../../lib/cyclone_lariat/clients/sqs'
+require 'timecop'
 
-RSpec.describe CycloneLariat::SqsClient do
+RSpec.describe CycloneLariat::Clients::Sqs do
   let(:client) do
     described_class.new(
-      key: 'key',
-      secret_key: 'secret_key',
-      region: 'region',
+      aws_key: 'key',
+      aws_secret_key: 'secret_key',
+      aws_region: 'region',
       publisher: 'sample_app',
       instance: :test,
-      account_id: 42,
+      aws_account_id: 42,
       version: 1
     )
   end
@@ -35,7 +36,7 @@ RSpec.describe CycloneLariat::SqsClient do
   describe '#custom_queue' do
     subject(:custom_queue) { client.custom_queue('custom_name') }
 
-    it { is_expected.to be_a CycloneLariat::Queue }
+    it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
     it 'should be custom queue' do
       expect(custom_queue.custom?).to eq true
@@ -51,7 +52,7 @@ RSpec.describe CycloneLariat::SqsClient do
     context 'when fifo disabled' do
       subject(:standard_queue) { client.queue('notes_was_added', fifo: false) }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be standard queue' do
         expect(standard_queue.standard?).to eq true
@@ -69,7 +70,7 @@ RSpec.describe CycloneLariat::SqsClient do
     context 'when fifo enabled' do
       subject(:standard_queue) { client.queue('notes_was_added', fifo: true) }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be standard queue' do
         expect(standard_queue.standard?).to eq true
@@ -87,7 +88,7 @@ RSpec.describe CycloneLariat::SqsClient do
     context 'when kind is command' do
       subject(:standard_queue) { client.queue('notes_was_added', fifo: true, kind: :command) }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be standard queue' do
         expect(standard_queue.standard?).to eq true
@@ -105,7 +106,7 @@ RSpec.describe CycloneLariat::SqsClient do
     context 'when dest is defined' do
       subject(:standard_queue) { client.queue('notes_was_added', fifo: true, dest: :mailer) }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be standard queue' do
         expect(standard_queue.dest).to eq :mailer
@@ -311,7 +312,7 @@ RSpec.describe CycloneLariat::SqsClient do
     subject(:list_all) { client.list_all }
 
     it 'should return array of Queues' do
-      is_expected.to all(be_an(CycloneLariat::Queue))
+      is_expected.to all(be_an(CycloneLariat::Resources::Queue))
     end
 
     it 'should generate list of expected queues' do

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../../lib/cyclone_lariat/topic'
+require_relative '../../../../lib/cyclone_lariat/resources/topic'
 
-RSpec.describe CycloneLariat::Topic do
+RSpec.describe CycloneLariat::Resources::Topic do
   describe '.from_arn' do
     context 'when send not arn' do
       subject(:topic) { described_class.from_arn 'custom_queue' }
@@ -25,7 +25,7 @@ RSpec.describe CycloneLariat::Topic do
     context 'custom topic' do
       subject(:topic) { described_class.from_arn 'arn:aws:sns:eu-west-1:247606935658:custom_queue' }
 
-      it { is_expected.to be_a CycloneLariat::Topic }
+      it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
       it 'should be custom' do
         expect(topic.custom?).to be true
@@ -42,7 +42,7 @@ RSpec.describe CycloneLariat::Topic do
     context 'standard topic' do
       subject(:topic) { described_class.from_arn 'arn:aws:sns:eu-west-1:247606935658:test-event-topic-cyclone_lariat-note_added.fifo' }
 
-      it { is_expected.to be_a CycloneLariat::Topic }
+      it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
       it 'should be custom' do
         expect(topic.standard?).to be true
@@ -65,7 +65,7 @@ RSpec.describe CycloneLariat::Topic do
   describe '.from_name' do
     subject(:topic) { described_class.from_name 'test-event-topic-cyclone_lariat-note_added.fifo', region: 'eu-west-1', account_id: 247_606_935_658 }
 
-    it { is_expected.to be_a CycloneLariat::Topic }
+    it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
     it 'should be created expected topic' do
       expect(topic.arn).to eq 'arn:aws:sns:eu-west-1:247606935658:test-event-topic-cyclone_lariat-note_added.fifo'

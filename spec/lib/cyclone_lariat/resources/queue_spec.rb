@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../../lib/cyclone_lariat/queue'
+require_relative '../../../../lib/cyclone_lariat/resources/queue'
 
-RSpec.describe CycloneLariat::Queue do
+RSpec.describe CycloneLariat::Resources::Queue do
   describe '.from_arn' do
     context 'when send not arn' do
       subject(:queue) { described_class.from_arn 'custom_queue' }
@@ -25,7 +25,7 @@ RSpec.describe CycloneLariat::Queue do
     context 'custom queue' do
       subject(:queue) { described_class.from_arn 'arn:aws:sqs:eu-west-1:247606935658:custom_queue' }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be custom' do
         expect(queue.custom?).to be true
@@ -42,7 +42,7 @@ RSpec.describe CycloneLariat::Queue do
     context 'standard queue' do
       subject(:queue) { described_class.from_arn 'arn:aws:sqs:eu-west-1:247606935658:test-event-queue-cyclone_lariat-note_added.fifo' }
 
-      it { is_expected.to be_a CycloneLariat::Queue }
+      it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
       it 'should be custom' do
         expect(queue.standard?).to be true
@@ -65,7 +65,7 @@ RSpec.describe CycloneLariat::Queue do
   describe '.from_name' do
     subject(:queue) { described_class.from_name 'test-event-queue-cyclone_lariat-note_added.fifo', region: 'eu-west-1', account_id: 247_606_935_658 }
 
-    it { is_expected.to be_a CycloneLariat::Queue }
+    it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
     it 'should be created expected queue' do
       expect(queue.arn).to eq 'arn:aws:sqs:eu-west-1:247606935658:test-event-queue-cyclone_lariat-note_added.fifo'

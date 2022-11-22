@@ -1,18 +1,18 @@
 # frozen_string_literal: true
-require_relative '../../../lib/cyclone_lariat/configure'
-require_relative '../../../lib/cyclone_lariat/sns_client'
-require_relative '../../../lib/cyclone_lariat/sqs_client'
+require_relative '../../../../lib/cyclone_lariat/clients/sqs'
+require_relative '../../../../lib/cyclone_lariat/clients/sns'
 require 'timecop'
 
-RSpec.describe CycloneLariat::SnsClient do
+RSpec.describe CycloneLariat::Clients::Sns do
   let(:client) do
     described_class.new(
-      key: 'key',
-      secret_key: 'secret_key',
-      region: 'region',
+      aws_key: 'key',
+      aws_secret_key: 'secret_key',
+      aws_region: 'region',
+      aws_account_id: 42,
       publisher: 'sample_app',
       instance: :test,
-      account_id: 42
+      version: 1
     )
   end
 
@@ -30,7 +30,7 @@ RSpec.describe CycloneLariat::SnsClient do
   describe '#custom_topic' do
     subject(:custom_topic) { client.custom_topic('custom_name') }
 
-    it { is_expected.to be_a CycloneLariat::Topic }
+    it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
     it 'should be custom topic' do
       expect(custom_topic.custom?).to eq true
@@ -46,7 +46,7 @@ RSpec.describe CycloneLariat::SnsClient do
     context 'when fifo disabled' do
       subject(:standard_topic) { client.topic('notes_was_added', fifo: false) }
 
-      it { is_expected.to be_a CycloneLariat::Topic }
+      it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
       it 'should be standard topic' do
         expect(standard_topic.standard?).to eq true
@@ -64,7 +64,7 @@ RSpec.describe CycloneLariat::SnsClient do
     context 'when fifo enabled' do
       subject(:standard_topic) { client.topic('notes_was_added', fifo: true) }
 
-      it { is_expected.to be_a CycloneLariat::Topic }
+      it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
       it 'should be standard topic' do
         expect(standard_topic.standard?).to eq true
@@ -82,7 +82,7 @@ RSpec.describe CycloneLariat::SnsClient do
     context 'when kind is command' do
       subject(:standard_topic) { client.topic('notes_was_added', fifo: true, kind: :command) }
 
-      it { is_expected.to be_a CycloneLariat::Topic }
+      it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
       it 'should be standard topic' do
         expect(standard_topic.standard?).to eq true
@@ -263,13 +263,14 @@ RSpec.describe CycloneLariat::SnsClient do
   describe '#subscribe' do
     let(:topic) { client.topic(:note_added, fifo: true) }
     let(:sqs_client) do
-      CycloneLariat::SqsClient.new(
-        key: 'key',
-        secret_key: 'secret_key',
-        region: 'region',
+      CycloneLariat::Clients::Sqs.new(
+        aws_key: 'key',
+        aws_secret_key: 'secret_key',
+        aws_region: 'region',
+        aws_account_id: 42,
         publisher: 'sample_app',
         instance: :test,
-        account_id: 42
+        version: 1
       )
     end
 
@@ -317,13 +318,14 @@ RSpec.describe CycloneLariat::SnsClient do
   describe '#unsubscribe' do
     let(:topic) { client.topic(:note_added, fifo: true) }
     let(:sqs_client) do
-      CycloneLariat::SqsClient.new(
-        key: 'key',
-        secret_key: 'secret_key',
-        region: 'region',
+      CycloneLariat::Clients::Sqs.new(
+        aws_key: 'key',
+        aws_secret_key: 'secret_key',
+        aws_region: 'region',
+        aws_account_id: 42,
         publisher: 'sample_app',
         instance: :test,
-        account_id: 42
+        version: 1
       )
     end
 
@@ -394,7 +396,7 @@ RSpec.describe CycloneLariat::SnsClient do
     subject(:list_all) { client.list_all }
 
     it 'should return array of Topics' do
-      is_expected.to all(be_an(CycloneLariat::Topic))
+      is_expected.to all(be_an(CycloneLariat::Resources::Topic))
     end
 
     it 'should generate list of expected queues' do

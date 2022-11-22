@@ -5,7 +5,7 @@ require_relative '../../../lib/cyclone_lariat/migration'
 RSpec.describe CycloneLariat::Migration do
   let(:migration) { Class.new(described_class).new }
   let(:topic) do
-    CycloneLariat::Topic.new(
+    CycloneLariat::Resources::Topic.new(
       instance: 'test',
       publisher: 'cyclone_lariat',
       region: 'region',
@@ -17,7 +17,7 @@ RSpec.describe CycloneLariat::Migration do
   end
 
   let(:queue) do
-    CycloneLariat::Queue.new(
+    CycloneLariat::Resources::Queue.new(
       instance: 'test',
       publisher: 'cyclone_lariat',
       region: 'region',
@@ -32,8 +32,8 @@ RSpec.describe CycloneLariat::Migration do
   describe '#create' do
     subject(:create) { migration.create resource }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, create: true }
-    let(:sqs) { instance_double CycloneLariat::SqsClient, create: true }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, create: true }
+    let(:sqs) { instance_double CycloneLariat::Clients::Sqs, create: true }
 
     before do
       migration.dependencies = { sns: -> { sns }, sqs: -> { sqs } }
@@ -69,8 +69,8 @@ RSpec.describe CycloneLariat::Migration do
   describe '#delete' do
     subject(:delete) { migration.delete resource }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, delete: true }
-    let(:sqs) { instance_double CycloneLariat::SqsClient, delete: true }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, delete: true }
+    let(:sqs) { instance_double CycloneLariat::Clients::Sqs, delete: true }
 
     before do
       migration.dependencies = { sns: -> { sns }, sqs: -> { sqs } }
@@ -106,8 +106,8 @@ RSpec.describe CycloneLariat::Migration do
   describe '#exists?' do
     subject(:exists?) { migration.exists? resource }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, exists?: true }
-    let(:sqs) { instance_double CycloneLariat::SqsClient, exists?: true }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, exists?: true }
+    let(:sqs) { instance_double CycloneLariat::Clients::Sqs, exists?: true }
 
     before do
       migration.dependencies = { sns: -> { sns }, sqs: -> { sqs } }
@@ -141,24 +141,67 @@ RSpec.describe CycloneLariat::Migration do
   end
 
   describe '#subscribe' do
-    subject(:subscribe) { migration.subscribe topic: topic, endpoint: queue }
-
-    let(:sns) { instance_double CycloneLariat::SnsClient, subscribe: true }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, subscribe: true }
+    let(:sqs) { instance_double CycloneLariat::Clients::Sqs, add_policy: true }
 
     before do
-      migration.dependencies = { sns: -> { sns } }
+      migration.dependencies = {
+        sns: -> { sns },
+        sqs: -> { sqs }
+      }
     end
 
-    it 'should subscribe endpoint to sns topic' do
-      expect(sns).to receive(:subscribe).with(topic: topic, endpoint: queue)
-      subscribe
+    context 'when endpoint is topic' do
+      subject(:subscribe) { migration.subscribe topic: topic, endpoint: topic }
+
+      it 'should not add policy' do
+        expect(sqs).to_not receive(:add_policy)
+        subscribe
+      end
+
+      it 'should subscribe endpoint to sns topic' do
+        expect(sns).to receive(:subscribe).with(topic: topic, endpoint: topic)
+        subscribe
+      end
+    end
+
+    context 'when endpoint is queue' do
+      subject(:subscribe) { migration.subscribe topic: topic, endpoint: queue }
+
+      before { CycloneLariat.config.aws_account_id = '123456' }
+      after  { CycloneLariat.config.aws_account_id = nil }
+
+      it 'should add policy to sqs queue' do
+        expected_policy = {
+          'Action' => 'SQS:*',
+          'Condition' => {
+            'ArnEquals' => {
+              'aws:SourceArn' => 'arn:aws:sns:region:42:test-event-fanout-cyclone_lariat-notes_added.fifo'
+            }
+          },
+          'Effect' => 'Allow',
+          'Principal' => {
+              'AWS' => '123456'
+            },
+          'Resource' => 'arn:aws:sqs:region:42:test-event-queue-cyclone_lariat-notes_added.fifo',
+          'Sid' => 'test-event-fanout-cyclone_lariat-notes_added.fifo'
+        }
+
+        expect(sqs).to receive(:add_policy).with(queue: queue, policy: expected_policy)
+        subscribe
+      end
+
+      it 'should subscribe endpoint to sns topic' do
+        expect(sns).to receive(:subscribe).with(topic: topic, endpoint: queue)
+        subscribe
+      end
     end
   end
 
   describe '#unsubscribe' do
     subject(:unsubscribe) { migration.unsubscribe topic: topic, endpoint: queue }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, unsubscribe: true }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, unsubscribe: true }
 
     before do
       migration.dependencies = { sns: -> { sns } }
@@ -173,7 +216,7 @@ RSpec.describe CycloneLariat::Migration do
   describe '#topics' do
     subject(:topics) { migration.topics }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, list_all: [] }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, list_all: [] }
 
     before do
       migration.dependencies = { sns: -> { sns } }
@@ -188,7 +231,7 @@ RSpec.describe CycloneLariat::Migration do
   describe '#subscriptions' do
     subject(:subscriptions) { migration.subscriptions }
 
-    let(:sns) { instance_double CycloneLariat::SnsClient, list_subscriptions: [] }
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, list_subscriptions: [] }
 
     before do
       migration.dependencies = { sns: -> { sns } }
@@ -203,7 +246,7 @@ RSpec.describe CycloneLariat::Migration do
   describe '#queues' do
     subject(:queues) { migration.queues }
 
-    let(:sqs) { instance_double CycloneLariat::SqsClient, list_all: [] }
+    let(:sqs) { instance_double CycloneLariat::Clients::Sqs, list_all: [] }
 
     before do
       migration.dependencies = { sqs: -> { sqs } }

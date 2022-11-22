@@ -4,8 +4,8 @@ require 'luna_park/entities/attributable'
 require_relative '../errors'
 
 module CycloneLariat
-  module Abstract
-    class Message < LunaPark::Entities::Attributable
+  module Messages
+    class Abstract < LunaPark::Entities::Attributable
       attr :uuid,       String, :new
       attr :publisher,  String, :new
       attr :type,       String, :new

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'event'
+require_relative 'messages/event'
+require_relative 'messages/command'
 require_relative 'messages_mapper'
 
 module CycloneLariat
@@ -51,8 +52,8 @@ module CycloneLariat
 
     def build(raw)
       case kind = raw.delete(:kind)
-      when 'event'   then Event.wrap raw
-      when 'command' then Command.wrap raw
+      when 'event'   then Messages::Event.wrap raw
+      when 'command' then Messages::Command.wrap raw
       else raise ArgumentError, "Unknown kind `#{kind}` of message"
       end
     end

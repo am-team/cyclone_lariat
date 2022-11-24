@@ -5,7 +5,7 @@ require 'luna_park/extensions/injector'
 require_relative '../messages/event'
 require_relative '../messages/command'
 require_relative '../errors'
-require_relative '../config'
+require_relative '../options'
 
 module CycloneLariat
   module Clients
@@ -16,7 +16,7 @@ module CycloneLariat
       dependency(:aws_credentials_class) { Aws::Credentials }
 
       def initialize(**options)
-        @config = CycloneLariat::Config.wrap(options).merge!(CycloneLariat.config)
+        @config = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
       end
 
       attr_reader :config

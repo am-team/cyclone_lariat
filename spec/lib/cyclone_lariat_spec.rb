@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/cyclone_lariat/config'
+require_relative '../../lib/cyclone_lariat/options'
 
 RSpec.describe CycloneLariat do
   # You should clone it for each test do reset do default state

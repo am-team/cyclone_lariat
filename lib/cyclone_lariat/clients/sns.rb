@@ -9,23 +9,9 @@ module CycloneLariat
   module Clients
     class Sns < Abstract
       include LunaPark::Extensions::Injector
+      include Generators::Topic
 
       dependency(:aws_client_class) { Aws::SNS::Client }
-
-      def custom_topic(name)
-        Resources::Topic.from_name(name, account_id: config.aws_account_id, region: config.aws_region)
-      end
-
-      def topic(type, fifo:, publisher: nil, kind: :event)
-        Resources::Topic.new(
-          instance: config.instance,
-          publisher: publisher || config.publisher,
-          region: config.aws_region,
-          account_id: config.aws_account_id,
-          kind: kind,
-          type: type, fifo: fifo
-        )
-      end
 
       def publish(msg, fifo:, topic: nil)
         topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)

@@ -3,17 +3,15 @@
 require 'aws-sdk-sqs'
 require_relative 'abstract'
 require_relative '../resources/queue'
+require_relative '../generators/queue'
 
 module CycloneLariat
   module Clients
     class Sqs < Abstract
       include LunaPark::Extensions::Injector
+      include Generators::Queue
 
       dependency(:aws_client_class) { Aws::SQS::Client }
-
-      def custom_queue(name)
-        Resources::Queue.from_name(name, account_id: config.aws_account_id, region: config.aws_region)
-      end
 
       def queue(type = :all, fifo:, dest: nil, publisher: nil, kind: :event)
         publisher ||= config.publisher

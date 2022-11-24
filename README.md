@@ -107,7 +107,7 @@ For publishing _Messages::Event_ or _Messages::Commands_, you have two ways, sen
 
 ```ruby
 CycloneLariat.tap do |cl|
-  # Config app here
+  # Options app here
 end
 
 client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)

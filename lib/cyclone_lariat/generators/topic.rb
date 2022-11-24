@@ -1,10 +1,8 @@
+require_relative '../resources/topic'
+
 module CycloneLariat
   module Generators
     module Topic
-      def config
-        raise LunaPark::Errors::AbstractMethod, 'config method should be defined'
-      end
-
       def topic(type, fifo:, kind: :event, **options)
         options = CycloneLariat::Options.wrap(options)
         options.merge!(config)

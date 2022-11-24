@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'luna_park/notifiers/log'
+require_relative '../../../lib/cyclone_lariat/messages/v1/event'
 require_relative '../../../lib/cyclone_lariat/middleware'
 require_relative '../../../lib/cyclone_lariat/messages_repo'
 
@@ -112,7 +113,7 @@ RSpec.describe CycloneLariat::Middleware do
       let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
       let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
       let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
-      let(:event) { instance_double CycloneLariat::Messages::Event, processed?: true }
+      let(:event) { instance_double CycloneLariat::Messages::V1::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
         let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: event }

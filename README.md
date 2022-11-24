@@ -84,7 +84,8 @@ data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_la
 Idea about X-Request-Id you can see at 
 [StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
 
-As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::Event_ and _Messages::Command_. 
+As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::V1::Event_ and 
+_Messages::V1::Command_. 
 
 ### Command vs Event
 Commands and events are both simple domain structures that contain solely data for reading. That means
@@ -103,7 +104,7 @@ A command can emit any number of events. The sender of the event does not care w
 whether it has been received at all.
 
 ### Publish
-For publishing _Messages::Event_ or _Messages::Commands_, you have two ways, send _Message_ directly:
+For publishing _Messages::V1::Event_ or _Messages::V1::Commands_, you have two ways, send _Message_ directly:
 
 ```ruby
 CycloneLariat.tap do |cl|

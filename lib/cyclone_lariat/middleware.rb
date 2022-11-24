@@ -20,7 +20,7 @@ module CycloneLariat
       return if msg.is_a? String
 
       catch_standard_error(queue, msg) do
-        event = Messages::Event.wrap(msg)
+        event = Messages::V1::Event.wrap(msg)
 
         store_in_dataset(event) do
           catch_business_error(event, &block)

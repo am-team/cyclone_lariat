@@ -1,13 +1,9 @@
+require_relative '../resources/queue'
+
 module CycloneLariat
   module Generators
     module Queue
-      def config
-        raise LunaPark::Errors::AbstractMethod, 'config method should be defined'
-      end
-
       def queue(type = :all, fifo:, dest: nil, kind: :event, **options)
-        require 'byebug'
-        byebug
         options = CycloneLariat::Options.wrap(options)
         options.merge!(config)
 

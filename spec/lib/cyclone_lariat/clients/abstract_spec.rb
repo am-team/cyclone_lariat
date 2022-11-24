@@ -89,7 +89,7 @@ RSpec.describe CycloneLariat::Clients::Abstract do
       after  { Timecop.return }
 
       it 'should build expected event' do
-        is_expected.to eq CycloneLariat::Messages::Event.new(
+        is_expected.to eq CycloneLariat::Messages::V1::Event.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: event_sent_at,
@@ -100,23 +100,18 @@ RSpec.describe CycloneLariat::Clients::Abstract do
       end
     end
 
-    context 'version is defined' do
-      subject(:event) { client.event('create_user', data: { mail: 'john.doe@mail.ru' }, uuid: uuid, version: 12) }
-      let(:event_sent_at) { Time.local(2021) }
-      let(:uuid) { SecureRandom.uuid }
-
-      before { Timecop.freeze event_sent_at }
-      after  { Timecop.return }
-
-      it 'should build expected event with defined version' do
-        is_expected.to eq CycloneLariat::Messages::Event.new(
-          uuid: uuid,
-          type: 'create_user',
-          sent_at: event_sent_at,
-          version: 12,
-          publisher: 'sample_app',
-          data: { mail: 'john.doe@mail.ru' }
+    context 'version is unknown' do
+      subject(:event) do
+        client.event('create_user',data: {
+            mail: 'john.doe@mail.ru'
+          },
+          uuid: SecureRandom.uuid,
+          version: 12
         )
+      end
+
+      it 'should raise Argument error' do
+        expect { event }.to raise_error ArgumentError
       end
     end
   end
@@ -131,7 +126,7 @@ RSpec.describe CycloneLariat::Clients::Abstract do
       after  { Timecop.return }
 
       it 'should build expected command' do
-        is_expected.to eq CycloneLariat::Messages::Command.new(
+        is_expected.to eq CycloneLariat::Messages::V1::Command.new(
           uuid: uuid,
           type: 'create_user',
           sent_at: command_sent_at,
@@ -142,23 +137,18 @@ RSpec.describe CycloneLariat::Clients::Abstract do
       end
     end
 
-    context 'version is defined' do
-      subject(:command) { client.command('create_user', data: { mail: 'john.doe@mail.ru' }, uuid: uuid, version: 12) }
-      let(:command_sent_at) { Time.local(2021) }
-      let(:uuid) { SecureRandom.uuid }
-
-      before { Timecop.freeze command_sent_at }
-      after  { Timecop.return }
+    context 'version is unknown' do
+      subject(:command) do
+        client.command('create_user',data: {
+            mail: 'john.doe@mail.ru'
+          },
+          uuid: SecureRandom.uuid,
+         version: 12
+        )
+      end
 
       it 'should build expected command with defined version' do
-        is_expected.to eq CycloneLariat::Messages::Command.new(
-          uuid: uuid,
-          type: 'create_user',
-          sent_at: command_sent_at,
-          version: 12,
-          publisher: 'sample_app',
-          data: { mail: 'john.doe@mail.ru' }
-        )
+        expect { command }.to raise_error ArgumentError
       end
     end
   end

@@ -13,15 +13,6 @@ module CycloneLariat
 
       dependency(:aws_client_class) { Aws::SQS::Client }
 
-      def queue(type = :all, fifo:, dest: nil, publisher: nil, kind: :event)
-        publisher ||= config.publisher
-
-        Resources::Queue.new(
-          instance: config.instance, publisher: publisher, region: config.aws_region,
-          account_id: config.aws_account_id, kind: kind, type: type, fifo: fifo, dest: dest
-        )
-      end
-
       def get_url(queue)
         raise ArgumentError, 'Should be queue' unless queue.is_a? Resources::Queue
 

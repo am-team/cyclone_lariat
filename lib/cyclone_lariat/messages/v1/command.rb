@@ -4,11 +4,13 @@ require_relative 'abstract'
 
 module CycloneLariat
   module Messages
-    class Command < Abstract
-      KIND = 'command'
+    module V1
+      class Command < Abstract
+        KIND = 'command'
 
-      def kind
-        KIND
+        def kind
+          KIND
+        end
       end
     end
   end

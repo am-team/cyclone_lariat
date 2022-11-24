@@ -4,11 +4,13 @@ require_relative 'abstract'
 
 module CycloneLariat
   module Messages
-    class Event < Abstract
-      KIND = 'event'
+    module V1
+      class Event < Abstract
+        KIND = 'event'
 
-      def kind
-        KIND
+        def kind
+          KIND
+        end
       end
     end
   end

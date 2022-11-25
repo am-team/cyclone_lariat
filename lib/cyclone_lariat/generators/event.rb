@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../messages/v1/event'
+require 'cyclone_lariat/messages/v1/event'
 
 module CycloneLariat
   module Generators

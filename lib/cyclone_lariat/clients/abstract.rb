@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'luna_park/extensions/injector'
-require_relative '../generators/event'
-require_relative '../generators/command'
-require_relative '../errors'
-require_relative '../core'
+require 'cyclone_lariat/generators/event'
+require 'cyclone_lariat/generators/command'
+require 'cyclone_lariat/errors'
+require 'cyclone_lariat/core'
 
 module CycloneLariat
   module Clients

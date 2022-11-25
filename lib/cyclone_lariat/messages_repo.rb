@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'messages/v1/event'
-require_relative 'messages/v1/command'
-require_relative 'messages_mapper'
+require 'cyclone_lariat/messages/v1/event'
+require 'cyclone_lariat/messages/v1/command'
+require 'cyclone_lariat/messages_mapper'
 
 module CycloneLariat
   class MessagesRepo

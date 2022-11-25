@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'aws-sdk-sns'
-require_relative 'abstract'
-require_relative '../resources/topic'
-require_relative '../resources/queue'
+require 'cyclone_lariat/clients/abstract'
+require 'cyclone_lariat/resources/topic'
+require 'cyclone_lariat/resources/queue'
 
 module CycloneLariat
   module Clients

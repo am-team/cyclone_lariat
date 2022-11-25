@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../../lib/cyclone_lariat/migration'
+require 'cyclone_lariat/migration'
 
 RSpec.describe CycloneLariat::Migration do
   let(:migration) { Class.new(described_class).new }

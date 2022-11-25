@@ -1,4 +1,4 @@
-require_relative '../resources/queue'
+require 'cyclone_lariat/resources/queue'
 
 module CycloneLariat
   module Generators

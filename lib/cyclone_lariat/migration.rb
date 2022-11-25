@@ -2,8 +2,8 @@
 
 require 'fileutils'
 require 'forwardable'
-require_relative 'clients/sns'
-require_relative 'clients/sqs'
+require 'cyclone_lariat/clients/sns'
+require 'cyclone_lariat/clients/sqs'
 require 'luna_park/errors'
 require 'terminal-table'
 require 'set'

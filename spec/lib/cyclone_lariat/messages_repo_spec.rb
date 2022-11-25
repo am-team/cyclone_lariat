@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require 'securerandom'
-
-require_relative '../../../lib/cyclone_lariat/messages_repo'
+require 'cyclone_lariat/messages_repo'
 
 RSpec.describe CycloneLariat::MessagesRepo do
   let(:dataset) { DB[:async_messages] }

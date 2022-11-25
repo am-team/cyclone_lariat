@@ -1,4 +1,4 @@
-require_relative '../resources/topic'
+require 'cyclone_lariat/resources/topic'
 
 module CycloneLariat
   module Generators

@@ -1,6 +1,8 @@
-require_relative 'generators/queue'
-require_relative 'generators/topic'
-require_relative 'options'
+# frozen_string_literal: true
+
+require 'cyclone_lariat/generators/queue'
+require 'cyclone_lariat/generators/topic'
+require 'cyclone_lariat/options'
 
 module CycloneLariat
   module CycloneLariatMethods

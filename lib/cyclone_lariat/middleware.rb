@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'messages_repo'
+require 'cyclone_lariat/messages_repo'
 require 'luna_park/errors'
 require 'json'
 

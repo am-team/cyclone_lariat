@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../../../lib/cyclone_lariat'
+require 'cyclone_lariat/clients/abstract'
 require 'timecop'
 
 RSpec.describe CycloneLariat::Clients::Abstract do

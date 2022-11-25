@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'luna_park/entities/attributable'
-require_relative '../../errors'
+require 'cyclone_lariat/errors'
 
 module CycloneLariat
   module Messages

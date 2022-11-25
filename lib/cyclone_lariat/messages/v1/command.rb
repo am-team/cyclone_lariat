@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'abstract'
+require 'cyclone_lariat/messages/v1/abstract'
 
 module CycloneLariat
   module Messages

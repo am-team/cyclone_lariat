@@ -3,42 +3,41 @@
 require 'cyclone_lariat'
 
 namespace :cyclone_lariat do
-  desc 'Migrate topics for SQSSNS'
+  desc 'Migrate topics for SQS/SNS'
   task migrate: :config do
-    require_relative '../../config/initializers/cyclone_lariat'
     CycloneLariat::Migration.migrate
   end
 
-  desc 'Rollback topics for SQSSNS'
+  desc 'Rollback topics for SQS/SNS'
   task :rollback, [:version] => :config do |_, args|
-    require_relative '../../config/initializers/cyclone_lariat'
     target_version = args[:version] ? args[:version].to_i : nil
     CycloneLariat::Migration.rollback(target_version)
   end
 
   namespace :list do
     desc 'List all topics'
-    task :topics do
-      require_relative '../../config/initializers/cyclone_lariat'
+    task topics: :config do
       CycloneLariat::Migration.list_topics
     end
 
     desc 'List all queues'
-    task :queues do
-      require_relative '../../config/initializers/cyclone_lariat'
+    task queues: :config do
       CycloneLariat::Migration.list_queues
     end
 
     desc 'List all subscriptions'
-    task :subscriptions do
-      require_relative '../../config/initializers/cyclone_lariat'
+    task subscriptions: :config do
       CycloneLariat::Migration.list_subscriptions
     end
   end
 
   desc 'Build graphviz graph for whole system'
-  task :graph do
-    require_relative '../../config/initializers/cyclone_lariat'
+  task graph: :config do
     CycloneLariat::Migration.build_graph
   end
+
+  task :config do
+    require_relative '../../config/initializers/cyclone_lariat'
+  end
 end
+

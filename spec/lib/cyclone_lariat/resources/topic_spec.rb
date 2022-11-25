@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../../../lib/cyclone_lariat/resources/topic'
+require 'cyclone_lariat/resources/topic'
 
 RSpec.describe CycloneLariat::Resources::Topic do
   describe '.from_arn' do

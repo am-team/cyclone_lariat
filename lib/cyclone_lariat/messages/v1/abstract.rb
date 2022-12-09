@@ -1,20 +1,53 @@
 # frozen_string_literal: true
 
 require 'luna_park/entities/attributable'
+require 'luna_park/extensions/validatable'
+require 'cyclone_lariat/messages/v1/validator'
 require 'cyclone_lariat/errors'
 
 module CycloneLariat
   module Messages
     module V1
       class Abstract < LunaPark::Entities::Attributable
+        include LunaPark::Extensions::Validatable
+
         attr :uuid,       String, :new
         attr :publisher,  String, :new
         attr :type,       String, :new
-        attrs :client_error, :version, :data, :request_id,
-              :sent_at, :processed_at, :received_at
+        attrs :client_error, :version, :data, :request_id, :sent_at,
+              :processed_at, :received_at
+
+        validator Validator
+
+        # Make validation public
+        def validation
+          super
+        end
+
+        def serialize
+          {
+            uuid: uuid,
+            publisher: publisher,
+            type: [kind, type].join('_'),
+            version: version,
+            data: data,
+            request_id: request_id,
+            sent_at: sent_at.iso8601(3)
+          }.compact
+        end
+
+        def to_json
+          serialize.to_json
+        end
+
+        alias params serialize
 
         def kind
           raise LunaPark::Errors::AbstractMethod
+        end
+
+        def data
+          @data ||= {}
         end
 
         def version=(value)
@@ -67,14 +100,14 @@ module CycloneLariat
             processed_at.to_i == other.processed_at.to_i
         end
 
-        def to_json(*args)
-          hash = serialize
-          hash[:type]         = [kind, hash[:type]].join '_'
-          hash[:sent_at]      = hash[:sent_at].iso8601(3)      if hash[:sent_at]
-          hash[:received_at]  = hash[:received_at].iso8601(3)  if hash[:received_at]
-          hash[:processed_at] = hash[:processed_at].iso8601(3) if hash[:processed_at]
-          hash.to_json(*args)
-        end
+        # def to_json(*args)
+        #   hash = serialize
+        #   hash[:type]         = [kind, hash[:type]].join '_'
+        #   hash[:sent_at]      = hash[:sent_at].iso8601(3)      if hash[:sent_at]
+        #   hash[:received_at]  = hash[:received_at].iso8601(3)  if hash[:received_at]
+        #   hash[:processed_at] = hash[:processed_at].iso8601(3) if hash[:processed_at]
+        #   hash.to_json(*args)
+        # end
 
         private
 

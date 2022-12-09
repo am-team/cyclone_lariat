@@ -6,6 +6,9 @@ module CycloneLariat
   module Messages
     module V1
       class Command < Abstract
+        include LunaPark::Extensions::Validatable
+        validator Messages::V1::Validator
+
         KIND = 'command'
 
         def kind

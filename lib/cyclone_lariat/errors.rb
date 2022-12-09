@@ -44,5 +44,9 @@ module CycloneLariat
     class PolicyAlreadyExists < LunaPark::Errors::System
       message { |d| "Policy with sid: `#{d[:sid]}` already exists" }
     end
+
+    class InvalidMessage < LunaPark::Errors::Business
+      message 'Message is not valid'
+    end
   end
 end

@@ -13,8 +13,8 @@ module CycloneLariat
 
       dependency(:aws_client_class) { Aws::SNS::Client }
 
-      def publish(msg, fifo:, topic: nil)
-        topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)
+      def publish(msg, topic: nil)
+        topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: msg.fifo?)
         aws_client.publish(topic_arn: topic.arn, message: msg.to_json)
       end
 
@@ -26,12 +26,24 @@ module CycloneLariat
         false
       end
 
-      def publish_event(type, fifo:, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
-        publish event(type, data: data, version: version, uuid: uuid, request_id: request_id), topic: topic, fifo: fifo
+      def publish_event(type, fifo_group_id: nil, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
+        publish event(type,
+          data: data,
+          version: version,
+          uuid: uuid,
+          request_id: request_id,
+          fifo_group_id: fifo_group_id
+        ), topic: topic
       end
 
-      def publish_command(type, fifo:, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
-        publish command(type, data: data, version: version, uuid: uuid, request_id: request_id), topic: topic, fifo: fifo
+      def publish_command(type, fifo_group_id: nil, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
+        publish command(type,
+          data: data,
+          version: version,
+          uuid: uuid,
+          request_id: request_id,
+          fifo_group_id: fifo_group_id
+        ), topic: topic
       end
 
       def create(topic)

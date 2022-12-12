@@ -143,7 +143,7 @@ RSpec.describe CycloneLariat::Clients::Abstract do
             mail: 'john.doe@mail.ru'
           },
           uuid: SecureRandom.uuid,
-         version: 12
+          version: 12
         )
       end
 
@@ -153,3 +153,18 @@ RSpec.describe CycloneLariat::Clients::Abstract do
     end
   end
 end
+
+class YourClient < CycloneLariat::Clients::Sns
+  # ...
+
+  # 1
+  def register_user(uid: first:, last:, mail:)
+    publish event('register_user', data: { mail: mail }, group_id: uid), fifo: true
+  end
+
+  # 2
+  def register_user(uid: first:, last:, mail:)
+    publish event('register_user', data: { mail: mail }, fifo_group_id: uid)
+  end
+end
+

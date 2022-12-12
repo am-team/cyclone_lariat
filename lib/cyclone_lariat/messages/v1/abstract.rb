@@ -15,7 +15,7 @@ module CycloneLariat
         attr :publisher,  String, :new
         attr :type,       String, :new
         attrs :client_error, :version, :data, :request_id, :sent_at,
-              :processed_at, :received_at
+              :fifo_group_id,:processed_at, :received_at
 
         validator Validator
 
@@ -32,12 +32,12 @@ module CycloneLariat
             version: version,
             data: data,
             request_id: request_id,
-            sent_at: sent_at.iso8601(3)
+            sent_at: sent_at&.iso8601(3)
           }.compact
         end
 
-        def to_json
-          serialize.to_json
+        def to_json(*args)
+          serialize.to_json(*args)
         end
 
         alias params serialize
@@ -66,8 +66,12 @@ module CycloneLariat
           @processed_at = wrap_time(value)
         end
 
-        def request_at=(value)
+        def request_id=(value)
           @request_id = wrap_string(value)
+        end
+
+        def fifo_group_id=(value)
+          @fifo_group_id = wrap_string(value)
         end
 
         def processed?
@@ -88,6 +92,10 @@ module CycloneLariat
           @client_error.details = details
         end
 
+        def fifo?
+          !@fifo_group_id.nil?
+        end
+
         def ==(other)
           kind == other.kind &&
             uuid == other.uuid &&
@@ -99,15 +107,6 @@ module CycloneLariat
             received_at.to_i == other.received_at.to_i &&
             processed_at.to_i == other.processed_at.to_i
         end
-
-        # def to_json(*args)
-        #   hash = serialize
-        #   hash[:type]         = [kind, hash[:type]].join '_'
-        #   hash[:sent_at]      = hash[:sent_at].iso8601(3)      if hash[:sent_at]
-        #   hash[:received_at]  = hash[:received_at].iso8601(3)  if hash[:received_at]
-        #   hash[:processed_at] = hash[:processed_at].iso8601(3) if hash[:processed_at]
-        #   hash.to_json(*args)
-        # end
 
         private
 
@@ -124,6 +123,7 @@ module CycloneLariat
           case value
           when String then String(value)
           when NilClass then nil
+          when FalseClass then nil
           else raise ArgumentError, "Unknown type `#{value.class}`"
           end
         end

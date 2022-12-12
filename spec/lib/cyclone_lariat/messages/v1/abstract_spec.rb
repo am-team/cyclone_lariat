@@ -16,16 +16,17 @@ module CycloneLariat
       }
     end
 
-    # let(:message) { described_class.new params }
-    let(:message) do
+    let(:message_class) do
       Class.new(described_class) do
         include LunaPark::Extensions::Validatable
         validator Messages::V1::Validator
         def kind
           'message'
         end
-      end.new params
+      end
     end
+
+    let(:message) { message_class.new params }
 
     describe '#uuid' do
       subject(:uuid) { message.uuid }
@@ -48,12 +49,6 @@ module CycloneLariat
 
         it 'should be valid' do
           expect(message.valid?).to eq true
-        end
-
-        it 'should be present in JSON' do
-          allow(message).to receive(:kind).and_return(:message)
-          json = message.to_json
-          expect(JSON.parse(json)['uuid']).to eq uuid
         end
       end
 
@@ -258,8 +253,77 @@ module CycloneLariat
         end
 
         it 'should be valid' do
-          expect(message.valid?).to eq false
+          expect(message.valid?).to eq true
         end
+      end
+    end
+
+    describe '#fifo_group_id' do
+      subject(:fifo_group_id) { message.fifo_group_id }
+
+      context 'when it undefined' do
+        before { params.delete :fifo_group_id }
+
+        it { is_expected.to be_nil }
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+
+        it 'message should not marked for fifo resource' do
+          expect(message.fifo?).to eq false
+        end
+      end
+
+      context 'when it defined as false' do
+        before { params.delete :fifo_group_id }
+
+        it { is_expected.to be_nil }
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+
+        it 'message should not marked for fifo resource' do
+          expect(message.fifo?).to eq false
+        end
+      end
+
+      context 'when it defined with fifo_group_id' do
+        before { params[:fifo_group_id] = '42' }
+
+        it 'should be eq defined string' do
+          is_expected.to eq '42'
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+
+        it 'message should marked for fifo resource' do
+          expect(message.fifo?).to eq true
+        end
+      end
+    end
+
+    describe '#to_json' do
+      subject(:to_json) { message.to_json }
+      let(:uuid) { SecureRandom.uuid }
+      before { params[:uuid] = uuid }
+
+      it 'should be in expected format' do
+        expected_json = {
+          uuid: uuid,
+          publisher: 'example_publisher',
+          type: 'message_create_user',
+          version: 1,
+          data: {
+            email: 'john.doe@example.com'
+          },
+          sent_at: '1970-01-01T16:40:00.000+01:00'
+        }.to_json
+
+        is_expected.to eq(expected_json)
       end
     end
   end

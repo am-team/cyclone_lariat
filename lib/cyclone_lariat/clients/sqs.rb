@@ -13,16 +13,16 @@ module CycloneLariat
 
       dependency(:aws_client_class) { Aws::SQS::Client }
 
-      def get_url(queue)
-        raise ArgumentError, 'Should be queue' unless queue.is_a? Resources::Queue
-
-        aws_client.get_queue_url(queue_name: queue.to_s).queue_url
-      end
+      # def get_url(queue)
+      #   raise ArgumentError, 'Should be queue' unless queue.is_a? Resources::Queue
+      #
+      #   aws_client.get_queue_url(queue_name: queue.to_s).queue_url
+      # end
 
       def exists?(queue)
         raise ArgumentError, 'Should be queue' unless queue.is_a? Resources::Queue
 
-        get_url(queue) && true
+        aws_client.get_queue_url(queue_name: queue.to_s) && true
       rescue Aws::SQS::Errors::NonExistentQueue
         false
       end
@@ -46,9 +46,25 @@ module CycloneLariat
         aws_client.set_queue_attributes({ queue_url: queue.url, attributes: { 'Policy' => new_policy.to_json } })
       end
 
+      # def publish(msg, fifo:, dest: nil, queue: nil)
+      #   queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
+      #   aws_client.send_message(queue_url: get_url(queue), message_body: msg.to_json)
+      # end
+
       def publish(msg, fifo:, dest: nil, queue: nil)
         queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
-        aws_client.send_message(queue_url: get_url(queue), message_body: msg.to_json)
+
+        raise Errors::GroupIdUndefined.new(resource: queue) if fifo && msg.group_id.nil?
+        raise Errors::GroupDefined.new(resource: queue) if !fifo && msg.group_id
+
+        params = {
+          queue_url: queue.url,
+          message_body: msg.to_json,
+          message_group_id: msg.group_id,
+          message_deduplication_id: msg.deduplication_id,
+        }.compact
+
+        aws_client.send_message **params
       end
 
       def publish_event(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)

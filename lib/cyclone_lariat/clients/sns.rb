@@ -13,9 +13,20 @@ module CycloneLariat
 
       dependency(:aws_client_class) { Aws::SNS::Client }
 
-      def publish(msg, topic: nil)
-        topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: msg.fifo?)
-        aws_client.publish(topic_arn: topic.arn, message: msg.to_json)
+      def publish(msg, fifo:, topic: nil)
+        topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)
+
+        raise Errors::GroupIdUndefined.new(resource: topic) if fifo && msg.group_id.nil?
+        raise Errors::GroupDefined.new(resource: topic) if !fifo && msg.group_id
+
+        params = {
+          topic_arn: topic.arn,
+          message: msg.to_json,
+          message_group_id: msg.group_id,
+          message_deduplication_id: msg.deduplication_id,
+        }.compact
+
+        aws_client.publish **params
       end
 
       def exists?(topic)
@@ -26,24 +37,20 @@ module CycloneLariat
         false
       end
 
-      def publish_event(type, fifo_group_id: nil, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
-        publish event(type,
-          data: data,
-          version: version,
-          uuid: uuid,
-          request_id: request_id,
-          fifo_group_id: fifo_group_id
-        ), topic: topic
+      def publish_event(type, fifo:, topic: nil, **options)
+        options[:version] ||= config.version
+        options[:data]    ||= {}
+        options[:uuid]    ||= SecureRandom.uuid
+
+        publish event(type, **options), fifo: fifo, topic: topic
       end
 
-      def publish_command(type, fifo_group_id: nil, data: {}, version: config.version, uuid: SecureRandom.uuid, request_id: nil, topic: nil)
-        publish command(type,
-          data: data,
-          version: version,
-          uuid: uuid,
-          request_id: request_id,
-          fifo_group_id: fifo_group_id
-        ), topic: topic
+      def publish_command(type, fifo:, topic: nil, **options)
+        options[:version] ||= config.version
+        options[:data]    ||= {}
+        options[:uuid]    ||= SecureRandom.uuid
+
+        publish command(type, **options), fifo: fifo, topic: topic
       end
 
       def create(topic)

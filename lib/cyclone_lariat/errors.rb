@@ -48,5 +48,13 @@ module CycloneLariat
     class InvalidMessage < LunaPark::Errors::Business
       message 'Message is not valid'
     end
+
+    class GroupIdUndefined < LunaPark::Errors::System
+      message { |d| "Group id must be defined for FIFO resources: `#{d[:resource].name}`" }
+    end
+
+    class GroupDefined < LunaPark::Errors::System
+      message { |d| "Group id must be nil for non-FIFO resources: `#{d[:resource].name}`" }
+    end
   end
 end

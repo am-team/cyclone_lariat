@@ -258,11 +258,11 @@ module CycloneLariat
       end
     end
 
-    describe '#fifo_group_id' do
-      subject(:fifo_group_id) { message.fifo_group_id }
+    describe '#group_id' do
+      subject(:group_id) { message.group_id }
 
       context 'when it undefined' do
-        before { params.delete :fifo_group_id }
+        before { params.delete :group_id }
 
         it { is_expected.to be_nil }
 
@@ -276,7 +276,7 @@ module CycloneLariat
       end
 
       context 'when it defined as false' do
-        before { params.delete :fifo_group_id }
+        before { params.delete :group_id }
 
         it { is_expected.to be_nil }
 
@@ -289,8 +289,8 @@ module CycloneLariat
         end
       end
 
-      context 'when it defined with fifo_group_id' do
-        before { params[:fifo_group_id] = '42' }
+      context 'when it defined with group_id' do
+        before { params[:group_id] = '42' }
 
         it 'should be eq defined string' do
           is_expected.to eq '42'

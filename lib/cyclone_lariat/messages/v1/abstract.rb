@@ -11,11 +11,11 @@ module CycloneLariat
       class Abstract < LunaPark::Entities::Attributable
         include LunaPark::Extensions::Validatable
 
-        attr :uuid,       String, :new
-        attr :publisher,  String, :new
-        attr :type,       String, :new
+        attr :uuid,      String, :new
+        attr :publisher, String, :new
+        attr :type,      String, :new
         attrs :client_error, :version, :data, :request_id, :sent_at,
-              :fifo_group_id,:processed_at, :received_at
+              :deduplication_id, :group_id, :processed_at, :received_at
 
         validator Validator
 
@@ -70,8 +70,12 @@ module CycloneLariat
           @request_id = wrap_string(value)
         end
 
-        def fifo_group_id=(value)
-          @fifo_group_id = wrap_string(value)
+        def group_id=(value)
+          @group_id = wrap_string(value)
+        end
+
+        def deduplication_id=(value)
+          @deduplication_id = wrap_string(value)
         end
 
         def processed?
@@ -93,7 +97,7 @@ module CycloneLariat
         end
 
         def fifo?
-          !@fifo_group_id.nil?
+          !@group_id.nil?
         end
 
         def ==(other)

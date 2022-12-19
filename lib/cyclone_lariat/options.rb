@@ -5,7 +5,8 @@ module CycloneLariat
   class Options < LunaPark::Values::Compound
     attr_accessor :aws_key, :aws_secret_key, :publisher,
                   :aws_region, :instance, :aws_account_id,
-                  :events_dataset, :version, :versions_dataset
+                  :events_dataset, :version, :versions_dataset,
+                  :driver
 
     # @param [CycloneLariat::Options, Hash] other
     # @return [CycloneLariat::Options]
@@ -21,6 +22,7 @@ module CycloneLariat
       self.events_dataset   ||= other.events_dataset
       self.version          ||= other.version
       self.versions_dataset ||= other.versions_dataset
+      self.driver           ||= other.driver
 
       self
     end

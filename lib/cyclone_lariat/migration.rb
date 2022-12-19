@@ -4,6 +4,9 @@ require 'fileutils'
 require 'forwardable'
 require 'cyclone_lariat/clients/sns'
 require 'cyclone_lariat/clients/sqs'
+require 'cyclone_lariat/repo/versions'
+require 'cyclone_lariat/services/migrate'
+require 'cyclone_lariat/services/rollback'
 require 'luna_park/errors'
 require 'terminal-table'
 require 'set'
@@ -109,48 +112,12 @@ module CycloneLariat
     end
 
     class << self
-      def migrate(dataset: CycloneLariat.versions_dataset, dir: DIR)
-        alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
-
-        Dir.glob("#{dir}/*.rb").sort_by {|f| f.split('/')[-1].split('_').first.to_i }.each do |path|
-          filename = File.basename(path, '.rb')
-          version, title = filename.split('_', 2)
-
-          existed_migrations = dataset.all.map { |row| row[:version] }
-          unless existed_migrations.include? version.to_i
-            class_name = title.split('_').collect(&:capitalize).join
-            puts "Up - #{version} #{class_name} #{path}"
-            require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
-            Object.const_get(class_name).new.up
-            dataset.insert(version: version)
-          end
-        end
+      def migrate(repo: CycloneLariat::Versions::Repo.new, dir: DIR)
+        Services::Migrate.new(repo: repo, dir: dir).call
       end
 
       def rollback(version = nil, dataset: CycloneLariat.versions_dataset, dir: DIR)
-        existed_migrations = dataset.all.map { |row| row[:version] }.sort
-        version ||= existed_migrations[-1]
-        migrations_to_downgrade = existed_migrations.select { |migration| migration >= version }
-
-        paths = []
-        migrations_to_downgrade.each do |migration|
-          path = Pathname.new(Dir.pwd) + Pathname.new(dir)
-          founded = Dir.glob("#{path}/#{migration}_*.rb")
-          raise "Could not found migration: `#{migration}` in #{path}" if founded.empty?
-          raise "Found lot of migration: `#{migration}` in #{path}"    if founded.size > 1
-
-          paths += founded
-        end
-
-        paths.each do |path|
-          filename       = File.basename(path, '.rb')
-          version, title = filename.split('_', 2)
-          class_name     = title.split('_').collect(&:capitalize).join
-          puts "Down - #{version} #{class_name} #{path}"
-          require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
-          Object.const_get(class_name).new.down
-          dataset.filter(version: version).delete
-        end
+        Services::Rollback.new(version, repo: repo, )
       end
 
       def list_topics

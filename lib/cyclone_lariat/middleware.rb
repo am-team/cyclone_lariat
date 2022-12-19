@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/messages_repo'
+require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/core'
 require 'luna_park/errors'
 require 'json'
 
 module CycloneLariat
   class Middleware
-    def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: MessagesRepo)
-      events_dataset    = dataset || CycloneLariat.config.events_dataset
-      @events_repo      = repo.new(events_dataset) if events_dataset
+    attr_reader :config
+
+    def initialize(errors_notifier: nil, message_notifier: nil, repo: Repo::Messages, **options)
+      @config           = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
+      @events_repo      = repo.new(**@config.to_h)
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
     end

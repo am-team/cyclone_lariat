@@ -3,7 +3,6 @@
 require 'luna_park/notifiers/log'
 require 'cyclone_lariat/messages/v1/event'
 require 'cyclone_lariat/middleware'
-require 'cyclone_lariat/messages_repo'
 
 RSpec.describe CycloneLariat::Middleware do
   describe '#call' do
@@ -110,13 +109,13 @@ RSpec.describe CycloneLariat::Middleware do
 
     context 'when messages_repo is defined' do
       let(:dataset) { double }
-      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
-      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
-      let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
+      let(:messages_repo) { instance_double CycloneLariat::Repo::Messages }
+      let(:messages_repo_class) { class_double(CycloneLariat::Repo::Messages, new: messages_repo) }
+      let(:middleware) { described_class.new(messages_dataset: dataset, repo: messages_repo_class) }
       let(:event) { instance_double CycloneLariat::Messages::V1::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: event }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: event }
         it { is_expected.to be true }
         it 'should not run business logic' do
           expect(business_logic).to_not receive(:call)
@@ -135,7 +134,7 @@ RSpec.describe CycloneLariat::Middleware do
       end
 
       context 'when event does not exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: true }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: nil, create: nil, processed!: true }
 
         it { is_expected.to be true }
 
@@ -171,8 +170,8 @@ RSpec.describe CycloneLariat::Middleware do
       before { CycloneLariat.config.events_dataset = double }
       after  { CycloneLariat.config.events_dataset = nil }
 
-      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: :result }
-      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
+      let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: nil, create: nil, processed!: :result }
+      let(:messages_repo_class) { class_double(CycloneLariat::Repo::Messages, new: messages_repo) }
       let(:middleware) { described_class.new(dataset: nil, repo: messages_repo_class) }
 
       it { is_expected.to be(:result) }

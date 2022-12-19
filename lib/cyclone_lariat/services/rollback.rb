@@ -2,26 +2,28 @@
 module CycloneLariat
   module Services
     class Rollback
-      attr_reader :version, :repo, :dir
+      attr_reader :repo, :dir
 
-      def initialize(version, repo:, dir:)
-        @version = version
+      def initialize(repo:, dir:)
         @repo = repo
         @dir = dir
       end
 
-      def call
-        @version ||= existed_migrations[-1]
+      def call(version = nil)
+        version ||= existed_migrations[-1]
+        output = []
 
         paths_of_downgrades.each do |path|
           filename       = File.basename(path, '.rb')
           version, title = filename.split('_', 2)
           class_name     = title.split('_').collect(&:capitalize).join
-          puts "Down - #{version} #{class_name} #{path}"
+          output << "Down - #{version} #{class_name} #{path}"
           require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
           Object.const_get(class_name).new.down
           repo.remove(version)
         end
+
+        output
       end
 
       def existed_migrations

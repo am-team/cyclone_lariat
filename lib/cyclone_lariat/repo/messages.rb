@@ -2,20 +2,20 @@
 
 require 'forwardable'
 require 'luna_park/extensions/injector'
-require 'cyclone_lariat/repo/sequel/versions'
+require 'cyclone_lariat/repo/sequel/messages'
 
 module CycloneLariat
   module Repo
-    class Versions
+    class Messages
       include LunaPark::Extensions::Injector
 
       attr_reader :config
 
-      dependency(:sequel_versions_class) { Repo::Sequel::Versions }
+      dependency(:sequel_versions_class) { Repo::Sequel::Messages }
 
       extend Forwardable
 
-      def_delegators :driver, :add, :repo
+      def_delegators :driver, :create, :exists?, :processed!, :find, :each_unprocessed, :each_with_client_errors
 
       def initialize(**options)
         @config = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)

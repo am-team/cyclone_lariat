@@ -11,6 +11,7 @@ module CycloneLariat
 
       def call
         alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
+        output = []
 
         migration_paths.each do |path|
           filename = File.basename(path, '.rb')
@@ -18,12 +19,14 @@ module CycloneLariat
 
           unless existed_migrations.include? version.to_i
             class_name = title.split('_').collect(&:capitalize).join
-            puts "Up - #{version} #{class_name} #{path}"
+            output << "Up - #{version} #{class_name} #{path}"
             require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
             Object.const_get(class_name).new.up
             repo.add(version)
           end
         end
+
+        output
       end
 
 

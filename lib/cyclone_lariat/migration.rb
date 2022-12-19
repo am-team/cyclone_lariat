@@ -7,9 +7,11 @@ require 'cyclone_lariat/clients/sqs'
 require 'cyclone_lariat/repo/versions'
 require 'cyclone_lariat/services/migrate'
 require 'cyclone_lariat/services/rollback'
+require 'cyclone_lariat/presenters/topics'
+require 'cyclone_lariat/presenters/queues'
+require 'cyclone_lariat/presenters/subscriptions'
+require 'cyclone_lariat/presenters/graph'
 require 'luna_park/errors'
-require 'terminal-table'
-require 'set'
 
 module CycloneLariat
   class Migration
@@ -112,88 +114,28 @@ module CycloneLariat
     end
 
     class << self
-      def migrate(repo: CycloneLariat::Versions::Repo.new, dir: DIR)
-        Services::Migrate.new(repo: repo, dir: dir).call
+      def migrate(repo: CycloneLariat::Versions::Repo.new, dir: DIR, service: Services::Migrate)
+        puts service.new(repo: repo, dir: dir).call
       end
 
-      def rollback(version = nil, dataset: CycloneLariat.versions_dataset, dir: DIR)
-        Services::Rollback.new(version, repo: repo, )
+      def rollback(version = nil, repo: CycloneLariat::Versions::Repo.new, dir: DIR, service: Services::Rollback)
+        puts service.new(repo: repo, dir: dir).call(version)
       end
 
-      def list_topics
-        rows = []
-        new.topics.each do |topic|
-          rows << [
-            topic.custom? ? 'custom' : 'standard',
-            topic.region,
-            topic.account_id,
-            topic.name,
-            topic.instance,
-            topic.kind,
-            topic.publisher,
-            topic.type,
-            topic.fifo
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type fifo]
+      def list_topics(presenter: Presenters::Topics)
+        puts presenter.call(new.topics)
       end
 
-      def list_queues
-        rows = []
-        new.queues.each do |queue|
-          rows << [
-            queue.custom? ? 'custom' : 'standard',
-            queue.region,
-            queue.account_id,
-            queue.name,
-            queue.instance,
-            queue.kind,
-            queue.publisher,
-            queue.type,
-            queue.dest,
-            queue.fifo
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type destination fifo]
+      def list_queues(presenter: Presenters::Queues)
+        puts presenter.call(new.queues)
       end
 
-      def list_subscriptions
-        rows = []
-        new.subscriptions.each do |subscription|
-          rows << [
-            subscription[:topic].name,
-            subscription[:endpoint].name,
-            subscription[:arn]
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[topic endpoint subscription_arn]
+      def list_subscriptions(presenter: Presenters::Subscriptions)
+        puts presenter.call(new.subscriptions)
       end
 
-      def build_graph
-        subscriptions = new.subscriptions
-        resources_set = Set.new
-
-        subscriptions.each do |subscription|
-          resources_set << subscription[:topic]
-          resources_set << subscription[:endpoint]
-        end
-
-        puts 'digraph G {'
-        puts '  rankdir=LR;'
-
-        resources_set.each do |resource|
-          color = resource.custom? ? ', fillcolor=grey' : ', fillcolor=white'
-          style = resource.topic? ? "[shape=component style=filled#{color}]" : "[shape=record, style=\"rounded,filled\"#{color}]"
-          puts "  \"#{resource.name}\" #{style};"
-        end
-
-        subscriptions.each do |subscription|
-          puts "  \"#{subscription[:topic].name}\" -> \"#{subscription[:endpoint].name}\";"
-        end
-        puts '}'
+      def build_graph(presenter: Presenters::Graph)
+        puts presenter.call(new.subscriptions)
       end
     end
   end

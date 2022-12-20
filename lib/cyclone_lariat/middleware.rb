@@ -43,7 +43,7 @@ module CycloneLariat
     end
 
     def store_in_dataset(event)
-      return yield if events_repo.nil?
+      return yield if events_repo.disabled?
 
       existed = events_repo.find(uuid: event.uuid)
       return true if existed&.processed?

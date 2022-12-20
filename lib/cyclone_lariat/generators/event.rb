@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'securerandom'
 require 'cyclone_lariat/messages/v1/event'
 
 module CycloneLariat

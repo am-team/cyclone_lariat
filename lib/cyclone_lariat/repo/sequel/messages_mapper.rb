@@ -32,8 +32,8 @@ module CycloneLariat
             return JSON.parse(data) if data.is_a?(String)
 
             if pg_json_extension_enabled?
-              return data.to_h             if data.is_a?(Sequel::Postgres::JSONHash)
-              return JSON.parse(data.to_s) if data.is_a?(Sequel::Postgres::JSONString)
+              return data.to_h             if data.is_a?(::Sequel::Postgres::JSONHash)
+              return JSON.parse(data.to_s) if data.is_a?(::Sequel::Postgres::JSONString)
             end
 
             raise ArgumentError, "Unknown type of `#{data}`"

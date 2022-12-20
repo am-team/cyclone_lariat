@@ -15,7 +15,8 @@ module CycloneLariat
 
       extend Forwardable
 
-      def_delegators :driver, :create, :exists?, :processed!, :find, :each_unprocessed, :each_with_client_errors
+      def_delegators :driver, :create, :exists?, :processed!, :find, :each_unprocessed, :each_with_client_errors,
+                     :enabled?, :disabled?
 
       def initialize(**options)
         @config = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)

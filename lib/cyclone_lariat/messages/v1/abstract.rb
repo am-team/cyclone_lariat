@@ -126,6 +126,7 @@ module CycloneLariat
         def wrap_string(value)
           case value
           when String then String(value)
+          when Integer then String(value)
           when NilClass then nil
           when FalseClass then nil
           else raise ArgumentError, "Unknown type `#{value.class}`"

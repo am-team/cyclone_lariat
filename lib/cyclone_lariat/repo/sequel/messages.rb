@@ -14,6 +14,14 @@ module CycloneLariat
           @dataset = dataset
         end
 
+        def enabled?
+          !dataset.nil?
+        end
+
+        def disabled?
+          dataset.nil?
+        end
+
         def create(msg)
           dataset.insert MessagesMapper.to_row(msg)
         end
@@ -23,7 +31,7 @@ module CycloneLariat
         end
 
         def processed!(uuid:, error: nil)
-          data = { processed_at: Sequel.function(:NOW) }
+          data = { processed_at: ::Sequel.function(:NOW) }
           data.merge!(client_error_message: error.message, client_error_details: JSON.generate(error.details)) if error
 
           !dataset.where(uuid: uuid).update(data).zero?
@@ -54,8 +62,8 @@ module CycloneLariat
 
         def build(raw)
           case kind = raw.delete(:kind)
-          when 'event'   then Messages::V1::Event.wrap raw
-          when 'command' then Messages::V1::Command.wrap raw
+          when 'event'   then CycloneLariat::Messages::V1::Event.wrap raw
+          when 'command' then CycloneLariat::Messages::V1::Command.wrap raw
           else raise ArgumentError, "Unknown kind `#{kind}` of message"
           end
         end

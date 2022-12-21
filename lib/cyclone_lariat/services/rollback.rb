@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CycloneLariat
   module Services
     class Rollback

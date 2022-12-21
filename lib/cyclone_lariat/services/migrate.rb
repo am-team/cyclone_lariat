@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module CycloneLariat
   module Services
     class Migrate
@@ -17,18 +18,17 @@ module CycloneLariat
           filename = File.basename(path, '.rb')
           version, title = filename.split('_', 2)
 
-          unless existed_migrations.include? version.to_i
-            class_name = title.split('_').collect(&:capitalize).join
-            output << "Up - #{version} #{class_name} #{path}"
-            require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
-            Object.const_get(class_name).new.up
-            repo.add(version)
-          end
+          next if existed_migrations.include? version.to_i
+
+          class_name = title.split('_').collect(&:capitalize).join
+          output << "Up - #{version} #{class_name} #{path}"
+          require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
+          Object.const_get(class_name).new.up
+          repo.add(version)
         end
 
         output
       end
-
 
       private
 

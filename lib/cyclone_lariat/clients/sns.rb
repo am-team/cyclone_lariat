@@ -23,10 +23,10 @@ module CycloneLariat
           topic_arn: topic.arn,
           message: msg.to_json,
           message_group_id: msg.group_id,
-          message_deduplication_id: msg.deduplication_id,
+          message_deduplication_id: msg.deduplication_id
         }.compact
 
-        aws_client.publish **params
+        aws_client.publish(**params)
       end
 
       def exists?(topic)
@@ -142,7 +142,9 @@ module CycloneLariat
 
       def find_subscription_arn(topic:, endpoint:)
         raise ArgumentError, 'Should be Topic' unless topic.is_a? Resources::Topic
-        raise ArgumentError, 'Endpoint should be Topic or Queue' unless [Resources::Topic, Resources::Queue].include? endpoint.class
+        unless [Resources::Topic, Resources::Queue].include? endpoint.class
+          raise ArgumentError, 'Endpoint should be Topic or Queue'
+        end
 
         found_subscription = topic_subscriptions(topic).select do |subscription|
           subscription.endpoint == endpoint.arn

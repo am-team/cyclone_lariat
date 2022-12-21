@@ -13,6 +13,7 @@ module CycloneLariat
       attr_reader :config
 
       dependency(:sequel_versions_class) { Repo::Sequel::Messages }
+      dependency(:active_record_versions_class) { Repo::ActiveRecord::Messages }
 
       extend Forwardable
 
@@ -32,6 +33,7 @@ module CycloneLariat
       def select(driver:)
         case driver
         when :sequel then sequel_versions_class.new(config.versions_dataset)
+        when :active_record then active_record_versions_class.new(config.versions_dataset)
         else raise ArgumentError, "Undefined driver `#{driver}`"
         end
       end

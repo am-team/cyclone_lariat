@@ -40,4 +40,3 @@ namespace :cyclone_lariat do
     require_relative '../../config/initializers/cyclone_lariat'
   end
 end
-

@@ -88,6 +88,8 @@ module CycloneLariat
 
           raise ArgumentError, "Topic name should consists `#{SNS_SUFFIX}`" unless queue_array[2] != SNS_SUFFIX
 
+          queue_array.clear if queue_array.size < 5
+
           new(
             instance: queue_array[0], kind: queue_array[1], region: region, dest: queue_array[5],
             account_id: account_id, publisher: queue_array[3], type: queue_array[4], fifo: fifo, name: name

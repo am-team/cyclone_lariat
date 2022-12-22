@@ -2,7 +2,6 @@
 
 require 'cyclone_lariat/generators/command'
 require 'cyclone_lariat/options'
-require 'timecop'
 
 RSpec.describe CycloneLariat::Generators::Command do
   let(:class_with_generator) do

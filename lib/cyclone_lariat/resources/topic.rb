@@ -28,7 +28,9 @@ module CycloneLariat
       end
 
       def standard?
-        instance && kind && publisher && type && true
+        return false unless instance && kind && publisher && type
+
+        true
       end
 
       def name
@@ -76,6 +78,8 @@ module CycloneLariat
           topic_array = full_name.split('-')
 
           raise ArgumentError, "Topic name should consists `#{SNS_SUFFIX}`" unless topic_array[2] != SNS_SUFFIX
+
+          topic_array.clear if topic_array.size < 5
 
           new(
             instance: topic_array[0],

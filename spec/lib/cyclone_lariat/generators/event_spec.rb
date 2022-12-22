@@ -2,7 +2,6 @@
 
 require 'cyclone_lariat/generators/event'
 require 'cyclone_lariat/options'
-require 'timecop'
 
 RSpec.describe CycloneLariat::Generators::Event do
   let(:class_with_generator) do

@@ -44,7 +44,7 @@ RSpec.describe CycloneLariat::Resources::Queue do
 
       it { is_expected.to be_a CycloneLariat::Resources::Queue }
 
-      it 'should be custom' do
+      it 'should be standard' do
         expect(queue.standard?).to be true
       end
 

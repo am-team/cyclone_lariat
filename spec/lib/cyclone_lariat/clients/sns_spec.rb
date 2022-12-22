@@ -129,6 +129,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
           name: 'test-event-fanout-sample_app-create_note.fifo',
           attributes: { 'FifoTopic' => 'true' },
           tags: [
+            { key: 'standard', value: 'true' },
             { key: 'instance', value: 'test' },
             { key: 'kind', value: 'event' },
             { key: 'publisher', value: 'sample_app' },
@@ -150,6 +151,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
           name: 'test-event-fanout-sample_app-create_note',
           attributes: {},
           tags: [
+            { key: 'standard', value: 'true' },
             { key: 'instance', value: 'test' },
             { key: 'kind', value: 'event' },
             { key: 'publisher', value: 'sample_app' },

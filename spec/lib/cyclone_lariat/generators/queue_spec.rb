@@ -35,14 +35,15 @@ RSpec.describe CycloneLariat::Generators::Queue do
       expect(queue.publisher).to eq 'pizzeria'
       expect(queue.type).to eq 'pizza_line'
       expect(queue.fifo).to eq true
-      expect(queue.tags).to eq({
-        dest: 'undefined',
-        fifo: 'true',
-        instance: 'test',
-        kind: 'event',
-        publisher: 'pizzeria',
-        type: 'pizza_line'
-      })
+      expect(queue.tags).to eq([
+        { key: 'standard', value: 'true'},
+        { key: 'instance', value: 'test'},
+        { key: 'kind', value: 'event'},
+        { key: 'publisher', value: 'pizzeria'},
+        { key: 'type', value: 'pizza_line'},
+        { key: 'dest', value: 'undefined'},
+        { key: 'fifo', value: 'true'}
+     ])
     end
   end
 
@@ -60,14 +61,11 @@ RSpec.describe CycloneLariat::Generators::Queue do
       expect(queue.type).to be_nil
       expect(queue.fifo).to eq(true)
       expect(queue.name).to eq('pizza_line.fifo')
-      expect(queue.tags).to eq({
-        dest: 'undefined',
-        fifo: 'true',
-        instance: '',
-        kind: '',
-        publisher: '',
-        type: ''
-      })
+      expect(queue.tags).to eq([
+        { key: 'standard', value: 'false' },
+        { key: 'name', value: 'pizza_line.fifo' },
+        { key: 'fifo', value: 'true' }
+      ])
     end
   end
 end

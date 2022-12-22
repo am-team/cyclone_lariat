@@ -7,7 +7,7 @@ module CycloneLariat
     class Queue
       SNS_SUFFIX = :queue
 
-      attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo, :tags
+      attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo
 
       def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:, tags: nil, name: nil)
         @instance  = instance
@@ -18,7 +18,7 @@ module CycloneLariat
         @publisher = publisher
         @type      = type
         @fifo      = fifo
-        @tags      = tags || default_tags(instance, kind, publisher, type, dest, fifo)
+        @tags      = tags
         @name      = name
       end
 
@@ -134,17 +134,26 @@ module CycloneLariat
         end
       end
 
-      private
-
-      def default_tags(instance, kind, publisher, type, dest, fifo)
-        {
-          instance: String(instance),
-          kind: String(kind),
-          publisher: String(publisher),
-          type: String(type),
-          dest: dest ? String(dest) : 'undefined',
-          fifo: fifo ? 'true' : 'false'
-        }
+      def tags
+        @tags ||= begin
+          if standard?
+            [
+              { key: 'standard',  value: 'true' },
+              { key: 'instance',  value: String(instance) },
+              { key: 'kind',      value: String(kind) },
+              { key: 'publisher', value: String(publisher) },
+              { key: 'type',      value: String(type) },
+              { key: 'dest',      value: dest ? String(dest) : 'undefined' },
+              { key: 'fifo',      value: fifo ? 'true' : 'false' }
+            ]
+          else
+            [
+              { key: 'standard',  value: 'false' },
+              { key: 'name',      value: String(name) },
+              { key: 'fifo',      value: fifo ? 'true' : 'false' }
+            ]
+          end
+        end
       end
     end
   end

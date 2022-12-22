@@ -154,14 +154,15 @@ RSpec.describe CycloneLariat::Clients::Sqs do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-note_created.fifo',
           attributes: { 'FifoQueue' => 'true' },
-          tags: {
-            dest: 'undefined',
-            fifo: 'true',
-            instance: 'test',
-            kind: 'event',
-            publisher: 'sample_app',
-            type: 'note_created'
-          }
+          tags: [
+            { key: 'standard', value: 'true'},
+            { key: 'instance', value: 'test'},
+            { key: 'kind', value: 'event'},
+            { key: 'publisher', value: 'sample_app' },
+            { key: 'type', value: 'note_created' },
+            { key: 'dest', value: 'undefined' },
+            { key: 'fifo', value: 'true' }
+          ]
         )
         create
       end
@@ -179,14 +180,15 @@ RSpec.describe CycloneLariat::Clients::Sqs do
         expect(aws_sqs_client).to receive(:create_queue).with(
           queue_name: 'test-event-queue-sample_app-note_created',
           attributes: {},
-          tags: {
-            dest: 'undefined',
-            fifo: 'false',
-            instance: 'test',
-            kind: 'event',
-            publisher: 'sample_app',
-            type: 'note_created'
-          }
+          tags: [
+            { key: 'standard', value: 'true' },
+            { key: 'instance', value: 'test' },
+            { key: 'kind', value: 'event' },
+            { key: 'publisher', value: 'sample_app' },
+            { key: 'type', value: 'note_created' },
+            { key: 'dest', value: 'undefined' },
+            { key: 'fifo', value: 'false' }
+          ]
         )
         create
       end

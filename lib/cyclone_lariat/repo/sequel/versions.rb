@@ -12,10 +12,11 @@ module CycloneLariat
 
         def add(version)
           dataset.insert(version: version)
+          true
         end
 
         def remove(version)
-          dataset.filter(version: version).delete
+          dataset.filter(version: version).delete > 0
         end
 
         def all

@@ -2,6 +2,7 @@
 
 require 'forwardable'
 require 'luna_park/extensions/injector'
+require 'cyclone_lariat/core'
 require 'cyclone_lariat/repo/sequel/messages'
 
 module CycloneLariat

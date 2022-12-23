@@ -2,6 +2,7 @@
 
 require 'forwardable'
 require 'luna_park/extensions/injector'
+require 'cyclone_lariat/core'
 require 'cyclone_lariat/repo/sequel/versions'
 
 module CycloneLariat
@@ -15,7 +16,7 @@ module CycloneLariat
 
       extend Forwardable
 
-      def_delegators :driver, :add, :repo
+      def_delegators :driver, :add, :remove, :all
 
       def initialize(**options)
         @config = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)

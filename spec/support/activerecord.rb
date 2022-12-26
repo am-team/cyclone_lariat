@@ -2,6 +2,7 @@
 
 require 'active_record'
 require 'database_cleaner-active_record'
+require_relative '../../config/db'
 
 ActiveRecord::Base.establish_connection(DB_CONF)
 

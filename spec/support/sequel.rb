@@ -14,8 +14,8 @@ DB_CONF = {
 DB = Sequel.connect(DB_CONF)
 
 DB.run('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-DB.drop_table?(:async_messages)
-DB.create_table :async_messages do
+DB.drop_table?(:sequel_async_messages)
+DB.create_table :sequel_async_messages do
   column :uuid, :uuid, primary_key: true
   String :kind, null: false
   String :type, null: false
@@ -28,8 +28,8 @@ DB.create_table :async_messages do
   DateTime :received_at, null: false, default: Sequel::CURRENT_TIMESTAMP
   DateTime :processed_at, null: true, default: nil
 end
-DB.drop_table?(:lariat_versions)
-DB.create_table :lariat_versions do
+DB.drop_table?(:sequel_lariat_versions)
+DB.create_table :sequel_lariat_versions do
   Integer :version, null: false, unique: true
 end
 

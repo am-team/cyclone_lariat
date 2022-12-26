@@ -3,8 +3,7 @@
 require 'bundler/setup'
 require 'pry'
 require_relative './support/sequel'
-require_relative './support/activerecord'
-# require 'database_cleaner-active_record'
+# require_relative './support/activerecord'
 
 RSpec.configure do |config|
   config.color = true

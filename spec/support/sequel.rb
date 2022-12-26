@@ -2,14 +2,7 @@
 
 require 'sequel'
 require 'database_cleaner-sequel'
-
-DB_CONF = {
-  adapter: 'postgresql',
-  host: ENV.fetch('DB_HOST', 'localhost'),
-  username: ENV.fetch('DB_USER', 'cyclone_lariat'),
-  password: ENV.fetch('DB_PASSWORD', 'cyclone_lariat'),
-  database: ENV.fetch('DB_NAME', 'cyclone-lariat-test')
-}.freeze
+require_relative '../../config/db'
 
 DB = Sequel.connect(DB_CONF)
 

@@ -58,16 +58,16 @@ module CycloneLariat
           <<~CONFIG
             # frozen_string_literal: true
 
-            CycloneLariat.tap do |cl|
-              cl.default_version    = 1                       # api version
-              cl.aws_key            = ENV['AWS_KEY']          # aws key
-              cl.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
-              cl.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
-              cl.aws_default_region = ENV['AWS_REGION']       # aws default region
-              cl.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application
-              cl.default_instance   = ENV['INSTANCE']         # stage, production, test
-              cl.events_dataset     = DB[:events]             # sequel dataset for store income messages, for receiver
-              cl.versions_dataset   = DB[:lariat_versions]    # sequel dataset for migrations, for publisher
+            CycloneLariat.configure do |c|
+              c.default_version    = 1                       # api version
+              c.aws_key            = ENV['AWS_KEY']          # aws key
+              c.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
+              c.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
+              c.aws_default_region = ENV['AWS_REGION']       # aws default region
+              c.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application
+              c.default_instance   = ENV['INSTANCE']         # stage, production, test
+              c.events_dataset     = DB[:events]             # sequel dataset for store income messages, for receiver
+              c.versions_dataset   = DB[:lariat_versions]    # sequel dataset for migrations, for publisher
             end
           CONFIG
         end
@@ -76,16 +76,16 @@ module CycloneLariat
           <<~CONFIG
             # frozen_string_literal: true
 
-            CycloneLariat.tap do |cl|
-              cl.default_version    = 1                       # api version
-              cl.aws_key            = ENV['AWS_KEY']          # aws key
-              cl.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
-              cl.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
-              cl.aws_default_region = ENV['AWS_REGION']       # aws default region
-              cl.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application
-              cl.default_instance   = ENV['INSTANCE']         # stage, production, test
-              cl.events_dataset     = CycloneLariatEvents     # AR model for store income messages, for receiver
-              cl.versions_dataset   = CycloneLariatVersions   # AR model for migrations, for publisher
+            CycloneLariat.configure do |c|
+              c.default_version    = 1                       # api version
+              c.aws_key            = ENV['AWS_KEY']          # aws key
+              c.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
+              c.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
+              c.aws_default_region = ENV['AWS_REGION']       # aws default region
+              c.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application
+              c.default_instance   = ENV['INSTANCE']         # stage, production, test
+              c.events_dataset     = CycloneLariatEvents     # AR model for store income messages, for receiver
+              c.versions_dataset   = CycloneLariatVersions   # AR model for migrations, for publisher
             end
           CONFIG
         end

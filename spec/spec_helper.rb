@@ -2,19 +2,14 @@
 
 require 'bundler/setup'
 require 'pry'
-require 'sequel'
-require 'database_cleaner-sequel'
-
-require_relative '../config/db'
-
-DB = Sequel.connect(DB_CONF)
-db_cleaner = DatabaseCleaner[:sequel, db: DB]
+require_relative './support/sequel'
+# require 'database_cleaner-active_record'
 
 RSpec.configure do |config|
-  config.color     = true
+  config.color = true
   config.formatter = :documentation
 
-  config.mock_with   :rspec
+  config.mock_with :rspec
   config.expect_with :rspec
 
   # Enable flags like --only-failures and --next-failure
@@ -29,13 +24,14 @@ RSpec.configure do |config|
   end
 
   # Database cleaner
-  config.before(:suite) { db_cleaner.clean_with :truncation }
-
-  config.before do
-    db_cleaner.strategy = self.class.metadata[:clean_with] || :transaction
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
   end
 
-  config.before { db_cleaner.start }
-  config.after  { db_cleaner.clean }
-  config.after(:suite) { db_cleaner.clean_with :truncation }
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
 end

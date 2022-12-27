@@ -135,14 +135,6 @@ RSpec.describe CycloneLariat::Repo::ActiveRecord::Messages do
         is_expected.to be_nil
       end
     end
-
-    context 'when pg_json extension enabled' do
-      before { DB.extension :pg_json }
-
-      it 'should be expected event' do
-        is_expected.to eq event
-      end
-    end
   end
 
   describe '#each_unprocessed' do

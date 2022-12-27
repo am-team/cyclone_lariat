@@ -44,24 +44,31 @@ module CycloneLariat
           row = dataset.where(uuid: uuid).first
           return if row.nil?
 
-          build MessagesMapper.from_row(row.attributes.symbolize_keys)
+          build_message_from_ar_row(row)
         end
 
         def each_unprocessed
           dataset.where(processed_at: nil).each do |row|
-            msg = build MessagesMapper.from_row(row)
+            msg = build_message_from_ar_row(row)
             yield(msg)
           end
         end
 
         def each_with_client_errors
-          dataset.where { (processed_at !~ nil) & (client_error_message !~ nil) }.each do |row|
-            msg = build MessagesMapper.from_row(row)
-            yield(msg)
-          end
+          dataset
+            .where.not(processed_at: nil)
+            .where.not(client_error_message: nil)
+            .each do |row|
+              msg = build_message_from_ar_row(row)
+              yield(msg)
+            end
         end
 
         private
+
+        def build_message_from_ar_row(row)
+          build MessagesMapper.from_row(row.attributes.symbolize_keys)
+        end
 
         def current_timestamp_from_db
           time_string_from_db =

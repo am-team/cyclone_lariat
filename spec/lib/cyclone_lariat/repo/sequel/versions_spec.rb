@@ -3,7 +3,7 @@
 require 'cyclone_lariat/repo/versions'
 
 RSpec.describe CycloneLariat::Repo::Sequel::Versions do
-  let(:dataset) { DB[:lariat_versions] }
+  let(:dataset) { DB[:sequel_lariat_versions] }
   let(:repo) { described_class.new dataset }
 
   describe '#add' do

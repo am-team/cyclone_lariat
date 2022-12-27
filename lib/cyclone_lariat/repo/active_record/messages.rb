@@ -2,7 +2,7 @@
 
 require 'cyclone_lariat/messages/v1/event'
 require 'cyclone_lariat/messages/v1/command'
-require 'cyclone_lariat/repo/sequel/messages_mapper'
+require 'cyclone_lariat/repo/messages_mapper'
 
 module CycloneLariat
   module Repo

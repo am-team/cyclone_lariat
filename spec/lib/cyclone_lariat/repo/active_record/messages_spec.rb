@@ -3,8 +3,8 @@
 require 'securerandom'
 require 'cyclone_lariat/repo/messages'
 
-RSpec.describe CycloneLariat::Repo::Sequel::Messages do
-  let(:dataset) { DB[:sequel_async_messages] }
+RSpec.describe CycloneLariat::Repo::ActiveRecord::Messages do
+  let(:dataset) { DB[:async_messages] }
   let(:repo) { described_class.new dataset }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(

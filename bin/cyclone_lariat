@@ -155,6 +155,7 @@ module CycloneLariat
 
             file_name = generate_filename(title)
             class_name = generate_class_name(title)
+
             file = File.open(file_name, 'w')
             file.puts(file_contents(class_name))
             puts "Migration successful created:\n\t#{file_name}"

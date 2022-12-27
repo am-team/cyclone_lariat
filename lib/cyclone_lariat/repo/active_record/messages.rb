@@ -22,7 +22,6 @@ module CycloneLariat
           dataset.nil?
         end
 
-        # Mayby return Message value object vs uuid
         def create(msg)
           dataset.create(MessagesMapper.to_row(msg)).uuid
         end
@@ -32,17 +31,20 @@ module CycloneLariat
         end
 
         def processed!(uuid:, error: nil)
-          data = { processed_at: ::Sequel.function(:NOW) }
+          data = { processed_at: current_timestamp_from_db }
           data.merge!(client_error_message: error.message, client_error_details: JSON.generate(error.details)) if error
 
-          !dataset.where(uuid: uuid).update(data).zero?
+          message = dataset.where(uuid: uuid).first
+          return false unless message
+
+          message.update(data)
         end
 
         def find(uuid:)
           row = dataset.where(uuid: uuid).first
           return if row.nil?
 
-          build MessagesMapper.from_row(row)
+          build MessagesMapper.from_row(row.attributes.symbolize_keys)
         end
 
         def each_unprocessed
@@ -60,6 +62,14 @@ module CycloneLariat
         end
 
         private
+
+        def current_timestamp_from_db
+          time_string_from_db =
+            ::ActiveRecord::Base
+            .connection.execute('select current_timestamp;')
+            .first['current_timestamp']
+          Time.parse(time_string_from_db)
+        end
 
         def build(raw)
           case kind = raw.delete(:kind)

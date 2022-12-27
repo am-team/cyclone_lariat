@@ -27,7 +27,7 @@ RSpec.describe CycloneLariat::Repo::ActiveRecord::Messages do
     end
 
     it 'should create correct record' do
-      created_event = dataset.first(uuid: create_event)
+      created_event = dataset.find(create_event)
       expect(created_event[:uuid]).to be_a String
       expect(created_event[:publisher]).to eq 'users'
       expect(created_event[:type]).to eq 'create_user'
@@ -43,7 +43,7 @@ RSpec.describe CycloneLariat::Repo::ActiveRecord::Messages do
     context 'when event with same uuid is already exists' do
       before { repo.create event }
 
-      it { expect { create_event }.to raise_error Sequel::UniqueConstraintViolation }
+      it { expect { create_event }.to raise_error ActiveRecord::RecordNotUnique }
     end
   end
 

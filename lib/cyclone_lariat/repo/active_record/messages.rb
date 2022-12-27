@@ -22,8 +22,9 @@ module CycloneLariat
           dataset.nil?
         end
 
+        # Mayby return Message value object vs uuid
         def create(msg)
-          dataset.insert MessagesMapper.to_row(msg)
+          dataset.create(MessagesMapper.to_row(msg)).uuid
         end
 
         def exists?(uuid:)

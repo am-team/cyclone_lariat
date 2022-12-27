@@ -8,7 +8,7 @@ ActiveRecord::Base.establish_connection(DB_CONF)
 
 ActiveRecord::Base.connection.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
 ActiveRecord::Base.connection.execute('DROP TABLE IF EXISTS ar_async_messages')
-ActiveRecord::Base.connection.create_table(:ar_async_messages, id: :uuid, default: -> { 'public.uuid_generate_v4()' }) do |t|
+ActiveRecord::Base.connection.create_table(:ar_async_messages, id: :uuid, primary_key: :uuid, default: -> { 'public.uuid_generate_v4()' }) do |t|
   t.string :kind, null: false
   t.string :type, null: false
   t.integer :version, null: false
@@ -26,6 +26,8 @@ ActiveRecord::Base.connection.create_table(:ar_lariat_versions) do |t|
 end
 
 class ArAsyncMessage < ActiveRecord::Base
+  self.inheritance_column = :_type_disabled
+  self.primary_key = 'uuid'
 end
 class ArLariatVersion < ActiveRecord::Base
 end

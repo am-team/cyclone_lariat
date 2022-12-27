@@ -169,7 +169,7 @@ RSpec.describe CycloneLariat::Middleware do
     context 'when dataset is defined in config' do
       before do
         CycloneLariat.configure do |cfg|
-          cfg.messages_dataset = double
+          cfg.messages_dataset = DB[:sequel_async_messages]
           cfg.driver           = :sequel
         end
       end
@@ -183,7 +183,7 @@ RSpec.describe CycloneLariat::Middleware do
 
       let(:middleware) { described_class.new(messages_dataset: nil) }
 
-      it { is_expected.to be(:result) }
+      it { is_expected.to be true }
 
       it 'should run business logic' do
         expect(business_logic).to receive(:call)

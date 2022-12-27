@@ -20,7 +20,7 @@ RSpec.describe CycloneLariat::Repo::Messages do
 
     before do
       repo.dependencies = {
-        sequel_versions_class: -> { sequel_repo_class }
+        sequel_messages_class: -> { sequel_repo_class }
       }
     end
 

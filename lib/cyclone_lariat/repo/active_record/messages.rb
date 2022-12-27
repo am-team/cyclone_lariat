@@ -28,7 +28,7 @@ module CycloneLariat
         end
 
         def exists?(uuid:)
-          dataset.where(uuid: uuid).limit(1).any?
+          dataset.exists?(uuid: uuid)
         end
 
         def processed!(uuid:, error: nil)

@@ -257,7 +257,4 @@ RSpec.describe CycloneLariat::Migration do
       queues
     end
   end
-
-  describe '.migrate' do
-  end
 end

@@ -112,7 +112,7 @@ module CycloneLariat
         loop do
           resp[:subscriptions].each do |s|
             endpoint = s.endpoint.split(':')[2] == 'sqs' ? Resources::Queue.from_arn(s.endpoint) : Resources::Topic.from_arn(s.endpoint)
-            subscriptions << { topic: Topic.from_arn(s.topic_arn), endpoint: endpoint, arn: s.subscription_arn }
+            subscriptions << { topic: Resources::Topic.from_arn(s.topic_arn), endpoint: endpoint, arn: s.subscription_arn }
           end
 
           break if resp[:next_token].nil?

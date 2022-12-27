@@ -11,6 +11,8 @@ module CycloneLariat
       end
 
       def call(subscriptions)
+        return '' if subscriptions.empty?
+
         resources_set = Set.new
 
         subscriptions.each do |subscription|
@@ -33,7 +35,7 @@ module CycloneLariat
       def present_resource(resource)
         color = resource.custom? ? ', fillcolor=grey' : ', fillcolor=white'
         style = resource.topic? ? "[shape=component style=filled#{color}]" : "[shape=record, style=\"rounded,filled\"#{color}]"
-        "  s\"#{resource.name}\" #{style};"
+        "  \"#{resource.name}\" #{style};"
       end
 
       def present_subscription(subscription)

@@ -16,7 +16,7 @@ module CycloneLariat
         end
 
         def remove(version)
-          dataset.filter(version: version).delete > 0
+          dataset.filter(version: version).delete.positive?
         end
 
         def all

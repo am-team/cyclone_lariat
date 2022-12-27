@@ -4,13 +4,9 @@ require 'cyclone_lariat/repo/versions'
 
 RSpec.describe CycloneLariat::Repo::Versions do
   let(:sequel_repo) { instance_double CycloneLariat::Repo::Sequel::Versions }
-  let(:sequel_repo_class) do
-    class_double CycloneLariat::Repo::Sequel::Versions, new: sequel_repo
-  end
+  let(:sequel_repo_class) { class_double CycloneLariat::Repo::Sequel::Versions, new: sequel_repo }
   let(:ar_repo) { instance_double CycloneLariat::Repo::ActiveRecord::Versions }
-  let(:ar_repo_class) do
-    class_double CycloneLariat::Repo::ActiveRecord::Versions, new: ar_repo
-  end
+  let(:ar_repo_class) { class_double CycloneLariat::Repo::ActiveRecord::Versions, new: ar_repo }
 
   before do
     repo.dependencies = {

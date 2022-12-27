@@ -22,7 +22,7 @@ ActiveRecord::Base.connection.create_table(:ar_async_messages, id: :uuid, defaul
 end
 ActiveRecord::Base.connection.execute('DROP TABLE IF EXISTS ar_lariat_versions')
 ActiveRecord::Base.connection.create_table(:ar_lariat_versions) do |t|
-  t.integer :version, null: false, unique: true
+  t.integer :version, null: false, index: { unique: true }
 end
 
 class ArAsyncMessage < ActiveRecord::Base

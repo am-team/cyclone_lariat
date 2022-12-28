@@ -6,7 +6,7 @@ require 'cyclone_lariat/repo/messages_mapper'
 
 module CycloneLariat
   module Repo
-    module Sequel
+    module ActiveRecord
       class Messages
         attr_reader :dataset
 
@@ -23,42 +23,60 @@ module CycloneLariat
         end
 
         def create(msg)
-          dataset.insert MessagesMapper.to_row(msg)
+          dataset.create(MessagesMapper.to_row(msg)).uuid
         end
 
         def exists?(uuid:)
-          dataset.where(uuid: uuid).limit(1).any?
+          dataset.exists?(uuid: uuid)
         end
 
         def processed!(uuid:, error: nil)
-          data = { processed_at: ::Sequel.function(:NOW) }
+          data = { processed_at: current_timestamp_from_db }
           data.merge!(client_error_message: error.message, client_error_details: JSON.generate(error.details)) if error
 
-          !dataset.where(uuid: uuid).update(data).zero?
+          message = dataset.where(uuid: uuid).first
+          return false unless message
+
+          message.update(data)
         end
 
         def find(uuid:)
           row = dataset.where(uuid: uuid).first
           return if row.nil?
 
-          build MessagesMapper.from_row(row)
+          build_message_from_ar_row(row)
         end
 
         def each_unprocessed
           dataset.where(processed_at: nil).each do |row|
-            msg = build MessagesMapper.from_row(row)
+            msg = build_message_from_ar_row(row)
             yield(msg)
           end
         end
 
         def each_with_client_errors
-          dataset.where { (processed_at !~ nil) & (client_error_message !~ nil) }.each do |row|
-            msg = build MessagesMapper.from_row(row)
-            yield(msg)
-          end
+          dataset
+            .where.not(processed_at: nil)
+            .where.not(client_error_message: nil)
+            .each do |row|
+              msg = build_message_from_ar_row(row)
+              yield(msg)
+            end
         end
 
         private
+
+        def build_message_from_ar_row(row)
+          build MessagesMapper.from_row(row.attributes.symbolize_keys)
+        end
+
+        def current_timestamp_from_db
+          time_string_from_db =
+            ::ActiveRecord::Base
+            .connection.execute('select current_timestamp;')
+            .first['current_timestamp']
+          Time.parse(time_string_from_db)
+        end
 
         def build(raw)
           case kind = raw.delete(:kind)

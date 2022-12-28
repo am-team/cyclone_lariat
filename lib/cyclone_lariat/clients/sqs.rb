@@ -27,7 +27,6 @@ module CycloneLariat
           attribute_names: ['Policy']
         }).attributes['Policy']
 
-
         current_policy = JSON.parse(current_policy_json) if current_policy_json
 
         if current_policy && current_policy['Statement'].find { |s| s['Sid'] == policy['Sid'] }
@@ -50,10 +49,10 @@ module CycloneLariat
           queue_url: queue.url,
           message_body: msg.to_json,
           message_group_id: msg.group_id,
-          message_deduplication_id: msg.deduplication_id,
+          message_deduplication_id: msg.deduplication_id
         }.compact
 
-        aws_client.send_message **params
+        aws_client.send_message(**params)
       end
 
       def publish_event(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)

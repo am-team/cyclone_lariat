@@ -2,7 +2,7 @@
 
 module CycloneLariat
   module Repo
-    module Sequel
+    module ActiveRecord
       class Versions
         attr_reader :dataset
 
@@ -11,16 +11,16 @@ module CycloneLariat
         end
 
         def add(version)
-          dataset.insert(version: version)
+          dataset.create(version: version)
           true
         end
 
         def remove(version)
-          dataset.filter(version: version).delete.positive?
+          dataset.where(version: version).delete_all.positive?
         end
 
         def all
-          dataset.all
+          dataset.pluck(:version).map { |version| { version: version } }
         end
       end
     end

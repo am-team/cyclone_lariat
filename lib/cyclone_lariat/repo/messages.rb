@@ -4,6 +4,7 @@ require 'forwardable'
 require 'luna_park/extensions/injector'
 require 'cyclone_lariat/core'
 require 'cyclone_lariat/repo/sequel/messages'
+require 'cyclone_lariat/repo/active_record/messages'
 
 module CycloneLariat
   module Repo
@@ -12,7 +13,8 @@ module CycloneLariat
 
       attr_reader :config
 
-      dependency(:sequel_versions_class) { Repo::Sequel::Messages }
+      dependency(:sequel_messages_class) { Repo::Sequel::Messages }
+      dependency(:active_record_messages_class) { Repo::ActiveRecord::Messages }
 
       extend Forwardable
 
@@ -31,7 +33,8 @@ module CycloneLariat
 
       def select(driver:)
         case driver
-        when :sequel then sequel_versions_class.new(config.versions_dataset)
+        when :sequel then sequel_messages_class.new(config.messages_dataset)
+        when :active_record then active_record_messages_class.new(config.messages_dataset)
         else raise ArgumentError, "Undefined driver `#{driver}`"
         end
       end

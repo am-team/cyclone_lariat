@@ -2,8 +2,8 @@
 
 require 'cyclone_lariat/repo/versions'
 
-RSpec.describe CycloneLariat::Repo::Sequel::Versions do
-  let(:dataset) { DB[:sequel_lariat_versions] }
+RSpec.describe CycloneLariat::Repo::ActiveRecord::Versions do
+  let(:dataset) { ArLariatVersion }
   let(:repo) { described_class.new dataset }
 
   describe '#add' do
@@ -16,7 +16,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Versions do
 
     context 'when version already exists' do
       before { repo.add(version) }
-      it { expect { add }.to raise_error(Sequel::UniqueConstraintViolation) }
+      it { expect { add }.to raise_error(ActiveRecord::RecordNotUnique) }
     end
   end
 

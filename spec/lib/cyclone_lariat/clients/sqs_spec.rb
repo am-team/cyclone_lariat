@@ -356,6 +356,18 @@ RSpec.describe CycloneLariat::Clients::Sqs do
         end
       end
     end
+
+    context 'when fake publish' do
+      before { allow(client.config).to receive(:fake_publish).and_return(true) }
+
+      it 'should not send message' do
+        expect(aws_sqs_client).not_to receive(:send_message)
+      end
+
+      it 'should return fake response' do
+        expect(publish_event).to be_instance_of(Aws::SQS::Types::SendMessageResult)
+      end
+    end
   end
 
   describe '#list_all' do

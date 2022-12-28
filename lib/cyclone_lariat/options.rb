@@ -7,7 +7,7 @@ module CycloneLariat
     attr_accessor :aws_key, :aws_secret_key, :publisher,
                   :aws_region, :instance, :aws_account_id,
                   :messages_dataset, :version, :versions_dataset,
-                  :driver
+                  :driver, :fake_publish
 
     # @param [CycloneLariat::Options, Hash] other
     # @return [CycloneLariat::Options]
@@ -24,6 +24,7 @@ module CycloneLariat
       self.version          ||= other.version
       self.versions_dataset ||= other.versions_dataset
       self.driver           ||= other.driver
+      self.fake_publish     ||= other.fake_publish
 
       self
     end
@@ -43,7 +44,8 @@ module CycloneLariat
         messages_dataset: messages_dataset,
         version: version,
         versions_dataset: versions_dataset,
-        driver: driver
+        driver: driver,
+        fake_publish: fake_publish
       }
     end
   end

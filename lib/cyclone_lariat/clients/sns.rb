@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'aws-sdk-sns'
+require 'cyclone_lariat/fake'
 require 'cyclone_lariat/clients/abstract'
 require 'cyclone_lariat/resources/topic'
 require 'cyclone_lariat/resources/queue'
@@ -14,6 +15,8 @@ module CycloneLariat
       dependency(:aws_client_class) { Aws::SNS::Client }
 
       def publish(msg, fifo:, topic: nil, skip_validation: false)
+        return Fake.sns_publish_response(msg) if config.fake_publish
+
         topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)
 
         raise Errors::GroupIdUndefined.new(resource: topic)       if fifo && msg.group_id.nil?

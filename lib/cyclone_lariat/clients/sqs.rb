@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'aws-sdk-sqs'
+require 'cyclone_lariat/fake'
 require 'cyclone_lariat/clients/abstract'
 require 'cyclone_lariat/resources/queue'
 require 'cyclone_lariat/generators/queue'
@@ -38,6 +39,8 @@ module CycloneLariat
       end
 
       def publish(msg, fifo:, dest: nil, queue: nil)
+        return Fake.sqs_send_message_result(msg) if config.fake_publish
+
         queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
 
         raise Errors::GroupIdUndefined.new(resource: queue)       if fifo && msg.group_id.nil?

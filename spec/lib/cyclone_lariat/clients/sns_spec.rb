@@ -327,6 +327,19 @@ RSpec.describe CycloneLariat::Clients::Sns do
         end
       end
     end
+
+    context 'when fake publish' do
+      before { allow(client.config).to receive(:fake_publish).and_return(true) }
+
+      it 'should not send message' do
+        expect(aws_sns_client).not_to receive(:publish)
+        publish_event
+      end
+
+      it 'should return fake response' do
+        expect(publish_event).to be_instance_of(Aws::SNS::Types::PublishResponse)
+      end
+    end
   end
 
   describe '#subscribe' do

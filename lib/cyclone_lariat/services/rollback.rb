@@ -14,7 +14,7 @@ module CycloneLariat
         version ||= existed_migrations[-1]
         output = []
 
-        paths_of_downgrades.each do |path|
+        paths_of_downgrades(version).each do |path|
           filename       = File.basename(path, '.rb')
           version, title = filename.split('_', 2)
           class_name     = title.split('_').collect(&:capitalize).join
@@ -31,7 +31,7 @@ module CycloneLariat
         @existed_migrations ||= repo.all.map { |row| row[:version] }.sort
       end
 
-      def paths_of_downgrades
+      def paths_of_downgrades(version)
         migrations_to_downgrade = existed_migrations.select { |migration| migration >= version }
 
         paths = []

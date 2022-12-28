@@ -7,9 +7,9 @@ module CycloneLariat
     class Queue
       SNS_SUFFIX = :queue
 
-      attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo
+      attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo, :content_based_deduplication
 
-      def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:, tags: nil, name: nil)
+      def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:, content_based_deduplication: nil, tags: nil, name: nil)
         @instance  = instance
         @kind      = kind
         @region    = region
@@ -20,6 +20,7 @@ module CycloneLariat
         @fifo      = fifo
         @tags      = tags
         @name      = name
+        @content_based_deduplication = content_based_deduplication
       end
 
       def arn
@@ -51,7 +52,6 @@ module CycloneLariat
 
       alias to_s name
 
-
       def topic?
         false
       end
@@ -62,6 +62,13 @@ module CycloneLariat
 
       def protocol
         'sqs'
+      end
+
+      def attributes
+        attrs = {}
+        attrs['FifoQueue']                 = 'true' if fifo
+        attrs['ContentBasedDeduplication'] = 'true' if content_based_deduplication
+        attrs
       end
 
       class << self
@@ -137,21 +144,21 @@ module CycloneLariat
       def tags
         @tags ||= begin
           if standard?
-            [
-              { key: 'standard',  value: 'true' },
-              { key: 'instance',  value: String(instance) },
-              { key: 'kind',      value: String(kind) },
-              { key: 'publisher', value: String(publisher) },
-              { key: 'type',      value: String(type) },
-              { key: 'dest',      value: dest ? String(dest) : 'undefined' },
-              { key: 'fifo',      value: fifo ? 'true' : 'false' }
-            ]
+            {
+              'standard' => 'true',
+              'instance' => String(instance),
+              'kind' => String(kind),
+              'publisher' => String(publisher),
+              'type' => String(type),
+              'dest' => dest ? String(dest) : 'undefined',
+              'fifo' => fifo ? 'true' : 'false'
+            }
           else
-            [
-              { key: 'standard',  value: 'false' },
-              { key: 'name',      value: String(name) },
-              { key: 'fifo',      value: fifo ? 'true' : 'false' }
-            ]
+            {
+              'standard' => 'false',
+              'name' => String(name),
+              'fifo' => fifo ? 'true' : 'false'
+            }
           end
         end
       end

@@ -62,7 +62,7 @@ module CycloneLariat
     end
 
     def subscribe(topic:, endpoint:, policy: nil)
-      policy ||= default_policy(topic, endpoint)
+      policy ||= default_policy(endpoint)
       sqs.add_policy(queue: endpoint, policy: policy) if endpoint.queue?
       sns.subscribe topic: topic, endpoint: endpoint
       puts "  Subscription was created `#{topic.name} -> #{endpoint.name}`"
@@ -73,18 +73,18 @@ module CycloneLariat
       puts "  Subscription was deleted `#{topic.name} -> #{endpoint.name}`"
     end
 
-    def default_policy(topic, queue)
+    def default_policy(queue)
       {
-        'Sid' => topic.name,
+        'Sid' => queue.arn,
         'Effect' => 'Allow',
         'Principal' => {
-          'AWS' => CycloneLariat.config.aws_account_id.to_s
+          'AWS' => '*'
         },
         'Action' => 'SQS:*',
         'Resource' => queue.arn,
         'Condition' => {
           'ArnEquals' => {
-            'aws:SourceArn' => topic.arn
+            'aws:SourceArn' => fanout_arn_pattern
           }
         }
       }
@@ -113,12 +113,21 @@ module CycloneLariat
       end
     end
 
+    def fanout_arn_pattern
+      @fanout_arn_pattern ||= [
+        'arn:aws:sns',
+        CycloneLariat.config.aws_region,
+        CycloneLariat.config.aws_account_id,
+        "#{CycloneLariat.config.instance}-*-fanout-*"
+      ].join(':')
+    end
+
     class << self
-      def migrate(repo: CycloneLariat::Versions::Repo.new, dir: DIR, service: Services::Migrate)
+      def migrate(repo: CycloneLariat::Repo::Versions.new, dir: DIR, service: Services::Migrate)
         puts service.new(repo: repo, dir: dir).call
       end
 
-      def rollback(version = nil, repo: CycloneLariat::Versions::Repo.new, dir: DIR, service: Services::Rollback)
+      def rollback(version = nil, repo: CycloneLariat::Repo::Versions.new, dir: DIR, service: Services::Rollback)
         puts service.new(repo: repo, dir: dir).call(version)
       end
 

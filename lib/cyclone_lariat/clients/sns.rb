@@ -16,8 +16,9 @@ module CycloneLariat
       def publish(msg, fifo:, topic: nil, skip_validation: false)
         topic = topic ? custom_topic(topic) : topic(msg.type, kind: msg.kind, fifo: fifo)
 
-        raise Errors::GroupIdUndefined.new(resource: topic) if fifo && msg.group_id.nil?
-        raise Errors::GroupDefined.new(resource: topic) if !fifo && msg.group_id
+        raise Errors::GroupIdUndefined.new(resource: topic)       if fifo && msg.group_id.nil?
+        raise Errors::GroupDefined.new(resource: topic)           if !fifo && msg.group_id
+        raise Errors::DeduplicationIdDefined.new(resource: topic) if !fifo && msg.deduplication_id
 
         msg.validation.check! unless skip_validation
 

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'cyclone_lariat/resources/topic'
 
 module CycloneLariat
   module Generators
     module Topic
-      def topic(type, fifo:, kind: :event, **options)
+      def topic(type, fifo:, kind: :event, content_based_deduplication: nil, **options)
         options = CycloneLariat::Options.wrap(options)
         options.merge!(config)
 
@@ -14,7 +16,8 @@ module CycloneLariat
           account_id: options.aws_account_id,
           kind: kind,
           type: type,
-          fifo: fifo
+          fifo: fifo,
+          content_based_deduplication: content_based_deduplication
         )
       end
 

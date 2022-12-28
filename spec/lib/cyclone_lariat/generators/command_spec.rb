@@ -67,7 +67,7 @@ RSpec.describe CycloneLariat::Generators::Command do
 
     it 'should match expected values' do
       expect(command.type).to eq('create_pizza')
-      expect(command.data).to eq({type: 'margaritta', size: 'L'})
+      expect(command.data).to eq({ type: 'margaritta', size: 'L' })
       expect(command.request_id).to eq(request_id)
       expect(command.uuid).to eq(uuid)
       expect(command.kind).to eq('command')

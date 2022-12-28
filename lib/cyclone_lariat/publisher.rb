@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'cyclone_lariat/clients/sns'
 require 'cyclone_lariat/clients/sqs'
 

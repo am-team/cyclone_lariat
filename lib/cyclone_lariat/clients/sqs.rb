@@ -29,9 +29,7 @@ module CycloneLariat
 
         current_policy = JSON.parse(current_policy_json) if current_policy_json
 
-        if current_policy && current_policy['Statement'].find { |s| s['Sid'] == policy['Sid'] }
-          raise Errors::PolicyAlreadyExists.new(sid: policy['Sid'])
-        end
+        return if current_policy && current_policy['Statement'].find { |s| s['Sid'] == policy['Sid'] }
 
         new_policy = current_policy || { 'Statement' => [] }
         new_policy['Statement'] << policy
@@ -42,8 +40,9 @@ module CycloneLariat
       def publish(msg, fifo:, dest: nil, queue: nil)
         queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
 
-        raise Errors::GroupIdUndefined.new(resource: queue) if fifo && msg.group_id.nil?
-        raise Errors::GroupDefined.new(resource: queue) if !fifo && msg.group_id
+        raise Errors::GroupIdUndefined.new(resource: queue)       if fifo && msg.group_id.nil?
+        raise Errors::GroupDefined.new(resource: queue)           if !fifo && msg.group_id
+        raise Errors::DeduplicationIdDefined.new(resource: queue) if !fifo && msg.deduplication_id
 
         params = {
           queue_url: queue.url,
@@ -69,10 +68,7 @@ module CycloneLariat
         raise ArgumentError, 'Should be queue' unless queue.is_a? Resources::Queue
         raise Errors::QueueAlreadyExists.new(expected_queue: queue.name) if exists?(queue)
 
-        attrs = {}
-        attrs['FifoQueue'] = 'true' if queue.fifo
-
-        aws_client.create_queue(queue_name: queue.name, attributes: attrs, tags: queue.tags)
+        aws_client.create_queue(queue_name: queue.name, attributes: queue.attributes, tags: queue.tags)
         queue
       end
 

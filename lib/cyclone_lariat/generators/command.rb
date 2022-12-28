@@ -13,7 +13,7 @@ module CycloneLariat
         end
       end
 
-      def command_v1(type, data: {}, request_id: nil, uuid: SecureRandom.uuid)
+      def command_v1(type, data: {}, request_id: nil, group_id: nil, deduplication_id: nil, uuid: SecureRandom.uuid)
         params = {
           uuid: uuid,
           type: type,
@@ -21,7 +21,9 @@ module CycloneLariat
           version: 1,
           publisher: config.publisher,
           data: data,
-          request_id: request_id
+          request_id: request_id,
+          group_id: group_id,
+          deduplication_id: deduplication_id
         }
 
         Messages::V1::Command.wrap(params.compact)

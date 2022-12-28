@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'cyclone_lariat/clients/sqs'
 require 'cyclone_lariat/clients/sns'
 require 'timecop'
@@ -113,7 +114,9 @@ RSpec.describe CycloneLariat::Clients::Sns do
   end
 
   describe '#create' do
-    subject(:create_topic) { client.create client.topic('create_note', fifo: true) }
+    subject(:create_topic) do
+      client.create client.topic('create_note', fifo: true, content_based_deduplication: true)
+    end
 
     context 'when topic already exists' do
       it 'should raise error' do
@@ -127,7 +130,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
       it 'should create new one FIFO topic' do
         expect(aws_sns_client).to receive(:create_topic).with(
           name: 'test-event-fanout-sample_app-create_note.fifo',
-          attributes: { 'FifoTopic' => 'true' },
+          attributes: { 'FifoTopic' => 'true', 'ContentBasedDeduplication' => 'true' },
           tags: [
             { key: 'standard', value: 'true' },
             { key: 'instance', value: 'test' },
@@ -248,12 +251,11 @@ RSpec.describe CycloneLariat::Clients::Sns do
       context 'when deduplication_id defined' do
         let(:event) do
           client.event(
-            'create_note', data: {
-              text: 'Test note'
-            },
+            'create_note',
+            data: { text: 'Test note' },
             request_id: request_id,
             group_id: 'the.group',
-            deduplication_id: 'the.uniq',
+            deduplication_id: 'the.uniq'
           )
         end
 
@@ -288,7 +290,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
       context 'when group_id is defined' do
         let(:event) { client.event('create_note', data: { text: 'Test note' }, request_id: request_id, group_id: 'the.group') }
 
-        it 'should raise you must define group id' do
+        it 'should raise group id must be nil' do
           expect { publish_event }.to raise_error CycloneLariat::Errors::GroupDefined
         end
       end
@@ -297,7 +299,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
         it 'should be sent to topic expected message' do
           expect(aws_sns_client).to receive(:publish).with(
             message: expected_message.to_json,
-            topic_arn: 'arn:aws:sns:region:42:test-event-fanout-sample_app-create_note',
+            topic_arn: 'arn:aws:sns:region:42:test-event-fanout-sample_app-create_note'
           )
           publish_event
         end
@@ -309,7 +311,7 @@ RSpec.describe CycloneLariat::Clients::Sns do
         it 'should be sent to topic expected message' do
           expect(aws_sns_client).to receive(:publish).with(
             message: expected_message.to_json,
-            topic_arn: 'arn:aws:sns:region:42:defined_topic',
+            topic_arn: 'arn:aws:sns:region:42:defined_topic'
           )
           publish_event
         end
@@ -317,22 +319,11 @@ RSpec.describe CycloneLariat::Clients::Sns do
 
       context 'when deduplication_id defined' do
         let(:event) do
-          client.event(
-            'create_note', data: {
-              text: 'Test note'
-            },
-            request_id: request_id,
-            deduplication_id: 'the.uniq',
-          )
+          client.event('create_note', data: { text: 'Test note' }, request_id: request_id, deduplication_id: 'the.uniq')
         end
 
-        it 'should be sent to topic expected message' do
-          expect(aws_sns_client).to receive(:publish).with(
-            message: expected_message.to_json,
-            topic_arn: 'arn:aws:sns:region:42:test-event-fanout-sample_app-create_note',
-            message_deduplication_id: 'the.uniq'
-          )
-          publish_event
+        it 'should raise deduplication id must be nil' do
+          expect { publish_event }.to raise_error CycloneLariat::Errors::DeduplicationIdDefined
         end
       end
     end

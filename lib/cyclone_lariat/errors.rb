@@ -41,10 +41,6 @@ module CycloneLariat
       message { |d| "Subscription for topic `#{d[:topic].name}`, on endpoint `#{d[:endpoint].name}` does not exists" }
     end
 
-    class PolicyAlreadyExists < LunaPark::Errors::System
-      message { |d| "Policy with sid: `#{d[:sid]}` already exists" }
-    end
-
     class InvalidMessage < LunaPark::Errors::Business
       message 'Message is not valid'
     end
@@ -55,6 +51,10 @@ module CycloneLariat
 
     class GroupDefined < LunaPark::Errors::System
       message { |d| "Group id must be nil for non-FIFO resources: `#{d[:resource].name}`" }
+    end
+
+    class DeduplicationIdDefined < LunaPark::Errors::System
+      message { |d| "Deduplication id must be nil for non-FIFO resources: `#{d[:resource].name}`" }
     end
   end
 end

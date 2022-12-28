@@ -102,9 +102,9 @@ RSpec.describe CycloneLariat::Clients::Abstract do
 
     context 'version is unknown' do
       subject(:event) do
-        client.event('create_user',data: {
-            mail: 'john.doe@mail.ru'
-          },
+        client.event(
+          'create_user',
+          data: { mail: 'john.doe@mail.ru' },
           uuid: SecureRandom.uuid,
           version: 12
         )
@@ -139,9 +139,9 @@ RSpec.describe CycloneLariat::Clients::Abstract do
 
     context 'version is unknown' do
       subject(:command) do
-        client.command('create_user',data: {
-            mail: 'john.doe@mail.ru'
-          },
+        client.command(
+          'create_user',
+          data: { mail: 'john.doe@mail.ru' },
           uuid: SecureRandom.uuid,
           version: 12
         )

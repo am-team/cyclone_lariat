@@ -5,9 +5,9 @@ module CycloneLariat
     class Topic
       SNS_SUFFIX = :fanout
 
-      attr_reader :instance, :kind, :region, :account_id, :publisher, :type, :fifo
+      attr_reader :instance, :kind, :region, :account_id, :publisher, :type, :fifo, :content_based_deduplication
 
-      def initialize(instance:, kind:, region:, account_id:, publisher:, type:, fifo:, tags: nil, name: nil)
+      def initialize(instance:, kind:, region:, account_id:, publisher:, type:, fifo:, content_based_deduplication: nil, tags: nil, name: nil)
         @instance  = instance
         @kind      = kind
         @region    = region
@@ -17,6 +17,7 @@ module CycloneLariat
         @fifo      = fifo
         @tags      = tags
         @name      = name
+        @content_based_deduplication = content_based_deduplication
       end
 
       def arn
@@ -42,7 +43,10 @@ module CycloneLariat
       end
 
       def attributes
-        fifo ? { 'FifoTopic' => 'true' } : {}
+        attrs = {}
+        attrs['FifoTopic']                 = 'true' if fifo
+        attrs['ContentBasedDeduplication'] = 'true' if content_based_deduplication
+        attrs
       end
 
       def topic?

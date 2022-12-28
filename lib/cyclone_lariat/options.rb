@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'luna_park/values/compound'
 
 module CycloneLariat

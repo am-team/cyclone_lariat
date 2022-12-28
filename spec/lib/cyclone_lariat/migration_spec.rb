@@ -176,15 +176,15 @@ RSpec.describe CycloneLariat::Migration do
           'Action' => 'SQS:*',
           'Condition' => {
             'ArnEquals' => {
-              'aws:SourceArn' => 'arn:aws:sns:region:42:test-event-fanout-cyclone_lariat-notes_added.fifo'
+              'aws:SourceArn' => 'arn:aws:sns::123456:test-*-fanout-*'
             }
           },
           'Effect' => 'Allow',
           'Principal' => {
-              'AWS' => '123456'
+              'AWS' => '*'
             },
           'Resource' => 'arn:aws:sqs:region:42:test-event-queue-cyclone_lariat-notes_added.fifo',
-          'Sid' => 'test-event-fanout-cyclone_lariat-notes_added.fifo'
+          'Sid' => 'arn:aws:sqs:region:42:test-event-queue-cyclone_lariat-notes_added.fifo'
         }
 
         expect(sqs).to receive(:add_policy).with(queue: queue, policy: expected_policy)

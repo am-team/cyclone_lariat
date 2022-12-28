@@ -67,7 +67,7 @@ RSpec.describe CycloneLariat::Generators::Event do
 
     it 'should match expected values' do
       expect(event.type).to eq('pizza_already_created')
-      expect(event.data).to eq({type: 'margaritta', size: 'L'})
+      expect(event.data).to eq({ type: 'margaritta', size: 'L' })
       expect(event.request_id).to eq(request_id)
       expect(event.uuid).to eq(uuid)
       expect(event.kind).to eq('event')

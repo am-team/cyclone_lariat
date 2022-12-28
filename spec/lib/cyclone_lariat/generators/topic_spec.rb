@@ -22,7 +22,9 @@ RSpec.describe CycloneLariat::Generators::Topic do
   let(:object_with_generator) { class_with_generator.new }
 
   describe '#queue' do
-    subject(:topic) { object_with_generator.topic 'pizza_line', fifo: true }
+    subject(:topic) do
+      object_with_generator.topic 'pizza_line', fifo: true, content_based_deduplication: true
+    end
 
     it { is_expected.to be_a CycloneLariat::Resources::Topic }
 
@@ -34,6 +36,7 @@ RSpec.describe CycloneLariat::Generators::Topic do
       expect(topic.publisher).to eq 'pizzeria'
       expect(topic.type).to eq 'pizza_line'
       expect(topic.fifo).to eq true
+      expect(topic.content_based_deduplication).to eq true
       expect(topic.tags).to eq([
         { key: 'standard', value: 'true' },
         { key: 'instance', value: 'test' },

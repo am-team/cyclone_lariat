@@ -300,6 +300,27 @@ RSpec.describe CycloneLariat::Clients::Sqs do
           publish_event
         end
       end
+
+      context 'when message invalid' do
+        let(:event) { client.event('create_user', data: { text: 'Test note' }, request_id: 'no-uuid', group_id: 'the.group') }
+
+        it 'should have invalid message' do
+          expect(event.valid?).to eq false
+        end
+
+        context 'and validation is enabled' do
+          subject(:publish_event) { client.publish event, queue: 'defined_queue.fifo', fifo: true, skip_validation: false }
+
+          it { expect { publish_event }.to raise_error CycloneLariat::Errors::InvalidMessage }
+        end
+
+        context 'and validation is disabled' do
+          subject(:publish_event) { client.publish event, queue: 'defined_queue.fifo', fifo: true, skip_validation: true }
+          before { allow(aws_sqs_client).to receive(:send_message).and_return(nil) }
+
+          it { expect { publish_event }.to_not raise_error }
+        end
+      end
     end
 
     context 'in existed non-FIFO topic' do

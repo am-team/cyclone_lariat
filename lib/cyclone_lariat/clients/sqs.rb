@@ -38,7 +38,7 @@ module CycloneLariat
         aws_client.set_queue_attributes({ queue_url: queue.url, attributes: { 'Policy' => new_policy.to_json } })
       end
 
-      def publish(msg, fifo:, dest: nil, queue: nil)
+      def publish(msg, fifo:, dest: nil, queue: nil, skip_validation: false)
         return Fake.sqs_send_message_result(msg) if config.fake_publish
 
         queue = queue ? custom_queue(queue) : queue(msg.type, kind: msg.kind, fifo: fifo, dest: dest)
@@ -46,6 +46,8 @@ module CycloneLariat
         raise Errors::GroupIdUndefined.new(resource: queue)       if fifo && msg.group_id.nil?
         raise Errors::GroupDefined.new(resource: queue)           if !fifo && msg.group_id
         raise Errors::DeduplicationIdDefined.new(resource: queue) if !fifo && msg.deduplication_id
+
+        msg.validation.check! unless skip_validation
 
         params = {
           queue_url: queue.url,

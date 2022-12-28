@@ -2,12 +2,12 @@
 
 require 'luna_park/entities/attributable'
 require 'luna_park/extensions/validatable'
-require 'cyclone_lariat/messages/v2/validator'
+require 'cyclone_lariat/messages/v1/validator'
 require 'cyclone_lariat/errors'
 
 module CycloneLariat
   module Messages
-    module V2
+    module V1
       class Abstract < LunaPark::Entities::Attributable
         include LunaPark::Extensions::Validatable
 
@@ -15,7 +15,8 @@ module CycloneLariat
         attr :publisher, String, :new
         attr :type,      String, :new
         attrs :client_error, :version, :data, :request_id, :sent_at,
-              :deduplication_id, :group_id, :processed_at, :received_at
+          :deduplication_id, :group_id, :processed_at, :received_at,
+          :subject, :object
 
         validator Validator
 
@@ -32,7 +33,9 @@ module CycloneLariat
             version: version,
             data: data,
             request_id: request_id,
-            sent_at: sent_at&.iso8601(3)
+            sent_at: sent_at&.iso8601(3),
+            subject: subject,
+            object: object
           }.compact
         end
 
@@ -48,6 +51,14 @@ module CycloneLariat
 
         def data
           @data ||= {}
+        end
+
+        def subject
+          @subject ||= {}
+        end
+
+        def object
+          @object ||= {}
         end
 
         def version=(value)

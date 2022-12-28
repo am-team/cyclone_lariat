@@ -2,7 +2,7 @@
 
 require 'luna_park/entities/attributable'
 require 'luna_park/extensions/validatable'
-require 'cyclone_lariat/messages/v1/validator'
+require 'cyclone_lariat/messages/v2/validator'
 require 'cyclone_lariat/errors'
 
 module CycloneLariat

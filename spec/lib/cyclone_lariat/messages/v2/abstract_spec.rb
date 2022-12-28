@@ -15,7 +15,7 @@ module CycloneLariat
         sent_at: '1970-01-01 16:40:00',
         subject: {
           type: 'User',
-          uuid: user_uuid,
+          uuid: user_uuid
         },
         object: {
           type: 'User',
@@ -29,7 +29,7 @@ module CycloneLariat
     let(:message_class) do
       Class.new(described_class) do
         include LunaPark::Extensions::Validatable
-        validator Messages::V1::Validator
+        validator Messages::V2::Validator
         def kind
           'message'
         end
@@ -112,35 +112,35 @@ module CycloneLariat
         end
       end
 
-      context 'when it defined with 1' do
-        before { params[:version] = 1 }
-
-        it 'should be eq 1' do
-          is_expected.to eq 1
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
-      context 'when it defined with \'1\'' do
-        before { params[:version] = '1' }
-
-        it 'should be eq 1 (int)' do
-          is_expected.to eq 1
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
       context 'when it defined with 2' do
         before { params[:version] = 2 }
 
-        it 'should be eq 2' do
+        it 'should be eq 1' do
           is_expected.to eq 2
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with \'2\'' do
+        before { params[:version] = '2' }
+
+        it 'should be eq 2 (int)' do
+          is_expected.to eq 2
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with 1' do
+        before { params[:version] = 1 }
+
+        it 'should be eq 2' do
+          is_expected.to eq 1
         end
 
         it 'should be invalid' do
@@ -325,12 +325,20 @@ module CycloneLariat
         expected_json = {
           uuid: uuid,
           publisher: 'example_publisher',
-          type: 'message_create_user',
-          version: 1,
+          type: 'message_user_email_updated',
+          version: 2,
           data: {
             email: 'john.doe@example.com'
           },
-          sent_at: '1970-01-01T16:40:00.000+01:00'
+          sent_at: '1970-01-01T16:40:00.000+01:00',
+          subject: {
+            type: 'User',
+            uuid: user_uuid
+          },
+          object: {
+            type: 'User',
+            uuid: user_uuid
+          }
         }.to_json
 
         is_expected.to eq(expected_json)

@@ -7,7 +7,7 @@ require 'cyclone_lariat/errors'
 
 module CycloneLariat
   module Messages
-    module V1
+    module V2
       class Abstract < LunaPark::Entities::Attributable
         include LunaPark::Extensions::Validatable
 

@@ -316,6 +316,108 @@ module CycloneLariat
       end
     end
 
+    describe '#subject' do
+      subject(:subject) { message.subject }
+
+      context 'when it undefined' do
+        before { params.delete :subject }
+
+        it { is_expected.to be_an Hash }
+        it { is_expected.to be_empty }
+
+        it 'should be invalid' do
+          expect(message.valid?).to eq false
+        end
+      end
+
+      context 'when it defined with valid data' do
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with invalid data' do
+        context 'when uuid is not uuid' do
+          before { params[:subject] = { type: 'User', uuid: 'rere' } }
+
+          it 'should be invalid' do
+            expect(message.valid?).to eq false
+          end
+        end
+
+        context 'when type is not a string' do
+          before { params[:subject] = { type: 1, uuid: SecureRandom.uuid } }
+
+          it 'should be invalid' do
+            expect(message.valid?).to eq false
+          end
+        end
+      end
+
+      context 'when it defined without hash' do
+        before { params[:subject] = 'string' }
+
+        it 'should be eq defined string' do
+          is_expected.to eq('string')
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq false
+        end
+      end
+    end
+
+    describe '#object' do
+      subject(:object) { message.object }
+
+      context 'when it undefined' do
+        before { params.delete :object }
+
+        it { is_expected.to be_an Hash }
+        it { is_expected.to be_empty }
+
+        it 'should be invalid' do
+          expect(message.valid?).to eq false
+        end
+      end
+
+      context 'when it defined with valid data' do
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with invalid data' do
+        context 'when uuid is not uuid' do
+          before { params[:object] = { type: 'User', uuid: 'rere' } }
+
+          it 'should be invalid' do
+            expect(message.valid?).to eq false
+          end
+        end
+
+        context 'when type is not a string' do
+          before { params[:object] = { type: 1, uuid: SecureRandom.uuid } }
+
+          it 'should be invalid' do
+            expect(message.valid?).to eq false
+          end
+        end
+      end
+
+      context 'when it defined without hash' do
+        before { params[:object] = 'string' }
+
+        it 'should be eq defined string' do
+          is_expected.to eq('string')
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq false
+        end
+      end
+    end
+
     describe '#to_json' do
       subject(:to_json) { message.to_json }
       let(:uuid) { SecureRandom.uuid }

@@ -32,7 +32,8 @@ Gem::Specification.new do |spec|
   end
 
   spec.require_paths = ['lib']
-  spec.executables   = ['cyclone_lariat']
+  spec.bindir = 'bin'
+  spec.executables = ['cyclone_lariat']
 
   spec.add_dependency 'aws-sdk-sns'
   spec.add_dependency 'aws-sdk-sqs'

@@ -8,7 +8,6 @@ This gem work in few scenarios:
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
 
-
 # Client / Publisher
 At first lets understand what the difference between SQS and SNS:
 - Amazon Simple Queue Service (SQS) lets you send, store, and receive messages between software components at any
@@ -21,7 +20,7 @@ SNS service like fanout.
 
 For use **cyclone_lariat** as _Publisher_ lets make install CycloneLariat.
 
-## Install cyclone_lariat
+## Install Cyclone Lariat with Sequel
 Edit Gemfile:
 ```ruby
 # Gemfile
@@ -31,27 +30,43 @@ gem 'cyclone_lariat'
 And run in console:
 ```bash
 $ bundle install
-$ cyclone_lariat install
+$ cyclone_lariat install        # If use Sequel gem
 ```
 
-Last command will create 2 files:
+## Install Cyclone Lariat with ActiveRecord
+Edit Gemfile:
+```ruby
+# Gemfile
+gem 'active_record'
+gem 'cyclone_lariat'
+```
+And run in console:
+```bash
+$ bundle install
+$ cyclone_lariat install active_record # If use ActiveRecord gem
+```
+
+## Configuration
+
+Last install command will create 2 files:
 - ./lib/tasks/cyclone_lariat.rake - Rake tasks, for management migrations
 - ./config/initializers/cyclone_lariat.rb - Configuration default values for cyclone lariat usage
 
-## Configuration
 ```ruby
 # frozen_string_literal: true
 
-CycloneLariat.configure do |config|
-  config.default_version = 1                      # api version
-  config.aws_key = ENV['AWS_KEY']                 # aws key
-  config.aws_account_id = ENV['AWS_ACCOUNT_ID']   # aws account id
-  config.aws_secret_key = ENV['AWS_SECRET_KEY']   # aws secret
-  config.aws_default_region = ENV['AWS_REGION']   # aws default region
-  config.publisher = ENV['APP_NAME']              # name of your publishers, usually name of your application
-  config.default_instance = ENV['INSTANCE']       # stage, production, test
-  config.events_dataset = DB[:events]             # sequel dataset for store income messages, for receiver
-  config.versions_dataset = DB[:lariat_versions]  # sequel dataset for migrations, for publisher
+CycloneLariat.configure do |c|
+   c.default_version    = 1                         # api version
+   c.aws_key            = ENV['AWS_KEY']            # aws key
+   c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
+   c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
+   c.aws_default_region = ENV['AWS_REGION']         # aws default region
+   c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
+   c.default_instance   = ENV['INSTANCE']           # stage, production, test
+   c.driver             = :sequel                   # :sequel or :active_record
+   c.messages_dataset   = DB[:messages]             # Sequel dataset / ActiveRecord model for store income messages (on receiver) 
+   c.versions_dataset   = DB[:lariat_versions]      # Sequel dataset / ActiveRecord model for publisher migrations
+   c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
 end
 ```
 If you are only using your application as a publisher, you may not need to set the `events_dataset`
@@ -63,9 +78,10 @@ Before creating the first migration, let's explain what `CycloneLariat::Messages
 Message in Amazon SQS\SNS service it's a
 [object](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 that has several attributes. The main attributes are the **body**, which consists of the published
-data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_lariat** use this scheme:
+data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
 
 ```json
+// Sceheme: version 1
 {
   "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",       // Uniq message identificator
   "publisher": "sample_app",                            // Publisher application name
@@ -86,6 +102,47 @@ Idea about X-Request-Id you can see at
 
 As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::V1::Event_ and
 _Messages::V1::Command_.
+
+
+If you want log all your messages you can use extended scheme - version 2.
+
+
+```json
+// Sceheme: version 2
+{
+  "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",       // Uniq message identificator
+  "publisher": "sample_app",                            // Publisher application name
+  "request_id": "51285005-8a06-4181-b5fd-bf29f3b1a45a", // Optional: X-Request-Id
+  "type": "event_note_created",                         // Type of Event or Command
+  "version": 1,                                         // Version of data structure
+  "object": {
+    "type": "user",                                     // Subject type
+    "uuid": "a27c29e2-bbd3-490a-8f1b-caa4f8d902ef"      // Subject uuid
+  },
+  "subject": {
+    "type": "note",                                     // Object type
+    "uuid": "f46e74db-3335-4c5e-b476-c2a87660a942"      // Object uuid
+  },
+  "data": {
+    "id": 12,
+    "text": "Sample of published data",
+    "attributes": ["one", "two", "three"]
+  },
+  "sent_at": "2022-11-09T11:42:18.203+01:00"      // Time when message was sended in ISO8601 Standard
+}
+```
+
+The difference between scheme first and second version - is subject and object. This values need to help with actions log. 
+For example, user #42, write to support, "why he could not sign in". The messages log is:
+
+| Subject  | Action      | Object    |
+|:---------|:------------|:----------|
+| user #42 | sign_up     | user #42  |
+| user #42 | sign_in     | user #42  |
+| user #42 | create_note | note #769 |
+| user #1  | ban         | user #42  |
+
+It is important to understand that user #42 can be both a subject and an object. And you should save both of these fields to keep track of the entire history of this user.
 
 ### Command vs Event
 Commands and events are both simple domain structures that contain solely data for reading. That means
@@ -111,7 +168,7 @@ CycloneLariat.configure do |config|
   # Options app here
 end
 
-client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)
+client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 1)
 
 client.publish_command('register_user', data: {
     first_name: 'John',
@@ -133,9 +190,29 @@ That's call, will generate a message body:
     "last_name": "Doe",
     "mail": "john.doe@example.com"
   },
-  "sent_at": "2022-11-09T11:42:18.203+01:00"      // Time when message was sended in ISO8601 Standard
+  "sent_at": "2022-11-09T11:42:18.203+01:00" // The time the message was sent. ISO8601 standard.
 }
 ```
+
+Or for second schema version code: 
+```ruby
+CycloneLariat.configure do |config|
+  # Options app here
+end
+
+client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)
+
+client.publish_event 'sign_up', data: { 
+                       first_name: 'John',
+                       last_name: 'Doe',
+                       mail: 'john.doe@example.com'
+                     },
+                     subject: { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
+                     object:  { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
+                     fifo: false
+)
+```
+
 
 Or is it better to make your own client, like a [Repository](https://deviq.com/design-patterns/repository-pattern) pattern.
 
@@ -143,10 +220,6 @@ Or is it better to make your own client, like a [Repository](https://deviq.com/d
 require 'cyclone_lariat/sns_client' # If require: false in Gemfile
 
 class YourClient < CycloneLariat::Clients::Sns
-  version 1
-  publisher 'pilot'
-  instance 'stage'
-
   def email_is_created(mail)
     publish event('email_is_created', data: { mail: mail }), fifo: true
   end

@@ -59,14 +59,20 @@ module CycloneLariat
         aws_client.send_message(**params)
       end
 
-      def publish_event(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)
-        publish event(type, data: data, version: version, uuid: uuid, request_id: request_id),
-                fifo: fifo, dest: dest, queue: queue
+      def publish_event(type, fifo:, dest: nil, queue: nil, **options)
+        options[:version] ||= self.config.version
+        options[:data]    ||= {}
+        options[:uuid]    ||= SecureRandom.uuid
+
+        publish event(type, data: data, **options), fifo: fifo, dest: dest, queue: queue
       end
 
-      def publish_command(type, fifo:, dest: nil, data: {}, version: self.version, uuid: SecureRandom.uuid, request_id: nil, queue: nil)
-        publish command(type, data: data, version: version, uuid: uuid, request_id: request_id),
-                fifo: fifo, dest: dest, queue: queue
+      def publish_command(type, fifo:, dest: nil, queue: nil, **options)
+        options[:version] ||= self.config.version
+        options[:data]    ||= {}
+        options[:uuid]    ||= SecureRandom.uuid
+
+        publish event(type, data: data, **options), fifo: fifo, dest: dest, queue: queue
       end
 
       def create(queue)

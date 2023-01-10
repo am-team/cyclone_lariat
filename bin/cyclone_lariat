@@ -62,18 +62,16 @@ module CycloneLariat
             # frozen_string_literal: true
 
             CycloneLariat.configure do |c|
-              c.version            = 1                         # api version
-
+              c.version            = 1                         # messages version
               c.aws_key            = ENV['AWS_KEY']            # aws key
               c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
               c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
-              c.aws_region         = ENV['AWS_REGION']         # aws region
-
+              c.aws_region         = ENV['AWS_REGION']         # aws default region
               c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
               c.instance           = ENV['INSTANCE']           # stage, production, test
-              c.driver             = :sequel                   # driver Sequel
-              c.messages_dataset   = DB[:events]               # sequel dataset for store income messages, for receiver
-              c.versions_dataset   = DB[:lariat_versions]      # sequel dataset for migrations, for publisher
+              c.driver             = :sequel                   # :sequel or :active_record
+              c.messages_dataset   = DB[:messages]             # Sequel dataset / ActiveRecord model for store income messages (on receiver)
+              c.versions_dataset   = DB[:lariat_versions]      # Sequel dataset / ActiveRecord model for publisher migrations
               c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
             end
           CONFIG
@@ -84,18 +82,16 @@ module CycloneLariat
             # frozen_string_literal: true
 
             CycloneLariat.configure do |c|
-              c.version            = 1                         # api version
-
+              c.version            = 1                         # messages version
               c.aws_key            = ENV['AWS_KEY']            # aws key
               c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
               c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
-              c.aws_region         = ENV['AWS_REGION']         # aws region
-
+              c.aws_region         = ENV['AWS_REGION']         # aws default region
               c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
               c.instance           = ENV['INSTANCE']           # stage, production, test
-              c.driver             = :active_record            # driver ActiveRecord
-              c.messages_dataset   = CycloneLariatMessage      # AR model for store income messages, for receiver
-              c.versions_dataset   = CycloneLariatVersion      # AR model for migrations, for publisher
+              c.driver             = :active_record            # :sequel or :active_record
+              c.messages_dataset   = CycloneLariatMessage      # Sequel dataset / ActiveRecord model for store income messages (on receiver)
+              c.versions_dataset   = CycloneLariatVersion      # Sequel dataset / ActiveRecord model for publisher migrations
               c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
             end
           CONFIG

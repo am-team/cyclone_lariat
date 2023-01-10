@@ -36,7 +36,7 @@ module CycloneLariat
 
       def name
         @name ||= begin
-          name = [instance, kind, SNS_SUFFIX, publisher, type].join '-'
+          name = [instance, kind, SNS_SUFFIX, publisher, type].compact.join '-'
           name += '.fifo' if fifo
           name
         end

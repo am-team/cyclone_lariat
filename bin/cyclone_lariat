@@ -24,9 +24,10 @@ module CycloneLariat
 
       class Install < Dry::CLI::Command
         desc 'Install cyclone lariat to current directory'
-        argument :adapter,
-                 desc: 'adapter for store events and versions',
-                 values: %w[sequel active_record]
+        option :adapter,
+          default: 'sequel',
+          values: %w[sequel active_record],
+          desc: 'adapter for store events and versions'
 
         def call(adapter: 'sequel', **)
           create_config(adapter)

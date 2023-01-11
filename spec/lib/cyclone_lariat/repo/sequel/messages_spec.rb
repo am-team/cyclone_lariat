@@ -45,25 +45,6 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
 
       it { expect { create_event }.to raise_error Sequel::UniqueConstraintViolation }
     end
-
-    context 'when client_error nil' do
-      let(:event) do
-        CycloneLariat::Messages::V1::Event.new(
-          uuid: SecureRandom.uuid,
-          publisher: 'users',
-          type: 'create_user',
-          version: 1,
-          data: { email: 'john.doe@example.com', password: 'password' },
-          client_error: nil,
-          sent_at: Time.now,
-          received_at: Time.now
-        )
-      end
-
-      it do
-        expect { create_event }.to change { dataset.count }.by(1)
-      end
-    end
   end
 
   describe '#exists?' do

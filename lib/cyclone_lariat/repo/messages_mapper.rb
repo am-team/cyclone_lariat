@@ -18,21 +18,15 @@ module CycloneLariat
             kind: input.kind,
             type: input.type,
             publisher: input.publisher,
-            data: json_generate(input.data),
+            data: JSON.generate(input.data),
             client_error_message: input.client_error&.message,
-            client_error_details: json_generate(input.client_error&.details),
+            client_error_details: JSON.generate(input.client_error&.details),
             version: input.version,
             sent_at: input.sent_at
           }
         end
 
         private
-
-        def json_generate(data)
-          return 'null' if data.nil?
-
-          JSON.generate(data)
-        end
 
         def hash_from_json_column(data)
           return JSON.parse(data) if data.is_a?(String)

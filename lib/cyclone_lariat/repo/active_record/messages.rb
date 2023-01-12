@@ -71,11 +71,12 @@ module CycloneLariat
         end
 
         def current_timestamp_from_db
-          time_string_from_db =
+          time_from_db =
             ::ActiveRecord::Base
             .connection.execute('select current_timestamp;')
-            .first['current_timestamp']
-          Time.parse(time_string_from_db)
+            .first
+          time_string = time_from_db.is_a?(Hash) ? time_from_db['current_timestamp'] : time_from_db[0]
+          Time.parse(time_string)
         end
 
         def build(raw)

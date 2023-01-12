@@ -29,6 +29,7 @@ module CycloneLariat
         private
 
         def hash_from_json_column(data)
+          return data if data.is_a?(Hash)
           return JSON.parse(data) if data.is_a?(String)
 
           if pg_json_extension_enabled?

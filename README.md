@@ -523,7 +523,7 @@ subscribe topic:    topic(:user_created, fifo: true),
 ```
 ![one2many](docs/_imgs/graphviz_01.png)
 
-#### Example: many-to-one
+### Example: many-to-one
 
 The second example is when you have three services: `registration` - creates new users, `order`
 service - allows you to create new orders, `statistics` service collects all statistics.
@@ -544,7 +544,7 @@ subscribe topic:    topic(:order_created, fifo: false),
 If queue receives messages from multiple sources you must specify publisher as `:any`. If the
 subscriber receives messages with different types, `cyclone_lariat` uses a specific keyword - `all`.
 
-#### Example fanout-to-fanout
+### Example fanout-to-fanout
 
 For better organisation you can subscribe topic on topic. For example, you have `management_panel`
 and `client_panel` services. Each of these services can register a user with predefined roles.
@@ -590,7 +590,7 @@ We recommend locate migration on:
 - **queue** - on Subscriber side;
 - **subscription** - on Subscriber side.
 
-# Console tasks
+## Console tasks
 
 ```bash
 $ cyclone_lariat install - install cyclone_lariat
@@ -610,7 +610,7 @@ it on your system. For convert it in png use:
 $ rake cyclone_lariat:list:subscriptions | dot -Tpng -o foo.png
 ```
 
-# Subscriber
+## Subscriber
 
 This is gem work like middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It save all events to
 database. And catch and produce all exceptions.
@@ -625,7 +625,7 @@ codes. You have the following processing:
 
 ![diagram](docs/_imgs/logic.png)
 
-# Middleware
+## Middleware
 If you use middleware:
 - Store all events to dataset
 - Notify every input sqs message

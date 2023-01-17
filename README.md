@@ -237,22 +237,22 @@ CycloneLariat.configure do |config|
   # Options app here
 end
 
-client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)
+client = CycloneLariat::Clients::Sns.new(publisher: 'auth', version: 2)
 
-client.publish_event 'sign_up', data: {
-                       first_name: 'John',
-                       last_name: 'Doe',
-                       mail: 'john.doe@example.com'
-                     },
-                     subject: { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
-                     object:  { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
-                     fifo: false
+client.publish_event(
+  'sign_up',
+  data: {
+    first_name: 'John',
+    last_name: 'Doe',
+    mail: 'john.doe@example.com'
+  },
+  subject: { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
+  object:  { type: 'user', uuid: '40250522-21c8-4fc7-9b0b-47d9666a4430'},
+  fifo: false
 )
 ```
 
-
 Or is it better to make your own client, like a [Repository](https://deviq.com/design-patterns/repository-pattern) pattern.
-
 ```ruby
 require 'cyclone_lariat/sns_client' # If require: false in Gemfile
 
@@ -295,15 +295,13 @@ arn:aws:sqs:eu-west-1:247602342345:test-event-queue-cyclone_lariat-note_added-no
 Split ARN:
 - `arn:aws:sns`  - Prefix for SNS Topics
 - `arn:aws:sqs`  - Prefix for SQS Queues
-- `eu-west-1`    -
-[AWS Region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-regions)
+- `eu-west-1`    - [AWS Region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-regions)
 - `247602342345` - [AWS account](https://docs.aws.amazon.com/IAM/latest/UserGuide/console_account-alias.html)
 - `test-event-fanout-cyclone_lariat-note_added` - Topic \ Queue name
-- `.fifo` - if Topic or queue is
-[FIFO](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/), they must
+- `.fifo` - if Topic or queue is [FIFO](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/), they must
 has that suffix.
 
-Region and client_id usually set using the **cyclone_lariat** [configuration](#Configuration).
+Region and account_id usually set using the **cyclone_lariat** [configuration](#Configuration).
 
 ## Declaration for topic and queues name
 In **cyclone_lariat** we have a declaration for defining topic and queue names.
@@ -331,7 +329,6 @@ class YourClient < CycloneLariat::Clients::Sns
   end
 end
 ```
-
 
 We will publish a message on this topic: `test-command-fanout-cyclone_lariat-register_user`.
 

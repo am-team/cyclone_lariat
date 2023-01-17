@@ -99,12 +99,6 @@ Last install command will create 2 files:
 
 If you are only using your application as a publisher, you may not need to set the `messages_dataset` parameter.
 
-
-
-
-
-Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
-
 ## Client / Publisher
 At first lets understand what the difference between SQS and SNS:
 - Amazon Simple Queue Service (SQS) lets you send, store, and receive messages between software components at any
@@ -117,11 +111,13 @@ SNS service like fanout.
 
 For use **cyclone_lariat** as _Publisher_ lets make install CycloneLariat.
 
-## Messages
+Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
+
+### Messages
 Message in Amazon SQS\SNS service it's a
 [object](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 that has several attributes. The main attributes are the **body**, which consists of the published
-data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
+data. The body is a `String`, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
 
 ```json
 // Sceheme: version 1
@@ -136,20 +132,17 @@ data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_la
     "text": "Sample of published data",
     "attributes": ["one", "two", "three"]
   },
-  "sent_at": "2022-11-09T11:42:18.203+01:00"      // Time when message was sended in ISO8601 Standard
+  "sent_at": "2022-11-09T11:42:18.203+01:00"            // Time when message was sended in ISO8601 Standard
 }
 ```
 
 Idea about X-Request-Id you can see at
 [StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
 
-As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::V1::Event_ and
-_Messages::V1::Command_.
+As you see, type has prefix `event_` in cyclone lariat you has two kinds of messages - `Messages::V1::Event` and
+`Messages::V1::Command`.
 
-
-If you want log all your messages you can use extended scheme - version 2.
-
-
+If you want log all your messages you can use extended scheme - version 2:
 ```json
 // Sceheme: version 2
 {
@@ -157,21 +150,21 @@ If you want log all your messages you can use extended scheme - version 2.
   "publisher": "sample_app",                            // Publisher application name
   "request_id": "51285005-8a06-4181-b5fd-bf29f3b1a45a", // Optional: X-Request-Id
   "type": "event_note_created",                         // Type of Event or Command
-  "version": 1,                                         // Version of data structure
+  "version": 2,                                         // Version of data structure
   "object": {
-    "type": "user",                                     // Subject type
-    "uuid": "a27c29e2-bbd3-490a-8f1b-caa4f8d902ef"      // Subject uuid
+    "type": "user",                                     // Object type
+    "uuid": "a27c29e2-bbd3-490a-8f1b-caa4f8d902ef"      // Object uuid
   },
   "subject": {
-    "type": "note",                                     // Object type
-    "uuid": "f46e74db-3335-4c5e-b476-c2a87660a942"      // Object uuid
+    "type": "note",                                     // Subject type
+    "uuid": "f46e74db-3335-4c5e-b476-c2a87660a942"      // Subject uuid
   },
   "data": {
     "id": 12,
     "text": "Sample of published data",
     "attributes": ["one", "two", "three"]
   },
-  "sent_at": "2022-11-09T11:42:18.203+01:00"      // Time when message was sended in ISO8601 Standard
+  "sent_at": "2022-11-09T11:42:18.203+01:00"            // Time when message was sended in ISO8601 Standard
 }
 ```
 

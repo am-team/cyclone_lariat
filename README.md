@@ -72,6 +72,22 @@ Last install command will create 2 files:
     c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
   end
   ```
+
+  Example database migration for using CycloneLariat
+
+  To store versions of **cyclone_lariat** migrations, you need to create a database table.
+
+  ```ruby
+  # frozen_string_literal: true
+
+  Sequel.migration do
+    change do
+      create_table :lariat_versions do
+        Integer :version, null: false, unique: true
+      end
+    end
+  end
+  ```
 </details>
 <details>
   <summary>ActiveRecord</summary>
@@ -393,23 +409,10 @@ end
 ```
 Will publish message on queue: `custom_topic_name.fifo`
 
-# Migrations
+## Migrations
 
 With **cyclone_lariat** you can use migrations that can create, delete, and subscribe to your queues and topics, just like database migrations do.
-To store versions of **cyclone_lariat** migrations, you need to create a database table.
-
-```ruby
-# frozen_string_literal: true
-
-Sequel.migration do
-  change do
-    create_table :lariat_versions do
-      Integer :version, null: false, unique: true
-    end
-  end
-end
-```
-After migrate this database migration, create **cyclone_lariat** migration.
+Before using this function, you must complete the **cyclone_lariat** [configuration](#Configuration).
 
 ```bash
 $ cyclone_lariat generate migration user_created
@@ -501,10 +504,10 @@ end
 ```
 
 
-#### Example: one-to-many
+### Example: one-to-many
 
-The first example is when your _registration_ service creates new user. You also have two services:
-_mailer_ - sending a welcome email, and _statistics_ service.
+The first example is when your `registration` service creates new user. You also have two services:
+`mailer` - sending a welcome email, and `statistics` service.
 
 ```ruby
 create topic(:user_created, fifo: true)
@@ -522,8 +525,8 @@ subscribe topic:    topic(:user_created, fifo: true),
 
 #### Example: many-to-one
 
-The second example is when you have three services: _registration_ - creates new users, _order_
-service - allows you to create new orders, _statistics_ service collects all statistics.
+The second example is when you have three services: `registration` - creates new users, `order`
+service - allows you to create new orders, `statistics` service collects all statistics.
 
 ```ruby
 create topic(:user_created, fifo: false)
@@ -543,9 +546,9 @@ subscriber receives messages with different types, `cyclone_lariat` uses a speci
 
 #### Example fanout-to-fanout
 
-For better organisation you can subscribe topic on topic. For example, you have _management_panel_
-and _client_panel_ services. Each of these services can register a user with predefined roles.
-And you want to send this information to the _mailer_ and _statistics_ services.
+For better organisation you can subscribe topic on topic. For example, you have `management_panel`
+and `client_panel` services. Each of these services can register a user with predefined roles.
+And you want to send this information to the `mailer` and `statistics` services.
 
 ```ruby
 create topic(:client_created, fifo: false)
@@ -554,7 +557,7 @@ create topic(:user_created, publisher: :any, fifo: false)
 create queue(:user_created, publisher: :any, dest: :mailer, fifo: false)
 create queue(:user_created, publisher: :any, dest: :stat, fifo: false)
 
-subscribe topic:    topic(:user_created, fifo: false),
+subscribe topic:    topic(:client_created, fifo: false),
           endpoint: topic(:user_created, publisher: :any, fifo: false)
 
 subscribe topic:    topic(:manager_created, fifo: false),

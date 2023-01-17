@@ -167,6 +167,7 @@ If you want log all your messages you can use extended scheme - version 2:
   "sent_at": "2022-11-09T11:42:18.203+01:00"            // Time when message was sended in ISO8601 Standard
 }
 ```
+#### Subject vs Object
 
 The difference between scheme first and second version - is subject and object. This values need to help with actions log.
 For example, user #42, write to support, "why he could not sign in". The messages log is:
@@ -180,7 +181,7 @@ For example, user #42, write to support, "why he could not sign in". The message
 
 It is important to understand that user #42 can be both a subject and an object. And you should save both of these fields to keep track of the entire history of this user.
 
-### Command vs Event
+#### Command vs Event
 Commands and events are both simple domain structures that contain solely data for reading. That means
 they contain no behaviour or business logic.
 

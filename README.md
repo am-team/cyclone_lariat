@@ -151,13 +151,13 @@ If you want log all your messages you can use extended scheme - version 2:
   "request_id": "51285005-8a06-4181-b5fd-bf29f3b1a45a", // Optional: X-Request-Id
   "type": "event_note_created",                         // Type of Event or Command
   "version": 2,                                         // Version of data structure
-  "object": {
-    "type": "user",                                     // Object type
-    "uuid": "a27c29e2-bbd3-490a-8f1b-caa4f8d902ef"      // Object uuid
-  },
   "subject": {
-    "type": "note",                                     // Subject type
-    "uuid": "f46e74db-3335-4c5e-b476-c2a87660a942"      // Subject uuid
+    "type": "user",                                     // Subject type
+    "uuid": "a27c29e2-bbd3-490a-8f1b-caa4f8d902ef"      // Subject uuid
+  },
+  "object": {
+    "type": "note",                                     // Object type
+    "uuid": "f46e74db-3335-4c5e-b476-c2a87660a942"      // Object uuid
   },
   "data": {
     "id": 12,
@@ -198,21 +198,21 @@ A command can emit any number of events. The sender of the event does not care w
 whether it has been received at all.
 
 ### Publish
-For publishing _Messages::V1::Event_ or _Messages::V1::Commands_, you have two ways, send _Message_ directly:
+For publishing `Messages::V1::Event` or `Messages::V1::Commands`, you have two ways, send `Message` directly:
 
 ```ruby
 CycloneLariat.configure do |config|
   # Options app here
 end
 
-client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 1)
+client = CycloneLariat::Clients::Sns.new(publisher: 'auth', version: 1)
+payload = {
+  first_name: 'John',
+  last_name: 'Doe',
+  mail: 'john.doe@example.com'
+}
 
-client.publish_command('register_user', data: {
-    first_name: 'John',
-    last_name: 'Doe',
-    mail: 'john.doe@example.com'
-  }, fifo: false
-)
+client.publish_command('register_user', data: payload, fifo: false)
 ```
 
 That's call, will generate a message body:
@@ -221,7 +221,7 @@ That's call, will generate a message body:
   "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",
   "publisher": "auth",
   "type": "command_register_user",
-  "version": 2,
+  "version": 1,
   "data": {
     "first_name": "John",
     "last_name": "Doe",

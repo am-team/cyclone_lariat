@@ -4,7 +4,7 @@ This gem work in few scenarios:
 - As middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken).
   - It saves all events to the database and also catches and throws all exceptions.
   - As a middleware, it can log all incoming messages.
-- As a [client](#Publish) that can send messages to SNS topics and SQS queues.
+- As a [client](#client--publisher) that can send messages to SNS topics and SQS queues.
 - Also it can help you with CI\CD for theme, queue and subscription management like database [migration](#Migrations).
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
@@ -14,7 +14,7 @@ This gem work in few scenarios:
 <details>
   <summary>Sequel</summary>
 
-  ### Install with Sequel
+  #### Install with Sequel
   Edit Gemfile:
   ```ruby
   # Gemfile
@@ -30,7 +30,7 @@ This gem work in few scenarios:
 <details>
   <summary>ActiveRecord</summary>
 
-  ### Install with ActiveRecord
+  #### Install with ActiveRecord
   Edit Gemfile:
   ```ruby
   # Gemfile
@@ -280,7 +280,7 @@ client.email_is_removed 'john.doe@example.com'
 client.delete_user      'john.doe@example.com'
 ```
 
-### Topics and Queue
+#### Topics and Queue
 An Amazon SNS topic and SQS queue is a logical access point that acts as a communication channel. Both
 of them has specific address ARN.
 
@@ -303,7 +303,7 @@ has that suffix.
 
 Region and account_id usually set using the **cyclone_lariat** [configuration](#Configuration).
 
-## Declaration for topic and queues name
+#### Declaration for topic and queues names
 In **cyclone_lariat** we have a declaration for defining topic and queue names.
 This can help in organizing the order.
 
@@ -314,11 +314,14 @@ CycloneLariat.configure do |config|
   # ...
 end
 
-CycloneLariat::Clients::Sns.new.publish_command('register_user', data: {
+CycloneLariat::Clients::Sns.new.publish_command(
+  'register_user',
+  data: {
     first_name: 'John',
     last_name: 'Doe',
     mail: 'john.doe@example.com'
-  }, fifo: true
+  },
+  fifo: true
 )
 
 # or in repository-like style:
@@ -342,10 +345,11 @@ Let's split the topic title:
 For queues you also can define destination.
 ```ruby
 CycloneLariat::Clients::Sqs.new.publish_event(
-  'register_user', data: { mail: 'john.doe@example.com' },
-                   dest: :mailer, fifo: true
+  'register_user',
+  data: { mail: 'john.doe@example.com' },
+  dest: :mailer,
+  fifo: true
 )
-
 
 # or in repository-like style:
 

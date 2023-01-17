@@ -1,14 +1,111 @@
 # Cyclone lariat
 
 This gem work in few scenarios:
-- As middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken). It saves all events to the database and also catches and throws all exceptions.
-- As a middleware, it can log all incoming messages.
+- As middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken).
+  - It saves all events to the database and also catches and throws all exceptions.
+  - As a middleware, it can log all incoming messages.
 - As a client that can send messages to SNS topics and SQS queues.
 - Also it can help you with CI\CD for theme, queue and subscription management like database migration.
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
 
-# Client / Publisher
+## Install and configuration Cyclone Lariat
+### Install
+<details>
+  <summary>Sequel</summary>
+
+  ### Install with Sequel
+  Edit Gemfile:
+  ```ruby
+  # Gemfile
+  gem 'sequel'
+  gem 'cyclone_lariat'
+  ```
+  And run in console:
+  ```bash
+  $ bundle install
+  $ cyclone_lariat install
+  ```
+</details>
+<details>
+  <summary>ActiveRecord</summary>
+
+  ### Install with ActiveRecord
+  Edit Gemfile:
+  ```ruby
+  # Gemfile
+  gem 'active_record'
+  gem 'cyclone_lariat'
+  ```
+  And run in console:
+  ```bash
+  $ bundle install
+  $ cyclone_lariat install --adapter=active_record
+  ```
+</details>
+
+Last install command will create 2 files:
+- ./lib/tasks/cyclone_lariat.rake - Rake tasks, for management migrations
+- ./config/initializers/cyclone_lariat.rb - Configuration default values for cyclone lariat usage
+
+
+### Configuration
+<details>
+  <summary>Sequel</summary>
+
+  ```ruby
+  # frozen_string_literal: true
+
+  CycloneLariat.configure do |c|
+    c.version = 1                               # api version
+
+    c.aws_key = ENV['AWS_KEY']                  # aws key
+    c.aws_secret_key = ENV['AWS_SECRET_KEY']    # aws secret
+    c.aws_account_id = ENV['AWS_ACCOUNT_ID']    # aws account id
+    c.aws_region = ENV['AWS_REGION']            # aws region
+
+    c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
+    c.instance = ENV['INSTANCE']                # stage, production, test
+    c.driver = :sequel                          # driver Sequel
+    c.messages_dataset = DB[:messages]          # Sequel dataset for store income messages (on receiver)
+    c.versions_dataset = DB[:lariat_versions]   # Sequel dataset for versions of publisher migrations
+    c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
+  end
+  ```
+</details>
+<details>
+  <summary>ActiveRecord</summary>
+
+  ```ruby
+  # frozen_string_literal: true
+
+  CycloneLariat.configure do |c|
+    c.version = 1                               # api version
+
+    c.aws_key = ENV['AWS_KEY']                  # aws key
+    c.aws_secret_key = ENV['AWS_SECRET_KEY']    # aws secret
+    c.aws_account_id = ENV['AWS_ACCOUNT_ID']    # aws account id
+    c.aws_region = ENV['AWS_REGION']            # aws region
+
+    c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
+    c.instance = ENV['INSTANCE']                # stage, production, test
+    c.driver = :active_record                   # driver ActiveRecord
+    c.messages_dataset = CycloneLariatMessage   # ActiveRecord model for store income messages (on receiver)
+    c.versions_dataset = CycloneLariatVersion   # ActiveRecord model for versions of publisher migrations
+    c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
+  end
+  ```
+</details>
+
+If you are only using your application as a publisher, you may not need to set the `messages_dataset` parameter.
+
+
+
+
+
+Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
+
+## Client / Publisher
 At first lets understand what the difference between SQS and SNS:
 - Amazon Simple Queue Service (SQS) lets you send, store, and receive messages between software components at any
 volume, without losing messages or requiring other services to be available.
@@ -19,60 +116,6 @@ SNS service like fanout.
 ![SQS/SNS](docs/_imgs/sqs_sns_diagram.png)
 
 For use **cyclone_lariat** as _Publisher_ lets make install CycloneLariat.
-
-## Install Cyclone Lariat with Sequel
-Edit Gemfile:
-```ruby
-# Gemfile
-gem 'sequel'
-gem 'cyclone_lariat'
-```
-And run in console:
-```bash
-$ bundle install
-$ cyclone_lariat install        # If use Sequel gem
-```
-
-## Install Cyclone Lariat with ActiveRecord
-Edit Gemfile:
-```ruby
-# Gemfile
-gem 'active_record'
-gem 'cyclone_lariat'
-```
-And run in console:
-```bash
-$ bundle install
-$ cyclone_lariat install active_record # If use ActiveRecord gem
-```
-
-## Configuration
-
-Last install command will create 2 files:
-- ./lib/tasks/cyclone_lariat.rake - Rake tasks, for management migrations
-- ./config/initializers/cyclone_lariat.rb - Configuration default values for cyclone lariat usage
-
-```ruby
-# frozen_string_literal: true
-
-CycloneLariat.configure do |c|
-   c.default_version    = 1                         # api version
-   c.aws_key            = ENV['AWS_KEY']            # aws key
-   c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
-   c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
-   c.aws_default_region = ENV['AWS_REGION']         # aws default region
-   c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
-   c.default_instance   = ENV['INSTANCE']           # stage, production, test
-   c.driver             = :sequel                   # :sequel or :active_record
-   c.messages_dataset   = DB[:messages]             # Sequel dataset / ActiveRecord model for store income messages (on receiver) 
-   c.versions_dataset   = DB[:lariat_versions]      # Sequel dataset / ActiveRecord model for publisher migrations
-   c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
-end
-```
-If you are only using your application as a publisher, you may not need to set the `events_dataset`
-parameter.
-
-Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
 
 ## Messages
 Message in Amazon SQS\SNS service it's a
@@ -132,7 +175,7 @@ If you want log all your messages you can use extended scheme - version 2.
 }
 ```
 
-The difference between scheme first and second version - is subject and object. This values need to help with actions log. 
+The difference between scheme first and second version - is subject and object. This values need to help with actions log.
 For example, user #42, write to support, "why he could not sign in". The messages log is:
 
 | Subject  | Action      | Object    |
@@ -194,7 +237,7 @@ That's call, will generate a message body:
 }
 ```
 
-Or for second schema version code: 
+Or for second schema version code:
 ```ruby
 CycloneLariat.configure do |config|
   # Options app here
@@ -202,7 +245,7 @@ end
 
 client = CycloneLariat::Clients::Sns.new(instance: 'auth', version: 2)
 
-client.publish_event 'sign_up', data: { 
+client.publish_event 'sign_up', data: {
                        first_name: 'John',
                        last_name: 'Doe',
                        mail: 'john.doe@example.com'

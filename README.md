@@ -391,7 +391,7 @@ class YourClient < CycloneLariat::Clients::Sns
   end
 end
 ```
-Will publish message on queue: `custom_topic` with fifo suffix.
+Will publish message on queue: `custom_topic_name.fifo`
 
 # Migrations
 

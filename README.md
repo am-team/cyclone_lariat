@@ -4,8 +4,8 @@ This gem work in few scenarios:
 - As middleware for [shoryuken](https://github.com/ruby-shoryuken/shoryuken).
   - It saves all events to the database and also catches and throws all exceptions.
   - As a middleware, it can log all incoming messages.
-- As a client that can send messages to SNS topics and SQS queues.
-- Also it can help you with CI\CD for theme, queue and subscription management like database migration.
+- As a [client](#Publish) that can send messages to SNS topics and SQS queues.
+- Also it can help you with CI\CD for theme, queue and subscription management like database [migration](#Migrations).
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
 
@@ -198,7 +198,7 @@ A command can emit any number of events. The sender of the event does not care w
 whether it has been received at all.
 
 ### Publish
-For publishing `Messages::V1::Event` or `Messages::V1::Commands`, you have two ways, send `Message` directly:
+For publishing `Messages::V1::Event` or `Messages::V1::Commands`, you have two ways, send [`Message`](#Messages) directly:
 
 ```ruby
 CycloneLariat.configure do |config|

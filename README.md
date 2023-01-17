@@ -120,7 +120,7 @@ that has several attributes. The main attributes are the **body**, which consist
 data. The body is a `String`, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
 
 ```json
-// Sceheme: version 1
+// Scheme: version 1
 {
   "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",       // Uniq message identificator
   "publisher": "sample_app",                            // Publisher application name
@@ -144,7 +144,7 @@ As you see, type has prefix `event_` in cyclone lariat you has two kinds of mess
 
 If you want log all your messages you can use extended scheme - version 2:
 ```json
-// Sceheme: version 2
+// Scheme: version 2
 {
   "uuid": "f2ce3813-0905-4d81-a60e-f289f2431f50",       // Uniq message identificator
   "publisher": "sample_app",                            // Publisher application name

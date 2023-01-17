@@ -67,18 +67,46 @@ Last install command will create 2 files:
     c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
     c.instance = ENV['INSTANCE']                # stage, production, test
     c.driver = :sequel                          # driver Sequel
-    c.messages_dataset = DB[:messages]          # Sequel dataset for store income messages (on receiver)
+    c.messages_dataset = DB[:async_messages]    # Sequel dataset for store income messages (on receiver)
     c.versions_dataset = DB[:lariat_versions]   # Sequel dataset for versions of publisher migrations
     c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
   end
   ```
 
-  Example database migration for using CycloneLariat
-
-  To store versions of **cyclone_lariat** migrations, you need to create a database table.
+  #### Example migrations
+  Before using the event store, add and apply these migrations:
 
   ```ruby
-  # frozen_string_literal: true
+  Sequel.migration do
+    up do
+      run <<-SQL
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+      SQL
+    end
+
+    down do
+      run <<-SQL
+        DROP EXTENSION IF EXISTS "uuid-ossp";
+      SQL
+    end
+  end
+
+  Sequel.migration do
+    change do
+      create_table :async_messages do
+        column   :uuid, :uuid, primary_key: true
+        String   :type,                         null: false
+        Integer  :version,                      null: false
+        String   :publisher,                    null: false
+        column   :data, :json,                  null: false
+        String   :client_error_message,         null: true,  default: nil
+        column   :client_error_details, :json,  null: true,  default: nil
+        DateTime :sent_at,                      null: true,  default: nil
+        DateTime :received_at,                  null: false, default: Sequel::CURRENT_TIMESTAMP
+        DateTime :processed_at,                 null: true,  default: nil
+      end
+    end
+  end
 
   Sequel.migration do
     change do
@@ -670,54 +698,6 @@ class Receiver
 end
 ```
 
-## Migrations
-Before using the event store, add and apply these two migrations:
-
-```ruby
-
-# First one
-
-Sequel.migration do
-  up do
-    run <<-SQL
-      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    SQL
-  end
-
-  down do
-    run <<-SQL
-      DROP EXTENSION IF EXISTS "uuid-ossp";
-    SQL
-  end
-end
-
-# The second one:
-Sequel.migration do
-  change do
-    create_table :async_messages do
-      column   :uuid, :uuid, primary_key: true
-      String   :type,                         null: false
-      Integer  :version,                      null: false
-      String   :publisher,                    null: false
-      column   :data, :json,                  null: false
-      String   :client_error_message,         null: true,  default: nil
-      column   :client_error_details, :json,  null: true,  default: nil
-      DateTime :sent_at,                      null: true,  default: nil
-      DateTime :received_at,                  null: false, default: Sequel::CURRENT_TIMESTAMP
-      DateTime :processed_at,                 null: true,  default: nil
-    end
-  end
-end
-```
-
-And don't forget to add it to the config file:
-
-```ruby
-# 'config/initializers/cyclone_lariat.rb'
-CycloneLariat.configure do |config|
-  config.events_dataset = DB[:async_messages]
-end
-```
 
 ### Rake tasks
 

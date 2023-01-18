@@ -7,7 +7,7 @@ require 'cyclone_lariat/version'
 Gem::Specification.new do |spec|
   spec.name          = 'cyclone_lariat'
   spec.version       = CycloneLariat::VERSION
-  spec.authors       = ['Alexander Kudrin', 'Philip Sorokin']
+  spec.authors       = ['Alexander Kudrin', 'Philip Sorokin', 'Kirill Drozdov', 'Vitaly Perminov']
   spec.email         = ['kudrin.alexander@gmail.com']
 
   spec.summary       = 'Shoryuken middleware for LunaPark based application.'

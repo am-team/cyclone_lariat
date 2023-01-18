@@ -173,7 +173,7 @@ Last install command will create 2 files:
   ```
 </details>
 
-If you are only using your application as a publisher, you may not need to set the `messages_dataset` parameter.
+If you are only using your application as a publisher, you may not need to set the _messages_dataset_ parameter.
 
 ## Client / Publisher
 At first lets understand what the difference between SQS and SNS:
@@ -187,13 +187,13 @@ SNS service like fanout.
 
 For use **cyclone_lariat** as _Publisher_ lets make install CycloneLariat.
 
-Before creating the first migration, let's explain what `CycloneLariat::Messages` is.
+Before creating the first migration, let's explain what _CycloneLariat::Messages_ is.
 
 ### Messages
 Message in Amazon SQS\SNS service it's a
 [object](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-metadata.html#sqs-message-attributes)
 that has several attributes. The main attributes are the **body**, which consists of the published
-data. The body is a `String`, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
+data. The body is a _String_, but we can use it as a _JSON_ object. **Cyclone_lariat** use by default scheme - version 1:
 
 ```json
 // Scheme: version 1
@@ -215,8 +215,8 @@ data. The body is a `String`, but we can use it as a _JSON_ object. **Cyclone_la
 Idea about X-Request-Id you can see at
 [StackOverflow](https://stackoverflow.com/questions/25433258/what-is-the-x-request-id-http-header).
 
-As you see, type has prefix `event_` in cyclone lariat you has two kinds of messages - `Messages::V1::Event` and
-`Messages::V1::Command`.
+As you see, type has prefix 'event_' in cyclone lariat you has two kinds of messages - _Messages::V1::Event_ and
+_Messages::V1::Command_.
 
 If you want log all your messages you can use extended scheme - version 2:
 ```json
@@ -274,7 +274,7 @@ A command can emit any number of events. The sender of the event does not care w
 whether it has been received at all.
 
 ### Publish
-For publishing `Messages::V1::Event` or `Messages::V1::Commands`, you have two ways, send [`Message`](#Messages) directly:
+For publishing _Messages::V1::Event_ or _Messages::V1::Commands_, you have two ways, send [_Message_](#Messages) directly:
 
 ```ruby
 CycloneLariat.configure do |config|
@@ -566,8 +566,8 @@ end
 
 ### Example: one-to-many
 
-The first example is when your `registration` service creates new user. You also have two services:
-`mailer` - sending a welcome email, and `statistics` service.
+The first example is when your _registration_ service creates new user. You also have two services:
+_mailer_ - sending a welcome email, and _statistics_ service.
 
 ```ruby
 create topic(:user_created, fifo: true)
@@ -585,8 +585,8 @@ subscribe topic:    topic(:user_created, fifo: true),
 
 ### Example: many-to-one
 
-The second example is when you have three services: `registration` - creates new users, `order`
-service - allows you to create new orders, `statistics` service collects all statistics.
+The second example is when you have three services: _registration_ - creates new users, _order_
+service - allows you to create new orders, _statistics_ service collects all statistics.
 
 ```ruby
 create topic(:user_created, fifo: false)
@@ -606,9 +606,9 @@ subscriber receives messages with different types, `cyclone_lariat` uses a speci
 
 ### Example fanout-to-fanout
 
-For better organisation you can subscribe topic on topic. For example, you have `management_panel`
-and `client_panel` services. Each of these services can register a user with predefined roles.
-And you want to send this information to the `mailer` and `statistics` services.
+For better organisation you can subscribe topic on topic. For example, you have _management_panel_
+and _client_panel_ services. Each of these services can register a user with predefined roles.
+And you want to send this information to the _mailer_ and _statistics_ services.
 
 ```ruby
 create topic(:client_created, fifo: false)

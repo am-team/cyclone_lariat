@@ -7,6 +7,9 @@ module CycloneLariat
   class Publisher
     include Generators::Event
     include Generators::Command
+
+    attr_reader :config
+
     def initialize(**options)
       @config = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
     end

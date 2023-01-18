@@ -730,20 +730,20 @@ class Receiver
 end
 ```
 
-### Rake tasks
+## Rake tasks
 
-For simplify write some Rake tasks you can use `CycloneLariat::Repo`.
+For simplify write some Rake tasks you can use `CycloneLariat::Repo::Messages`.
 
 ```ruby
 # For retry all unprocessed
 
-CycloneLariat.new(DB[:events]).each_unprocessed do |event|
+CycloneLariat::Repo::Messages.new.each_unprocessed do |event|
   # Your logic here
 end
 
 # For retry all events with client errors
 
-CycloneLariat.new(DB[:events]).each_with_client_errors do |event|
+CycloneLariat::Repo::Messages.new.each_with_client_errors do |event|
   # Your logic here
 end
 ```

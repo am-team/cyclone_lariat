@@ -5,7 +5,7 @@ This gem work in few scenarios:
   - It saves all events to the database and also catches and throws all exceptions.
   - As a middleware, it can log all incoming messages.
 - As a [client](#client--publisher) that can send messages to SNS topics and SQS queues.
-- Also it can help you with CI\CD for theme, queue and subscription management like database [migration](#Migrations).
+- Also it can help you with CI\CD to manage topics, queues and subscriptions such as database  [migration](#Migrations).
 
 ![Cyclone lariat](docs/_imgs/lariat.jpg)
 
@@ -330,30 +330,34 @@ client.publish_event(
 
 Or is it better to make your own client, like a [Repository](https://deviq.com/design-patterns/repository-pattern) pattern.
 ```ruby
-require 'cyclone_lariat/sns_client' # If require: false in Gemfile
+require 'cyclone_lariat/publisher' # If require: false in Gemfile
 
-class YourClient < CycloneLariat::Clients::Sns
+class Publisher < CycloneLariat::Publisher
   def email_is_created(mail)
-    publish event('email_is_created', data: { mail: mail }), fifo: true
+    sns.publish event('email_is_created', data: { mail: mail }), fifo: false
   end
 
   def email_is_removed(mail)
-    publish event('email_is_removed', data: { mail: mail }), fifo: true
+    sns.publish event('email_is_removed', data: { mail: mail }), fifo: false
   end
 
-
   def delete_user(mail)
-    publish command('delete_user', data: { mail: mail }), fifo: false
+    sns.publish command('delete_user', data: { mail: mail }), fifo: false
+  end
+  
+  def welcome_message(mail, text)
+    sqs.publish command('welcome', data: {mail: mail, txt: text}), fifo: false
   end
 end
 
 # Init repo
-client = YourClient.new
+publisher = Publisher.new
 
 # And send topics
-client.email_is_created 'john.doe@example.com'
-client.email_is_removed 'john.doe@example.com'
-client.delete_user      'john.doe@example.com'
+publisher.email_is_created 'john.doe@example.com'
+publisher.email_is_removed 'john.doe@example.com'
+publisher.delete_user      'john.doe@example.com'
+publisher.welcome_message  'john.doe@example.com', 'You are welcome'
 ```
 
 #### Topics and Queue
@@ -397,14 +401,22 @@ CycloneLariat::Clients::Sns.new.publish_command(
     last_name: 'Doe',
     mail: 'john.doe@example.com'
   },
-  fifo: true
+  fifo: false
 )
 
 # or in repository-like style:
-
-class YourClient < CycloneLariat::Clients::Sns
+class Publisher < CycloneLariat::Publisher
   def register_user(first:, last:, mail:)
-    publish command('register_user', data: { mail: mail }), fifo: true
+    sns.publish command(
+      'register_user', 
+      data: { 
+        mail: mail, 
+        name: {
+          first: first, 
+          last: last
+        } 
+      }
+    ), fifo: false
   end
 end
 ```
@@ -424,7 +436,7 @@ CycloneLariat::Clients::Sqs.new.publish_event(
   'register_user',
   data: { mail: 'john.doe@example.com' },
   dest: :mailer,
-  fifo: true
+  fifo: false
 )
 
 # or in repository-like style:
@@ -433,7 +445,7 @@ class YourClient < CycloneLariat::Clients::Sns
   # ...
 
   def register_user(first:, last:, mail:)
-    publish event('register_user', data: { mail: mail }), fifo: true
+    publish event('register_user', data: { mail: mail }), fifo: false
   end
 end
 ```
@@ -454,20 +466,74 @@ You also can sent message to queue with custom name. But this way does not recom
 # Directly
 CycloneLariat::Clients::Sqs.new.publish_event(
   'register_user', data: { mail: 'john.doe@example.com' },
-                   dest: :mailer, topic: 'custom_topic_name.fifo', fifo: true
+                   dest: :mailer, topic: 'custom_topic_name.fifo', fifo: false
 )
 
 # Repository
-class YourClient < CycloneLariat::Clients::Sns
+class Publisher < CycloneLariat::Publisher
   # ...
 
   def register_user(first:, last:, mail:)
     publish event('register_user', data: { mail: mail }),
-            topic: 'custom_topic_name.fifo', fifo: true
+            topic: 'custom_topic_name.fifo', fifo: false
   end
 end
 ```
-Will publish message on queue: `custom_topic_name.fifo`
+Will publish message on queue: `custom_topic_name`
+
+
+### FIFO and no FIFO 
+The main idea you can read on [AWS Docs](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/).
+
+FIFO message should consist two fields:
+- `group_id` - In each topic, the FIFO sequence is defined only within one group. 
+ [AWS Docs](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-grouping.html)
+- `deduplication_id` - Within the same group, a unique identifier must be defined for each message. 
+ [AWS Docs](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-dedup.html)
+  
+ The unique identifier can definitely be the entire message. In this case, you 
+ do not need to pass the deduplication_id parameter. But you must create a queue
+   with the `content_based_deduplication` parameter in migration.
+
+
+```ruby
+class Publisher < CycloneLariat::Publisher
+  def user_created(mail:, uuid:)
+    sns.publish event('user_created', data: {
+        user: {
+          uuid: uuid,
+          mail: mail
+        },
+      },
+      deduplication_id: uuid,
+      group_id: uuid),
+    fifo: true
+  end
+
+  def user_mail_changed(mail:, uuid:)
+    sns.publish event('user_mail_created', data: {
+        user: {
+          uuid: uuid,
+          mail: mail
+        },
+      }, 
+      deduplication_id: mail,
+      group_id: uuid),
+    fifo: true
+  end
+end
+```
+
+### Tests for publishers
+
+Instead of stub all requests to AWS services, you can set up cyclone lariat for make fake publishing.
+
+```ruby
+  CycloneLariat.configure do |c|
+    # ...
+    c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
+  end
+```
 
 ## Migrations
 
@@ -487,14 +553,16 @@ This command should create a migration file, let's edit it.
 
 class UserCreatedQueue < CycloneLariat::Migration
   def up
-    create queue(:user_created, dest: :mailer, fifo: true)
+    create queue(:user_created, dest: :mailer, content_based_deduplication: true, fifo: true)
   end
 
   def down
-    delete queue(:user_created, dest: :mailer, fifo: true)
+    delete queue(:user_created, dest: :mailer, content_based_deduplication: true, fifo: true)
   end
 end
 ```
+The `content_based_dedupplication` parameter can only be specified for FIFO resources. When true, the whole message is 
+used as the unique message identifier instead of the `deduplication_id` key.
 
 To apply migration use:
 ```bash
@@ -562,7 +630,6 @@ class UserCreatedSubscription < CycloneLariat::Migration
   end
 end
 ```
-
 
 ### Example: one-to-many
 
@@ -692,8 +759,14 @@ If you use middleware:
 - Notify every error
 
 ```ruby
+require 'sequel'
 require 'cyclone_lariat/middleware' # If require: false in Gemfile
-require 'cyclone_lariat/sqs' # If you want use queue name helper
+require 'luna_park/notifiers/log'
+
+require_relative './config/initializers/cyclone_lariat'
+
+Shoryuken::Logging.logger       = Logger.new STDOUT
+Shoryuken::Logging.logger.level = Logger::INFO
 
 class Receiver
   include Shoryuken::Worker
@@ -704,9 +777,7 @@ class Receiver
                     body_parser: ->(sqs_msg) {
                       JSON.parse(sqs_msg.body, symbolize_names: true)
                     },
-                    queue: 'your_sqs_queue_name.fifo'
-  # or
-  # queue: CycloneLariat::Clients::Sqs.new.queue('user_added', fifo: true).name
+                    queue: CycloneLariat.queue(:user_created, dest: :stat, fifo: true).name
 
   server_middleware do |chain|
     # Options dataset, errors_notifier and message_notifier is optionals.
@@ -714,7 +785,7 @@ class Receiver
     # If you dont define dataset - middleware does not store events in db
     chain.add CycloneLariat::Middleware,
               dataset: DB[:events],
-              errors_notifier: LunaPark::Notifiers::Sentry.new,
+              errors_notifier:  LunaPark::Notifiers::Sentry.new,
               message_notifier: LunaPark::Notifiers::Log.new(min_lvl: :debug, format: :pretty_json)
   end
 

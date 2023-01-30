@@ -122,7 +122,7 @@ RSpec.describe CycloneLariat::Generators::Command do
       expect(command.uuid).to eq(uuid)
       expect(command.kind).to eq('command')
       expect(command.version).to eq(2)
-      expect(command.publisher).to eq('pizzeria')
+      expect(command.publisher).to eq({ type: 'pizzeria' })
     end
   end
 end

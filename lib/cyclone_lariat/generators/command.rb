@@ -39,7 +39,9 @@ module CycloneLariat
           object: object,
           sent_at: Time.now.iso8601(3),
           version: 2,
-          publisher: config.publisher,
+          publisher: {
+            type: config.publisher
+          },
           data: data,
           request_id: request_id,
           group_id: group_id,

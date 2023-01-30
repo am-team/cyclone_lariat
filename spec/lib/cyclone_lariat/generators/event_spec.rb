@@ -123,7 +123,7 @@ RSpec.describe CycloneLariat::Generators::Event do
       expect(event.object).to eq(type: 'pizza', uuid: object_uid)
       expect(event.kind).to eq('event')
       expect(event.version).to eq(2)
-      expect(event.publisher).to eq('pizzeria')
+      expect(event.publisher).to eq({ type: 'pizzeria' })
     end
   end
 end

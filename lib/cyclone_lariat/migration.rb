@@ -2,19 +2,24 @@
 
 require 'fileutils'
 require 'forwardable'
-require_relative 'sns_client'
-require_relative 'sqs_client'
+require 'cyclone_lariat/clients/sns'
+require 'cyclone_lariat/clients/sqs'
+require 'cyclone_lariat/repo/versions'
+require 'cyclone_lariat/services/migrate'
+require 'cyclone_lariat/services/rollback'
+require 'cyclone_lariat/presenters/topics'
+require 'cyclone_lariat/presenters/queues'
+require 'cyclone_lariat/presenters/subscriptions'
+require 'cyclone_lariat/presenters/graph'
 require 'luna_park/errors'
-require 'terminal-table'
-require 'set'
 
 module CycloneLariat
   class Migration
     extend Forwardable
     include LunaPark::Extensions::Injector
 
-    dependency(:sns) { CycloneLariat::SnsClient.new }
-    dependency(:sqs) { CycloneLariat::SqsClient.new }
+    dependency(:sns) { CycloneLariat::Clients::Sns.new }
+    dependency(:sqs) { CycloneLariat::Clients::Sqs.new }
 
     DIR = './lariat/migrate'
 
@@ -56,7 +61,9 @@ module CycloneLariat
       )
     end
 
-    def subscribe(topic:, endpoint:)
+    def subscribe(topic:, endpoint:, policy: nil)
+      policy ||= default_policy(endpoint)
+      sqs.add_policy(queue: endpoint, policy: policy) if endpoint.queue?
       sns.subscribe topic: topic, endpoint: endpoint
       puts "  Subscription was created `#{topic.name} -> #{endpoint.name}`"
     end
@@ -64,6 +71,23 @@ module CycloneLariat
     def unsubscribe(topic:, endpoint:)
       sns.unsubscribe topic: topic, endpoint: endpoint
       puts "  Subscription was deleted `#{topic.name} -> #{endpoint.name}`"
+    end
+
+    def default_policy(queue)
+      {
+        'Sid' => queue.arn,
+        'Effect' => 'Allow',
+        'Principal' => {
+          'AWS' => '*'
+        },
+        'Action' => 'SQS:*',
+        'Resource' => queue.arn,
+        'Condition' => {
+          'ArnEquals' => {
+            'aws:SourceArn' => fanout_arn_pattern
+          }
+        }
+      }
     end
 
     def topics
@@ -82,132 +106,45 @@ module CycloneLariat
 
     def process(resource:, for_topic:, for_queue:)
       case resource
-      when Topic then for_topic.call(resource)
-      when Queue then for_queue.call(resource)
+      when Resources::Topic then for_topic.call(resource)
+      when Resources::Queue then for_queue.call(resource)
       else
         raise ArgumentError, "Unknown resource class #{resource.class}"
       end
     end
 
+    def fanout_arn_pattern
+      @fanout_arn_pattern ||= [
+        'arn:aws:sns',
+        CycloneLariat.config.aws_region,
+        CycloneLariat.config.aws_account_id,
+        "#{CycloneLariat.config.instance}-*-fanout-*"
+      ].join(':')
+    end
+
     class << self
-      def migrate(dataset: CycloneLariat.versions_dataset, dir: DIR)
-        alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
-
-        Dir.glob("#{dir}/*.rb") do |path|
-          filename = File.basename(path, '.rb')
-          version, title = filename.split('_', 2)
-
-          existed_migrations = dataset.all.map { |row| row[:version] }
-          unless existed_migrations.include? version.to_i
-            class_name = title.split('_').collect(&:capitalize).join
-            puts "Up - #{version} #{class_name} #{path}"
-            require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
-            Object.const_get(class_name).new.up
-            dataset.insert(version: version)
-          end
-        end
+      def migrate(repo: CycloneLariat::Repo::Versions.new, dir: DIR, service: Services::Migrate)
+        puts service.new(repo: repo, dir: dir).call
       end
 
-      def rollback(version = nil, dataset: CycloneLariat.versions_dataset, dir: DIR)
-        existed_migrations = dataset.all.map { |row| row[:version] }.sort
-        version ||= existed_migrations[-1]
-        migrations_to_downgrade = existed_migrations.select { |migration| migration >= version }
-
-        paths = []
-        migrations_to_downgrade.each do |migration|
-          path = Pathname.new(Dir.pwd) + Pathname.new(dir)
-          founded = Dir.glob("#{path}/#{migration}_*.rb")
-          raise "Could not found migration: `#{migration}` in #{path}" if founded.empty?
-          raise "Found lot of migration: `#{migration}` in #{path}"    if founded.size > 1
-
-          paths += founded
-        end
-
-        paths.each do |path|
-          filename       = File.basename(path, '.rb')
-          version, title = filename.split('_', 2)
-          class_name     = title.split('_').collect(&:capitalize).join
-          puts "Down - #{version} #{class_name} #{path}"
-          require_relative Pathname.new(Dir.pwd) + Pathname.new(path)
-          Object.const_get(class_name).new.down
-          dataset.filter(version: version).delete
-        end
+      def rollback(version = nil, repo: CycloneLariat::Repo::Versions.new, dir: DIR, service: Services::Rollback)
+        puts service.new(repo: repo, dir: dir).call(version)
       end
 
-      def list_topics
-        rows = []
-        new.topics.each do |topic|
-          rows << [
-            topic.custom? ? 'custom' : 'standard',
-            topic.region,
-            topic.account_id,
-            topic.name,
-            topic.instance,
-            topic.kind,
-            topic.publisher,
-            topic.type,
-            topic.fifo
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type fifo]
+      def list_topics(presenter: Presenters::Topics)
+        puts presenter.call(new.topics)
       end
 
-      def list_queues
-        rows = []
-        new.queues.each do |queue|
-          rows << [
-            queue.custom? ? 'custom' : 'standard',
-            queue.region,
-            queue.account_id,
-            queue.name,
-            queue.instance,
-            queue.kind,
-            queue.publisher,
-            queue.type,
-            queue.dest,
-            queue.fifo
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[valid region account_id name instance kind publisher type destination fifo]
+      def list_queues(presenter: Presenters::Queues)
+        puts presenter.call(new.queues)
       end
 
-      def list_subscriptions
-        rows = []
-        new.subscriptions.each do |subscription|
-          rows << [
-            subscription[:topic].name,
-            subscription[:endpoint].name,
-            subscription[:arn]
-          ]
-        end
-
-        puts Terminal::Table.new rows: rows, headings: %w[topic endpoint subscription_arn]
+      def list_subscriptions(presenter: Presenters::Subscriptions)
+        puts presenter.call(new.subscriptions)
       end
 
-      def build_graph
-        subscriptions = new.subscriptions
-        resources_set = Set.new
-
-        subscriptions.each do |subscription|
-          resources_set << subscription[:topic]
-          resources_set << subscription[:endpoint]
-        end
-
-        puts 'digraph G {'
-        puts '  rankdir=LR;'
-
-        resources_set.each do |resource|
-          color = resource.custom? ? ', fillcolor=grey' : ', fillcolor=white'
-          style = resource.topic? ? "[shape=component style=filled#{color}]" : "[shape=record, style=\"rounded,filled\"#{color}]"
-          puts "  \"#{resource.name}\" #{style};"
-        end
-
-        subscriptions.each do |subscription|
-          puts "  \"#{subscription[:topic].name}\" -> \"#{subscription[:endpoint].name}\";"
-        end
-        puts '}'
+      def build_graph(presenter: Presenters::Graph)
+        puts presenter.call(new.subscriptions)
       end
     end
   end

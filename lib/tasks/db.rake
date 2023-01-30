@@ -22,20 +22,6 @@ namespace :db do
     puts "Database `#{DB_CONF[:database]}` successfully dropped" if system(cmd)
   end
 
-  desc 'Apply migrate'
-  task :migrate, [:version] => :config do |_, args|
-    require 'logger'
-    require 'sequel/core'
-
-    Sequel.extension :migration
-    version = args[:version] ? args[:version].to_i : nil
-    migrations_path = "#{__dir__}/../../db/migrate/"
-
-    Sequel.connect(**DB_CONF, logger: Logger.new($stdout)) do |db|
-      Sequel::Migrator.run(db, migrations_path, target: version)
-    end
-  end
-
   desc 'Database console'
   task console: :config do
     cmd = "PGPASSWORD=#{DB_CONF[:password]} psql" \
@@ -50,6 +36,5 @@ namespace :db do
   task :reset do
     Rake::Task['db:drop'].invoke
     Rake::Task['db:create'].invoke
-    Rake::Task['db:migrate'].invoke
   end
 end

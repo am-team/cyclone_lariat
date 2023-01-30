@@ -1,17 +1,14 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/repo/messages'
-require 'cyclone_lariat/core'
+require_relative 'messages_repo'
 require 'luna_park/errors'
 require 'json'
 
 module CycloneLariat
   class Middleware
-    attr_reader :config
-
-    def initialize(errors_notifier: nil, message_notifier: nil, repo: Repo::Messages, **options)
-      @config           = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
-      @events_repo      = repo.new(**@config.to_h)
+    def initialize(dataset: nil, errors_notifier: nil, message_notifier: nil, repo: MessagesRepo)
+      events_dataset    = dataset || CycloneLariat.events_dataset
+      @events_repo      = repo.new(events_dataset) if events_dataset
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
     end
@@ -23,7 +20,7 @@ module CycloneLariat
       return if msg.is_a? String
 
       catch_standard_error(queue, msg) do
-        event = Messages::V1::Event.wrap(msg)
+        event = Event.wrap(msg)
 
         store_in_dataset(event) do
           catch_business_error(event, &block)
@@ -43,7 +40,7 @@ module CycloneLariat
     end
 
     def store_in_dataset(event)
-      return yield if events_repo.disabled?
+      return yield if events_repo.nil?
 
       existed = events_repo.find(uuid: event.uuid)
       return true if existed&.processed?

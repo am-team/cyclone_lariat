@@ -40,21 +40,5 @@ module CycloneLariat
     class SubscriptionDoesNotExists < LunaPark::Errors::System
       message { |d| "Subscription for topic `#{d[:topic].name}`, on endpoint `#{d[:endpoint].name}` does not exists" }
     end
-
-    class InvalidMessage < LunaPark::Errors::Business
-      message 'Message is not valid'
-    end
-
-    class GroupIdUndefined < LunaPark::Errors::System
-      message { |d| "Group id must be defined for FIFO resources: `#{d[:resource].name}`" }
-    end
-
-    class GroupDefined < LunaPark::Errors::System
-      message { |d| "Group id must be nil for non-FIFO resources: `#{d[:resource].name}`" }
-    end
-
-    class DeduplicationIdDefined < LunaPark::Errors::System
-      message { |d| "Deduplication id must be nil for non-FIFO resources: `#{d[:resource].name}`" }
-    end
   end
 end

@@ -36,22 +36,22 @@ Metrics/MethodLength:
 Style/AccessorGrouping:
   Exclude:
     - 'lib/cyclone_lariat/event.rb'
-    - 'lib/cyclone_lariat/messages/abstract.rb'
+    - 'lib/cyclone_lariat/abstract/message.rb'
 
 Layout/EmptyLinesAroundAttributeAccessor:
   Exclude:
-    - 'lib/cyclone_lariat/messages/abstract.rb'
+    - 'lib/cyclone_lariat/abstract/message.rb'
 
 Metrics/CyclomaticComplexity:
   Exclude:
     - 'lib/cyclone_lariat/event.rb'
-    - 'lib/cyclone_lariat/messages/abstract.rb'
+    - 'lib/cyclone_lariat/abstract/message.rb'
     - 'lib/cyclone_lariat/migration.rb'
 
 Metrics/PerceivedComplexity:
   Exclude:
     - 'lib/cyclone_lariat/event.rb'
-    - 'lib/cyclone_lariat/messages/abstract.rb'
+    - 'lib/cyclone_lariat/abstract/message.rb'
     - 'lib/cyclone_lariat/migration.rb'
 
 Metrics/AbcSize:
@@ -61,16 +61,12 @@ Metrics/AbcSize:
 Metrics/BlockLength:
   Exclude:
     - '**/*'
-    -
-Layout/FirstHashElementIndentation:
-  Exclude:
-    - '**/*'
 
 Metrics/ClassLength:
   Exclude:
     - 'lib/cyclone_lariat/migration.rb'
     - 'lib/cyclone_lariat/abstract/client.rb'
-    - 'lib/cyclone_lariat/sns.rb'
+    - 'lib/cyclone_lariat/sns_client.rb'
 
 Lint/RescueException:
   Exclude:

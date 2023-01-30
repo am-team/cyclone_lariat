@@ -12,7 +12,7 @@ module CycloneLariat
         include LunaPark::Extensions::Validatable
 
         attr :uuid,      String, :new
-        attr :publisher, String, :new
+        attr :publisher, Hash, :[]
         attr :type,      String, :new
         attrs :client_error, :version, :data, :request_id, :sent_at,
           :deduplication_id, :group_id, :processed_at, :received_at,

@@ -8,7 +8,9 @@ module CycloneLariat
     let(:params) do
       {
         uuid: SecureRandom.uuid,
-        publisher: 'example_publisher',
+        publisher: {
+          type: 'example_publisher'
+        },
         type: 'user_email_updated',
         version: 2,
         data: { email: 'john.doe@example.com' },
@@ -87,10 +89,14 @@ module CycloneLariat
       end
 
       context 'when it defined with publisher' do
-        before { params[:publisher] = 'publisher' }
+        before do
+          params[:publisher] = {
+            type: 'publisher'
+          }
+        end
 
         it 'should be eq defined string' do
-          is_expected.to eq 'publisher'
+          is_expected.to eq({ type: 'publisher'})
         end
 
         it 'should be valid' do
@@ -426,7 +432,9 @@ module CycloneLariat
       it 'should be in expected format' do
         expected_json = {
           uuid: uuid,
-          publisher: 'example_publisher',
+          publisher: {
+            type: 'example_publisher'
+          },
           type: 'message_user_email_updated',
           version: 2,
           data: {

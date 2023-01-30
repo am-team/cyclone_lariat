@@ -13,7 +13,7 @@ module CycloneLariat
         validation_schema do
           params do
             required(:uuid).value(format?: UUID_MATCHER)
-            required(:publisher).filled(:string)
+            required(:publisher).filled(:hash?)
             required(:type).filled(:string)
             required(:version).filled(:integer).value(eql?: 2)
             required(:data).value(:hash?)

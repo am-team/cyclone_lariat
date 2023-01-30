@@ -24,7 +24,7 @@ This gem work in few scenarios:
   And run in console:
   ```bash
   $ bundle install
-  $ cyclone_lariat install
+  $ bundle exec cyclone_lariat install
   ```
 </details>
 <details>
@@ -40,7 +40,7 @@ This gem work in few scenarios:
   And run in console:
   ```bash
   $ bundle install
-  $ cyclone_lariat install --adapter=active_record
+  $ bundle exec cyclone_lariat install --adapter=active_record
   ```
 </details>
 
@@ -344,7 +344,7 @@ class Publisher < CycloneLariat::Publisher
   def delete_user(mail)
     sns.publish command('delete_user', data: { mail: mail }), fifo: false
   end
-  
+
   def welcome_message(mail, text)
     sqs.publish command('welcome', data: {mail: mail, txt: text}), fifo: false
   end
@@ -408,13 +408,13 @@ CycloneLariat::Clients::Sns.new.publish_command(
 class Publisher < CycloneLariat::Publisher
   def register_user(first:, last:, mail:)
     sns.publish command(
-      'register_user', 
-      data: { 
-        mail: mail, 
+      'register_user',
+      data: {
+        mail: mail,
         name: {
-          first: first, 
+          first: first,
           last: last
-        } 
+        }
       }
     ), fifo: false
   end
@@ -482,16 +482,16 @@ end
 Will publish message on queue: `custom_topic_name`
 
 
-### FIFO and no FIFO 
+### FIFO and no FIFO
 The main idea you can read on [AWS Docs](https://aws.amazon.com/blogs/aws/introducing-amazon-sns-fifo-first-in-first-out-pub-sub-messaging/).
 
 FIFO message should consist two fields:
-- `group_id` - In each topic, the FIFO sequence is defined only within one group. 
+- `group_id` - In each topic, the FIFO sequence is defined only within one group.
  [AWS Docs](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-grouping.html)
-- `deduplication_id` - Within the same group, a unique identifier must be defined for each message. 
+- `deduplication_id` - Within the same group, a unique identifier must be defined for each message.
  [AWS Docs](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-dedup.html)
-  
- The unique identifier can definitely be the entire message. In this case, you 
+
+ The unique identifier can definitely be the entire message. In this case, you
  do not need to pass the deduplication_id parameter. But you must create a queue
    with the `content_based_deduplication` parameter in migration.
 
@@ -516,7 +516,7 @@ class Publisher < CycloneLariat::Publisher
           uuid: uuid,
           mail: mail
         },
-      }, 
+      },
       deduplication_id: mail,
       group_id: uuid),
     fifo: true
@@ -541,7 +541,7 @@ With **cyclone_lariat** you can use migrations that can create, delete, and subs
 Before using this function, you must complete the **cyclone_lariat** [configuration](#Configuration).
 
 ```bash
-$ cyclone_lariat generate migration user_created
+$ bundle exec cyclone_lariat generate migration user_created
 ```
 
 This command should create a migration file, let's edit it.
@@ -561,7 +561,7 @@ class UserCreatedQueue < CycloneLariat::Migration
   end
 end
 ```
-The `content_based_dedupplication` parameter can only be specified for FIFO resources. When true, the whole message is 
+The `content_based_dedupplication` parameter can only be specified for FIFO resources. When true, the whole message is
 used as the unique message identifier instead of the `deduplication_id` key.
 
 To apply migration use:
@@ -720,8 +720,8 @@ We recommend locate migration on:
 ## Console tasks
 
 ```bash
-$ cyclone_lariat install - install cyclone_lariat
-$ cyclone_lariat generate migration - generate new migration
+$ bundle exec cyclone_lariat install - install cyclone_lariat
+$ bundle exec cyclone_lariat generate migration - generate new migration
 
 $ rake cyclone_lariat:list:queues         # List all queues
 $ rake cyclone_lariat:list:subscriptions  # List all subscriptions

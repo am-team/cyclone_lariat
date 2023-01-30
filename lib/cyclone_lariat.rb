@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'cyclone_lariat/version'
 require 'cyclone_lariat/core'
 require 'cyclone_lariat/middleware'
 require 'cyclone_lariat/migration'

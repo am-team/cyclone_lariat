@@ -24,13 +24,25 @@ module CycloneLariat
 
       class Install < Dry::CLI::Command
         desc 'Install cyclone lariat to current directory'
+        option :adapter,
+          default: 'sequel',
+          values: %w[sequel active_record],
+          desc: 'adapter for store events and versions'
 
-        def call(*)
-          create_config
+        def call(adapter: 'sequel', **)
+          create_config(adapter)
           create_rake_task
         end
 
-        def create_config
+        def create_config(adapter)
+          FileUtils.mkdir_p INITIALIZERS_DIR unless Dir.exist? INITIALIZERS_DIR
+          config_path = "#{INITIALIZERS_DIR}/cyclone_lariat.rb"
+          config_file = File.open(config_path, 'w')
+          config_file.puts config_contents(adapter)
+          puts "Created config: #{config_path}"
+        end
+
+        def create_rake_task
           FileUtils.mkdir_p RAKE_TASKS_DIR unless Dir.exist? RAKE_TASKS_DIR
           config_path = "#{RAKE_TASKS_DIR}/cyclone_lariat.rake"
           config_file = File.open(config_path, 'w')
@@ -38,28 +50,49 @@ module CycloneLariat
           puts "Created rake task: #{config_path}"
         end
 
-        def create_rake_task
-          FileUtils.mkdir_p INITIALIZERS_DIR unless Dir.exist? INITIALIZERS_DIR
-          config_path = "#{INITIALIZERS_DIR}/cyclone_lariat.rb"
-          config_file = File.open(config_path, 'w')
-          config_file.puts config_contents
-          puts "Created config: #{config_path}"
+        def config_contents(adapter)
+          return config_active_record_contents if adapter == 'active_record'
+          return config_sequel_contents if adapter == 'sequel'
+
+          raise ArgumentError, "Unknown adapter #{adapter}"
         end
 
-        def config_contents
+        def config_sequel_contents
           <<~CONFIG
             # frozen_string_literal: true
 
-            CycloneLariat.tap do |cl|
-              cl.default_version    = 1                       # api version
-              cl.aws_key            = ENV['AWS_KEY']          # aws key
-              cl.aws_account_id     = ENV['AWS_ACCOUNT_ID']   # aws account id
-              cl.aws_secret_key     = ENV['AWS_SECRET_KEY']   # aws secret
-              cl.aws_default_region = ENV['AWS_REGION']       # aws default region
-              cl.publisher          = ENV['APP_NAME']         # name of your publishers, usually name of your application 
-              cl.default_instance   = ENV['INSTANCE']         # stage, production, test
-              cl.events_dataset     = DB[:events]             # sequel dataset for store income messages, for receiver
-              cl.versions_dataset   = DB[:lariat_versions]    # sequel dataset for migrations, for publisher
+            CycloneLariat.configure do |c|
+              c.version            = 1                         # messages version
+              c.aws_key            = ENV['AWS_KEY']            # aws key
+              c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
+              c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
+              c.aws_region         = ENV['AWS_REGION']         # aws default region
+              c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
+              c.instance           = ENV['INSTANCE']           # stage, production, test
+              c.driver             = :sequel                   # :sequel or :active_record
+              c.messages_dataset   = DB[:messages]             # Sequel dataset / ActiveRecord model for store income messages (on receiver)
+              c.versions_dataset   = DB[:lariat_versions]      # Sequel dataset / ActiveRecord model for publisher migrations
+              c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
+            end
+          CONFIG
+        end
+
+        def config_active_record_contents
+          <<~CONFIG
+            # frozen_string_literal: true
+
+            CycloneLariat.configure do |c|
+              c.version            = 1                         # messages version
+              c.aws_key            = ENV['AWS_KEY']            # aws key
+              c.aws_account_id     = ENV['AWS_ACCOUNT_ID']     # aws account id
+              c.aws_secret_key     = ENV['AWS_SECRET_KEY']     # aws secret
+              c.aws_region         = ENV['AWS_REGION']         # aws default region
+              c.publisher          = ENV['APP_NAME']           # name of your publishers, usually name of your application
+              c.instance           = ENV['INSTANCE']           # stage, production, test
+              c.driver             = :active_record            # :sequel or :active_record
+              c.messages_dataset   = CycloneLariatMessage      # Sequel dataset / ActiveRecord model for store income messages (on receiver)
+              c.versions_dataset   = CycloneLariatVersion      # Sequel dataset / ActiveRecord model for publisher migrations
+              c.fake_publish       = ENV['INSTANCE'] == 'test' # when true, prevents messages from being published
             end
           CONFIG
         end
@@ -69,45 +102,43 @@ module CycloneLariat
             # frozen_string_literal: true
 
             require 'cyclone_lariat'
-            
+
             namespace :cyclone_lariat do
               desc 'Migrate topics for SQS/SNS'
-              task migrate: :config do
-                require_relative '../../config/initializers/cyclone_lariat'
+              task migrate: :cyclone_lariat_config do
                 CycloneLariat::Migration.migrate
               end
-            
+
               desc 'Rollback topics for SQS/SNS'
-              task :rollback, [:version] => :config do |_, args|
-                require_relative '../../config/initializers/cyclone_lariat'
+              task :rollback, [:version] => :cyclone_lariat_config do |_, args|
                 target_version = args[:version] ? args[:version].to_i : nil
                 CycloneLariat::Migration.rollback(target_version)
               end
-            
+
               namespace :list do
                 desc 'List all topics'
-                task :topics do
-                  require_relative '../../config/initializers/cyclone_lariat'
+                task topics: :cyclone_lariat_config do
                   CycloneLariat::Migration.list_topics
                 end
-            
+
                 desc 'List all queues'
-                task :queues do
-                  require_relative '../../config/initializers/cyclone_lariat'
+                task queues: :cyclone_lariat_config do
                   CycloneLariat::Migration.list_queues
                 end
-            
+
                 desc 'List all subscriptions'
-                task :subscriptions do
-                  require_relative '../../config/initializers/cyclone_lariat'
+                task subscriptions: :cyclone_lariat_config do
                   CycloneLariat::Migration.list_subscriptions
                 end
               end
-            
+
               desc 'Build graphviz graph for whole system'
-              task :graph do
-                require_relative '../../config/initializers/cyclone_lariat'
+              task graph: :cyclone_lariat_config do
                 CycloneLariat::Migration.build_graph
+              end
+
+              task :cyclone_lariat_config do
+                require_relative '../../config/initializers/cyclone_lariat'
               end
             end
           TASKS
@@ -125,10 +156,11 @@ module CycloneLariat
 
             FileUtils.mkdir_p CycloneLariat::Migration::DIR unless Dir.exist? CycloneLariat::Migration::DIR
 
-            file_name  = generate_filename title
-            class_name = generate_class_name title
-            file       = File.open(file_name, 'w')
-            file.puts file_contents(class_name)
+            file_name = generate_filename(title)
+            class_name = generate_class_name(title)
+
+            file = File.open(file_name, 'w')
+            file.puts(file_contents(class_name))
             puts "Migration successful created:\n\t#{file_name}"
           end
 
@@ -153,7 +185,7 @@ module CycloneLariat
               class #{klass_name} < CycloneLariat::Migration
                 def up
                 end
-              
+
                 def down
                 end
               end

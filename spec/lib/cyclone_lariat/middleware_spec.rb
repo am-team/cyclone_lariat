@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'luna_park/notifiers/log'
-require_relative '../../../lib/cyclone_lariat/middleware'
-require_relative '../../../lib/cyclone_lariat/messages_repo'
+require 'cyclone_lariat/messages/v1/event'
+require 'cyclone_lariat/middleware'
 
 RSpec.describe CycloneLariat::Middleware do
   describe '#call' do
@@ -17,7 +17,7 @@ RSpec.describe CycloneLariat::Middleware do
     let(:notifier) { instance_double(LunaPark::Notifiers::Log, error: nil, warning: nil) }
 
     context 'when message_notifier is defined' do
-      let(:middleware) { described_class.new(message_notifier: notifier) }
+      let(:middleware) { described_class.new(message_notifier: notifier, driver: :sequel) }
 
       it 'should write INFO log message' do
         expect(notifier).to receive(:info).with(
@@ -37,7 +37,7 @@ RSpec.describe CycloneLariat::Middleware do
     end
 
     context 'when errors_notifier is defined' do
-      let(:middleware) { described_class.new(errors_notifier: notifier) }
+      let(:middleware) { described_class.new(errors_notifier: notifier, driver: :sequel) }
 
       context 'no any one exception is handled' do
         it 'should not write log message' do
@@ -109,13 +109,13 @@ RSpec.describe CycloneLariat::Middleware do
 
     context 'when messages_repo is defined' do
       let(:dataset) { double }
-      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo }
-      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
-      let(:middleware) { described_class.new(dataset: dataset, repo: messages_repo_class) }
-      let(:event) { instance_double CycloneLariat::Event, processed?: true }
+      let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, disabled?: false }
+      let(:messages_repo_class) { class_double(CycloneLariat::Repo::Messages, new: messages_repo) }
+      let(:middleware) { described_class.new(messages_dataset: dataset, repo: messages_repo_class) }
+      let(:event) { instance_double CycloneLariat::Messages::V1::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: event }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: event, disabled?: false }
         it { is_expected.to be true }
         it 'should not run business logic' do
           expect(business_logic).to_not receive(:call)
@@ -134,7 +134,7 @@ RSpec.describe CycloneLariat::Middleware do
       end
 
       context 'when event does not exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: true }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: nil, create: nil, processed!: true, disabled?: false }
 
         it { is_expected.to be true }
 
@@ -156,7 +156,7 @@ RSpec.describe CycloneLariat::Middleware do
     end
 
     context 'when dataset is not defined' do
-      let(:middleware) { described_class.new(dataset: nil, repo: nil) }
+      let(:middleware) { described_class.new(messages_dataset: nil, driver: :sequel) }
 
       it { is_expected.to be :result }
 
@@ -167,14 +167,23 @@ RSpec.describe CycloneLariat::Middleware do
     end
 
     context 'when dataset is defined in config' do
-      before { CycloneLariat.events_dataset = double }
-      after  { CycloneLariat.events_dataset = nil }
+      before do
+        CycloneLariat.configure do |cfg|
+          cfg.messages_dataset = DB[:sequel_async_messages]
+          cfg.driver           = :sequel
+        end
+      end
 
-      let(:messages_repo) { instance_double CycloneLariat::MessagesRepo, find: nil, create: nil, processed!: :result }
-      let(:messages_repo_class) { class_double(CycloneLariat::MessagesRepo, new: messages_repo) }
-      let(:middleware) { described_class.new(dataset: nil, repo: messages_repo_class) }
+      after do
+        CycloneLariat.configure do |cfg|
+          cfg.messages_dataset = nil
+          cfg.driver           = nil
+        end
+      end
 
-      it { is_expected.to be(:result) }
+      let(:middleware) { described_class.new(messages_dataset: nil) }
+
+      it { is_expected.to be true }
 
       it 'should run business logic' do
         expect(business_logic).to receive(:call)

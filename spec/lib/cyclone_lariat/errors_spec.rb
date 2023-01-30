@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/errors'
+require_relative '../../../lib/cyclone_lariat/errors'
 
 RSpec.describe CycloneLariat::Errors::ClientError do
   let(:error) { described_class.new('Could not found user', email: 'john.doe@example.com') }

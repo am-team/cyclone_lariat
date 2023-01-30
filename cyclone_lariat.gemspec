@@ -7,7 +7,7 @@ require 'cyclone_lariat/version'
 Gem::Specification.new do |spec|
   spec.name          = 'cyclone_lariat'
   spec.version       = CycloneLariat::VERSION
-  spec.authors       = ['Alexander Kudrin', 'Philip Sorokin', 'Kirill Drozdov', 'Vitaly Perminov']
+  spec.authors       = ['Alexander Kudrin', 'Philip Sorokin']
   spec.email         = ['kudrin.alexander@gmail.com']
 
   spec.summary       = 'Shoryuken middleware for LunaPark based application.'
@@ -28,28 +28,21 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|docs|examples|config)/}) }
+    `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   end
 
   spec.require_paths = ['lib']
-  spec.bindir = 'bin'
-  spec.executables = ['cyclone_lariat']
+  spec.executables   = ['cyclone_lariat']
 
   spec.add_dependency 'aws-sdk-sns'
   spec.add_dependency 'aws-sdk-sqs'
   spec.add_dependency 'dry-cli', '~> 0.6'
-  spec.add_dependency 'dry-validation', '~> 1.5'
   spec.add_dependency 'luna_park', '~> 0.11'
   spec.add_dependency 'terminal-table', '~> 3.0'
 
   spec.add_development_dependency 'bundler', '~> 1.17'
   spec.add_development_dependency 'byebug', '~> 11.1'
-  spec.add_development_dependency 'database_cleaner-active_record'
   spec.add_development_dependency 'database_cleaner-sequel', '~> 2.0'
-  spec.add_development_dependency 'guard'
-  spec.add_development_dependency 'guard-bundler'
-  spec.add_development_dependency 'guard-rspec'
-  spec.add_development_dependency 'guard-rubocop'
   spec.add_development_dependency 'pg', '~> 1.2'
   spec.add_development_dependency 'pry', '~> 0.13'
   spec.add_development_dependency 'pry-byebug', '~> 3.9'

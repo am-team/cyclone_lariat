@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0.rc2]
+Changed
+- README.md file
+Added
+- require version file, fixed `bundle exec cyclone_lariat -v`
+
 ## [0.4.0]
 Changed
 - rename `topic` to `queue` for SQS operations, in fact it changed only in methods `publish_event`, `publish_command`
@@ -19,7 +25,7 @@ Added
 Added
 - Added aws_client_od options
 Changed:
-- Renamed all AWS options with prefix _aws 
+- Renamed all AWS options with prefix _aws
 
 ## [0.3.9] - 2022-10-05 Depricated
 Added

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/messages/builder'
 require 'cyclone_lariat/core'
 require 'luna_park/errors'
 require 'json'
@@ -23,10 +24,10 @@ module CycloneLariat
       return if msg.is_a? String
 
       catch_standard_error(queue, msg) do
-        event = Messages::V1::Event.wrap(msg)
+        message = Messages::Builder.new(raw_message: msg).call
 
-        store_in_dataset(event) do
-          catch_business_error(event, &block)
+        store_in_dataset(message) do
+          catch_business_error(message, &block)
         end
       end
     end

@@ -10,7 +10,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
     CycloneLariat::Messages::V1::Event.new(
       uuid: SecureRandom.uuid,
       publisher: 'users',
-      type: 'create_user',
+      type: 'event_create_user',
       version: 1,
       data: { email: 'john.doe@example.com', password: 'password' },
       client_error: LunaPark::Errors::Business.new('Something went wrong', some: 'thing'),
@@ -30,7 +30,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
       created_event = dataset.first(uuid: create_event)
       expect(created_event[:uuid]).to be_a String
       expect(created_event[:publisher]).to eq 'users'
-      expect(created_event[:type]).to eq 'create_user'
+      expect(created_event[:type]).to eq 'event_create_user'
       expect(created_event[:client_error_details]).to eq JSON.generate(some: :thing)
       expect(created_event[:client_error_message]).to eq 'Something went wrong'
       expect(created_event[:version]).to eq 1
@@ -72,7 +72,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
         CycloneLariat::Messages::V1::Event.new(
           uuid: SecureRandom.uuid,
           publisher: 'users',
-          type: 'create_user',
+          type: 'event_create_user',
           version: 1,
           data: { email: 'john.doe@example.com', password: 'password' },
           sent_at: Time.now
@@ -95,7 +95,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
         CycloneLariat::Messages::V1::Event.new(
           uuid: SecureRandom.uuid,
           publisher: 'users',
-          type: 'create_user',
+          type: 'event_create_user',
           version: 1,
           data: { email: 'john.doe@example.com', password: 'password' },
           sent_at: Time.now
@@ -151,7 +151,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
       uuid = repo.create CycloneLariat::Messages::V1::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
-        type: 'create_user',
+        type: 'event_create_user',
         version: 1,
         data: { email: 'john.doe@example.com', password: 'password' },
         client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),
@@ -172,7 +172,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
       uuid = repo.create CycloneLariat::Messages::V1::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
-        type: 'create_user',
+        type: 'event_create_user',
         version: 1,
         data: { email: 'john.doe@example.com', password: 'password' },
         sent_at: Time.now
@@ -186,7 +186,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
       uuid = repo.create CycloneLariat::Messages::V1::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
-        type: 'create_user',
+        type: 'event_create_user',
         version: 1,
         data: { email: 'john.doe@example.com', password: 'password' },
         client_error: LunaPark::Errors::Business.new('Something went wrong', some: :thing),

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/messages/builder'
+require 'cyclone_lariat/messages/message'
 require 'cyclone_lariat/repo/messages_mapper'
 
 module CycloneLariat
@@ -79,7 +79,7 @@ module CycloneLariat
         end
 
         def build(raw)
-          CycloneLariat::Messages::Builder.new(raw_message: raw).call
+          CycloneLariat::Messages::Message.wrap(raw)
         end
       end
     end

@@ -6,9 +6,6 @@ module CycloneLariat
   module Messages
     module V2
       class Event < Abstract
-        include LunaPark::Extensions::Validatable
-        validator Messages::V2::Validator
-
         KIND = 'event'
 
         def kind

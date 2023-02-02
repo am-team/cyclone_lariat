@@ -3,6 +3,7 @@
 require 'cyclone_lariat/messages/v1/event'
 require 'cyclone_lariat/messages/v1/command'
 require 'cyclone_lariat/repo/messages_mapper'
+require 'cyclone_lariat/messages/builder'
 
 module CycloneLariat
   module Repo
@@ -80,11 +81,7 @@ module CycloneLariat
         end
 
         def build(raw)
-          case kind = raw.delete(:kind)
-          when 'event'   then CycloneLariat::Messages::V1::Event.wrap raw
-          when 'command' then CycloneLariat::Messages::V1::Command.wrap raw
-          else raise ArgumentError, "Unknown kind `#{kind}` of message"
-          end
+          CycloneLariat::Messages::Builder.new(raw_message: raw).call
         end
       end
     end

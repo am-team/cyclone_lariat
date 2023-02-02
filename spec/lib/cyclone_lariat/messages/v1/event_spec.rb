@@ -1,35 +1,25 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/messages/v2/abstract'
+require 'cyclone_lariat/messages/v1/event'
 require 'securerandom'
 
 module CycloneLariat
-  RSpec.describe Messages::V2::Abstract do
+  RSpec.describe Messages::V1::Event do
     let(:params) do
       {
         uuid: SecureRandom.uuid,
         publisher: 'example_publisher',
-        type: 'user_email_updated',
-        version: 2,
+        type: 'create_user',
+        version: 1,
         data: { email: 'john.doe@example.com' },
-        sent_at: '1970-01-01 16:40:00',
-        subject: {
-          type: 'User',
-          uuid: user_uuid
-        },
-        object: {
-          type: 'User',
-          uuid: user_uuid
-        }
+        sent_at: '1970-01-01 16:40:00'
       }
     end
-
-    let(:user_uuid) { SecureRandom.uuid }
 
     let(:message_class) do
       Class.new(described_class) do
         include LunaPark::Extensions::Validatable
-        validator Messages::V2::Validator
+        validator Messages::V1::Validator
         def kind
           'message'
         end
@@ -112,35 +102,35 @@ module CycloneLariat
         end
       end
 
-      context 'when it defined with 2' do
-        before { params[:version] = 2 }
-
-        it 'should be eq 1' do
-          is_expected.to eq 2
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
-      context 'when it defined with \'2\'' do
-        before { params[:version] = '2' }
-
-        it 'should be eq 2 (int)' do
-          is_expected.to eq 2
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
       context 'when it defined with 1' do
         before { params[:version] = 1 }
 
-        it 'should be eq 2' do
+        it 'should be eq 1' do
           is_expected.to eq 1
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with \'1\'' do
+        before { params[:version] = '1' }
+
+        it 'should be eq 1 (int)' do
+          is_expected.to eq 1
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with 2' do
+        before { params[:version] = 2 }
+
+        it 'should be eq 2' do
+          is_expected.to eq 2
         end
 
         it 'should be invalid' do
@@ -316,108 +306,6 @@ module CycloneLariat
       end
     end
 
-    describe '#subject' do
-      subject(:subject) { message.subject }
-
-      context 'when it undefined' do
-        before { params.delete :subject }
-
-        it { is_expected.to be_an Hash }
-        it { is_expected.to be_empty }
-
-        it 'should be invalid' do
-          expect(message.valid?).to eq false
-        end
-      end
-
-      context 'when it defined with valid data' do
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
-      context 'when it defined with invalid data' do
-        context 'when uuid is not uuid' do
-          before { params[:subject] = { type: 'User', uuid: 'rere' } }
-
-          it 'should be invalid' do
-            expect(message.valid?).to eq false
-          end
-        end
-
-        context 'when type is not a string' do
-          before { params[:subject] = { type: 1, uuid: SecureRandom.uuid } }
-
-          it 'should be invalid' do
-            expect(message.valid?).to eq false
-          end
-        end
-      end
-
-      context 'when it defined without hash' do
-        before { params[:subject] = 'string' }
-
-        it 'should be eq defined string' do
-          is_expected.to eq('string')
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq false
-        end
-      end
-    end
-
-    describe '#object' do
-      subject(:object) { message.object }
-
-      context 'when it undefined' do
-        before { params.delete :object }
-
-        it { is_expected.to be_an Hash }
-        it { is_expected.to be_empty }
-
-        it 'should be invalid' do
-          expect(message.valid?).to eq false
-        end
-      end
-
-      context 'when it defined with valid data' do
-        it 'should be valid' do
-          expect(message.valid?).to eq true
-        end
-      end
-
-      context 'when it defined with invalid data' do
-        context 'when uuid is not uuid' do
-          before { params[:object] = { type: 'User', uuid: 'rere' } }
-
-          it 'should be invalid' do
-            expect(message.valid?).to eq false
-          end
-        end
-
-        context 'when type is not a string' do
-          before { params[:object] = { type: 1, uuid: SecureRandom.uuid } }
-
-          it 'should be invalid' do
-            expect(message.valid?).to eq false
-          end
-        end
-      end
-
-      context 'when it defined without hash' do
-        before { params[:object] = 'string' }
-
-        it 'should be eq defined string' do
-          is_expected.to eq('string')
-        end
-
-        it 'should be valid' do
-          expect(message.valid?).to eq false
-        end
-      end
-    end
-
     describe '#to_json' do
       subject(:to_json) { message.to_json }
       let(:uuid) { SecureRandom.uuid }
@@ -427,20 +315,12 @@ module CycloneLariat
         expected_json = {
           uuid: uuid,
           publisher: 'example_publisher',
-          type: 'message_user_email_updated',
-          version: 2,
+          type: 'message_create_user',
+          version: 1,
           data: {
             email: 'john.doe@example.com'
           },
-          sent_at: '1970-01-01T16:40:00.000+01:00',
-          subject: {
-            type: 'User',
-            uuid: user_uuid
-          },
-          object: {
-            type: 'User',
-            uuid: user_uuid
-          }
+          sent_at: '1970-01-01T16:40:00.000+01:00'
         }.to_json
 
         is_expected.to eq(expected_json)

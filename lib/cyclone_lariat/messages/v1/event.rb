@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/messages/v1/abstract'
+require 'cyclone_lariat/messages/abstract'
+require 'cyclone_lariat/messages/v1/validator'
 
 module CycloneLariat
   module Messages
     module V1
       class Event < Abstract
-        include LunaPark::Extensions::Validatable
-        validator Messages::V1::Validator
+        validator Validator
 
         KIND = 'event'
 

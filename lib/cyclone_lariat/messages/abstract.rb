@@ -35,7 +35,9 @@ module CycloneLariat
           version: version,
           data: data,
           request_id: request_id,
-          sent_at: sent_at&.iso8601(3)
+          sent_at: sent_at&.iso8601(3),
+          deduplication_id: deduplication_id,
+          group_id: group_id
         }.compact
       end
 

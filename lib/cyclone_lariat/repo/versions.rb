@@ -13,8 +13,8 @@ module CycloneLariat
 
       attr_reader :config
 
-      dependency(:sequel_versions_class) { Repo::Sequel::Versions }
-      dependency(:active_record_versions_class) { Repo::ActiveRecord::Versions }
+      dependency(:sequel_versions_class) { Repo::Adapters::Sequel::Versions }
+      dependency(:active_record_versions_class) { Repo::Adapters::ActiveRecord::Versions }
 
       extend Forwardable
 

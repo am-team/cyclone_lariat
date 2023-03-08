@@ -8,13 +8,13 @@ require 'cyclone_lariat/repo/active_record/messages'
 
 module CycloneLariat
   module Repo
-    class Messages
+    class InboxMessages
       include LunaPark::Extensions::Injector
 
       attr_reader :config
 
-      dependency(:sequel_messages_class) { Repo::Sequel::Messages }
-      dependency(:active_record_messages_class) { Repo::ActiveRecord::Messages }
+      dependency(:sequel_messages_class) { Repo::Sequel::InboxMessages }
+      dependency(:active_record_messages_class) { Repo::ActiveRecord::InboxMessages }
 
       extend Forwardable
 
@@ -26,15 +26,15 @@ module CycloneLariat
       end
 
       def driver
-        @driver ||= select(driver: config.driver)
+        @driver ||= select(driver: config.db_driver)
       end
 
       private
 
       def select(driver:)
         case driver
-        when :sequel then sequel_messages_class.new(config.messages_dataset)
-        when :active_record then active_record_messages_class.new(config.messages_dataset)
+        when :sequel then sequel_messages_class.new(config.inbox_dataset)
+        when :active_record then active_record_messages_class.new(config.outbox_dataset)
         else raise ArgumentError, "Undefined driver `#{driver}`"
         end
       end

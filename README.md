@@ -67,7 +67,8 @@ Last install command will create 2 files:
     c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
     c.instance = ENV['INSTANCE']                # stage, production, test
     c.driver = :sequel                          # driver Sequel
-    c.messages_dataset = DB[:async_messages]    # Sequel dataset for store income messages (on receiver)
+    c.inbox_dataset = DB[:inbox_messages]       # Sequel dataset for store incoming messages (on receiver)
+    c.outbox_dataset = DB[:outbox_messages]     # Sequel dataset for store outgoing messages (on publishing)
     c.versions_dataset = DB[:lariat_versions]   # Sequel dataset for versions of publisher migrations
     c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
   end
@@ -124,19 +125,20 @@ Last install command will create 2 files:
   # frozen_string_literal: true
 
   CycloneLariat.configure do |c|
-    c.version = 1                               # api version
+    c.version = 1                                 # api version
 
-    c.aws_key = ENV['AWS_KEY']                  # aws key
-    c.aws_secret_key = ENV['AWS_SECRET_KEY']    # aws secret
-    c.aws_account_id = ENV['AWS_ACCOUNT_ID']    # aws account id
-    c.aws_region = ENV['AWS_REGION']            # aws region
+    c.aws_key = ENV['AWS_KEY']                    # aws key
+    c.aws_secret_key = ENV['AWS_SECRET_KEY']      # aws secret
+    c.aws_account_id = ENV['AWS_ACCOUNT_ID']      # aws account id
+    c.aws_region = ENV['AWS_REGION']              # aws region
 
-    c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
-    c.instance = ENV['INSTANCE']                # stage, production, test
-    c.driver = :active_record                   # driver ActiveRecord
-    c.messages_dataset = CycloneLariatMessage   # ActiveRecord model for store income messages (on receiver)
-    c.versions_dataset = CycloneLariatVersion   # ActiveRecord model for versions of publisher migrations
-    c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
+    c.publisher = ENV['APP_NAME']                 # name of your publishers, usually name of your application
+    c.instance = ENV['INSTANCE']                  # stage, production, test
+    c.driver = :active_record                     # driver ActiveRecord
+    c.inbox_dataset = CycloneLariatInboxMessage   # ActiveRecord model for store income messages (on receiver)
+    c.outbox_dataset = CycloneLariatOutboxMessage # ActiveRecord model for store income messages (on receiver)
+    c.versions_dataset = CycloneLariatVersion     # ActiveRecord model for versions of publisher migrations
+    c.fake_publish = ENV['INSTANCE'] == 'test'    # when true, prevents messages from being published
   end
   ```
 

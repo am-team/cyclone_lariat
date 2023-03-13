@@ -68,7 +68,6 @@ Last install command will create 2 files:
     c.instance = ENV['INSTANCE']                # stage, production, test
     c.driver = :sequel                          # driver Sequel
     c.inbox_dataset = DB[:inbox_messages]       # Sequel dataset for store incoming messages (on receiver)
-    c.outbox_dataset = DB[:outbox_messages]     # Sequel dataset for store outgoing messages (on publishing)
     c.versions_dataset = DB[:lariat_versions]   # Sequel dataset for versions of publisher migrations
     c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
   end
@@ -136,7 +135,6 @@ Last install command will create 2 files:
     c.instance = ENV['INSTANCE']                  # stage, production, test
     c.driver = :active_record                     # driver ActiveRecord
     c.inbox_dataset = CycloneLariatInboxMessage   # ActiveRecord model for store income messages (on receiver)
-    c.outbox_dataset = CycloneLariatOutboxMessage # ActiveRecord model for store income messages (on receiver)
     c.versions_dataset = CycloneLariatVersion     # ActiveRecord model for versions of publisher migrations
     c.fake_publish = ENV['INSTANCE'] == 'test'    # when true, prevents messages from being published
   end
@@ -805,18 +803,18 @@ end
 
 ## Rake tasks
 
-For simplify write some Rake tasks you can use `CycloneLariat::Repo::Messages`.
+For simplify write some Rake tasks you can use `CycloneLariat::Repo::InboxMessages`.
 
 ```ruby
 # For retry all unprocessed
 
-CycloneLariat::Repo::Messages.new.each_unprocessed do |event|
+CycloneLariat::Repo::InboxMessages.new.each_unprocessed do |event|
   # Your logic here
 end
 
 # For retry all events with client errors
 
-CycloneLariat::Repo::Messages.new.each_with_client_errors do |event|
+CycloneLariat::Repo::InboxMessages.new.each_with_client_errors do |event|
   # Your logic here
 end
 ```

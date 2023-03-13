@@ -109,13 +109,13 @@ RSpec.describe CycloneLariat::Middleware do
 
     context 'when messages_repo is defined' do
       let(:dataset) { double }
-      let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, disabled?: false }
-      let(:messages_repo_class) { class_double(CycloneLariat::Repo::Messages, new: messages_repo) }
-      let(:middleware) { described_class.new(messages_dataset: dataset, repo: messages_repo_class) }
+      let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, disabled?: false }
+      let(:messages_repo_class) { class_double(CycloneLariat::Repo::InboxMessages, new: messages_repo) }
+      let(:middleware) { described_class.new(inbox_dataset: dataset, repo: messages_repo_class) }
       let(:event) { instance_double CycloneLariat::Messages::V1::Event, processed?: true }
 
       context 'when event is already exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: event, disabled?: false }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, find: event, disabled?: false }
         it { is_expected.to be true }
         it 'should not run business logic' do
           expect(business_logic).to_not receive(:call)
@@ -134,7 +134,7 @@ RSpec.describe CycloneLariat::Middleware do
       end
 
       context 'when event does not exists in dataset' do
-        let(:messages_repo) { instance_double CycloneLariat::Repo::Messages, find: nil, create: nil, processed!: true, disabled?: false }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, find: nil, create: nil, processed!: true, disabled?: false }
 
         it { is_expected.to be true }
 
@@ -156,7 +156,7 @@ RSpec.describe CycloneLariat::Middleware do
     end
 
     context 'when dataset is not defined' do
-      let(:middleware) { described_class.new(messages_dataset: nil, driver: :sequel) }
+      let(:middleware) { described_class.new(inbox_dataset: nil, driver: :sequel) }
 
       it { is_expected.to be :result }
 
@@ -169,19 +169,19 @@ RSpec.describe CycloneLariat::Middleware do
     context 'when dataset is defined in config' do
       before do
         CycloneLariat.configure do |cfg|
-          cfg.messages_dataset = DB[:sequel_async_messages]
+          cfg.inbox_dataset = DB[:sequel_async_messages]
           cfg.driver           = :sequel
         end
       end
 
       after do
         CycloneLariat.configure do |cfg|
-          cfg.messages_dataset = nil
+          cfg.inbox_dataset = nil
           cfg.driver           = nil
         end
       end
 
-      let(:middleware) { described_class.new(messages_dataset: nil) }
+      let(:middleware) { described_class.new(inbox_dataset: nil) }
 
       it { is_expected.to be true }
 

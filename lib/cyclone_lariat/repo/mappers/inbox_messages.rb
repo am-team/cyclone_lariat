@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cyclone_lariat/repo/mappers/base'
+
 module CycloneLariat
   module Repo
     module Mappers

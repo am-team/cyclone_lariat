@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'securerandom'
-require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/repo/inbox_messages'
 
-RSpec.describe CycloneLariat::Repo::Sequel::Messages do
-  let(:dataset) { DB[:sequel_async_messages] }
+RSpec.describe CycloneLariat::Repo::ActiveRecord::InboxMessages do
+  let(:dataset) { ArAsyncMessage }
   let(:repo) { described_class.new dataset }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(
@@ -27,7 +27,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
     end
 
     it 'should create correct record' do
-      created_event = dataset.first(uuid: create_event)
+      created_event = dataset.find(create_event)
       expect(created_event[:uuid]).to be_a String
       expect(created_event[:publisher]).to eq 'users'
       expect(created_event[:type]).to eq 'create_user'
@@ -43,7 +43,7 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
     context 'when event with same uuid is already exists' do
       before { repo.create event }
 
-      it { expect { create_event }.to raise_error Sequel::UniqueConstraintViolation }
+      it { expect { create_event }.to raise_error ActiveRecord::RecordNotUnique }
     end
   end
 
@@ -133,14 +133,6 @@ RSpec.describe CycloneLariat::Repo::Sequel::Messages do
 
       it 'returns nil' do
         is_expected.to be_nil
-      end
-    end
-
-    context 'when pg_json extension enabled' do
-      before { DB.extension :pg_json }
-
-      it 'should be expected event' do
-        is_expected.to eq event
       end
     end
   end

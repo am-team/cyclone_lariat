@@ -1,39 +1,30 @@
 # frozen_string_literal: true
 
+require 'cyclone_lariat/core'
+require 'cyclone_lariat/clients/sns'
+require 'cyclone_lariat/plugins/outbox/options'
+require 'cyclone_lariat/plugins/outbox/extensions/active_record_transaction'
+require 'cyclone_lariat/plugins/outbox/extensions/sequel_transaction'
+
 module CycloneLariat
-  module Plugins
-    class Outbox
-      class << self
-        def config
-          @config ||= OpenStruct.new
-        end
+  module Outbox
+    class << self
+      def config
+        @config ||= Outbox::Options.new
+      end
 
-        def configure
-          yield(config)
-        end
+      def configure
+        yield(config)
+        extend_driver_transaction
+      end
 
-        def load
-          extend_driver_transaction
-        end
+      private
 
-        private
-
-        def check_config!
-          raise ArgumentError, "Undefined outbox dataset"       unless config.outbox_dataset
-          raise ArgumentError, "Undefined outbox poll interval" unless config.outbox_poll_interval
-          raise ArgumentError, "Undefined async backend"        unless config.async_backend
-        end
-
-        def extend_driver_transaction
-          case CycloneLariat.config.db_driver
-          when :sequel        then Sequel::Database.prepend(Outbox::Extensions::Sequel)
-          when :active_record then ActiveRecord::Base.prepend(Outbox::Extensions::ActiveRecord)
-          else raise ArgumentError, "Undefined driver `#{driver}`"
-          end
-        end
-
-        def config
-          @config ||= CycloneLariat.config
+      def extend_driver_transaction
+        case CycloneLariat.config.driver
+        when :sequel        then Sequel::Database.prepend(Outbox::Extensions::SequelTransaction)
+        when :active_record then ActiveRecord::ConnectionAdapters::AbstractAdapter.prepend(Outbox::Extensions::ActiveRecordTransaction)
+        else raise ArgumentError, "Undefined driver `#{driver}`"
         end
       end
     end

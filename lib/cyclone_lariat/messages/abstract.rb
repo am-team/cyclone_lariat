@@ -15,7 +15,7 @@ module CycloneLariat
       attr :publisher, String, :new
       attr :type,      String, :new
 
-      attrs :client_error, :version, :data, :request_id, :sent_at,
+      attrs :client_error, :sending_error, :version, :data, :request_id, :sent_at,
             :deduplication_id, :group_id, :processed_at, :received_at
 
       # Make validation public
@@ -35,9 +35,7 @@ module CycloneLariat
           version: version,
           data: data,
           request_id: request_id,
-          sent_at: sent_at&.iso8601(3),
-          deduplication_id: deduplication_id,
-          group_id: group_id
+          sent_at: sent_at&.iso8601(3)
         }.compact
       end
 

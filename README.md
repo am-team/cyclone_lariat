@@ -93,7 +93,7 @@ Last install command will create 2 files:
 
   Sequel.migration do
     change do
-      create_table :async_messages do
+      create_table :inbox_messages do
         column   :uuid, :uuid, primary_key: true
         String   :type,                         null: false
         Integer  :version,                      null: false
@@ -800,6 +800,72 @@ class Receiver
   end
 end
 ```
+
+## Transactional outbox
+
+This extension allows you to save messages to a database inside a transaction. It prevents messages from being lost when publishing fails. After the transaction is copmpleted, publishing will be perfromed and successfully published messages will be deleted from the database. For more information, see [Transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html)
+
+
+### Configuration
+
+```ruby
+CycloneLariat::Outbox.configure do |config|
+  config.dataset = DB[:outbox_messages] # Outbox messages dataset. Sequel dataset or ActiveRecord model
+  config.republish_timeout = 120 # After timeout messages will become visible for republishing
+end
+```
+
+Before using the outbox, add and apply this migration:
+
+```ruby
+# Sequel
+DB.create_table :outbox_messages do
+  column :uuid, :uuid, primary_key: true
+  column :deduplication_id, String
+  column :group_id, String
+  column :serialized_message, :json, null: false
+  column :sending_error, String
+  DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+end
+
+# ActiveRecord
+create_table(:outbox_messages, id: :uuid, primary_key: :uuid, default: -> { 'public.uuid_generate_v4()' }) do |t|
+  t.string :deduplication_id, null: true, default: nil
+  t.string :group_id, null: true, default: nil
+  t.string :sending_error, null: true, default: nil
+  t.jsonb :serialized_message, null: true, default: nil
+  t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
+end
+```
+
+### Usage example
+
+```ruby
+# Sequel
+DB.transaction(with_outbox: true) do |outbox|
+  some_action
+  outbox << CycloneLariat::Messages::V1::Event.new(...)
+  ...
+end
+
+# ActiveRecord
+ActiveRecord::Base.transaction(with_outbox: true) do |outbox|
+  some_action
+  outbox << CycloneLariat::Messages::V1::Event.new(...)
+  ...
+end
+```
+
+### Republishing
+
+To republish messages you can use the following service:
+
+```ruby
+CycloneLariat::Outbox::Services::Republish.call
+```
+
+This service tries to publish messages from the outbox table where `created_at < republish_timeout`.
+Successfully published messages will be removed from the outbox table.
 
 ## Rake tasks
 

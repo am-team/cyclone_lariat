@@ -29,7 +29,7 @@ module CycloneLariat
             dataset.where(uuid: uuid).update(sending_error: error_message)
           end
 
-          def each_unpublished
+          def each_for_republishing
             dataset
               .where('created_at < ?', Time.now - republish_timeout)
               .order(created_at: :asc)

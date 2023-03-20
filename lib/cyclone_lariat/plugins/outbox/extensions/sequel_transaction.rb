@@ -13,32 +13,33 @@ module CycloneLariat
 
           outbox = []
           block_result = nil
+          messages_repo = CycloneLariat::Outbox::Repo::Messages.new
+
           super(opts) do |conn|
             block_result = block.call(outbox, conn)
-            outbox.each { |message| message.uuid = outbox_messages_repo.create(message) }
+            outbox.each { |message| message.uuid = messages_repo.create(message) }
           end
 
-          sended_message_uuids = []
-          outbox.each do |message|
-            begin
-              sns_client.publish message, fifo: message.fifo?
-              sended_message_uuids << message.uuid
-            rescue StandardError => e
-              outbox_messages_repo.update_error(message.uuid, e.message)
-              next
-            end
-          end
+          published_message_uuids = publish_outbox_messages(outbox, messages_repo)
+          messages_repo.delete(published_message_uuids)
 
-          outbox_messages_repo.delete(sended_message_uuids)
           block_result
         end
 
-        def outbox_messages_repo
-          @outbox_messages_repo ||= CycloneLariat::Outbox::Repo::Messages.new
-        end
+        private
 
-        def sns_client
-          @sns_client ||= CycloneLariat::Clients::Sns.new
+        def publish_outbox_messages(outbox, messages_repo)
+          sns_client = CycloneLariat::Clients::Sns.new
+
+          outbox.each_with_object([]) do |message, published_message_uuids|
+            begin
+              sns_client.publish message, fifo: message.fifo?
+              published_message_uuids << message.uuid
+            rescue StandardError => e
+              messages_repo.update_error(message.uuid, e.message)
+              next
+            end
+          end
         end
       end
     end

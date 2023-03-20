@@ -169,7 +169,7 @@ RSpec.describe CycloneLariat::Middleware do
     context 'when dataset is defined in config' do
       before do
         CycloneLariat.configure do |cfg|
-          cfg.inbox_dataset = DB[:sequel_async_messages]
+          cfg.inbox_dataset = DB[:sequel_inbox_messages]
           cfg.driver           = :sequel
         end
       end

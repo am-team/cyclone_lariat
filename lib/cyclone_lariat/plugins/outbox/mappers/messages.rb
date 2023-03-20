@@ -12,7 +12,6 @@ module CycloneLariat
 
             attrs = hash_from_json_column(row[:serialized_message]).symbolize_keys
             attrs[:uuid]             = row[:uuid]
-            attrs[:version]          = row[:version]
             attrs[:deduplication_id] = row[:deduplication_id]
             attrs[:group_id]         = row[:group_id]
             attrs[:sending_error]    = row[:sending_error]
@@ -27,7 +26,6 @@ module CycloneLariat
               row[:group_id] = input.group_id
               row[:serialized_message] = input.to_json
               row[:sending_error] = input.sending_error
-              row[:version] = input.version
             end
           end
         end

@@ -4,7 +4,7 @@ require 'luna_park/values/compound'
 
 module CycloneLariat
   module Outbox
-    class Options
+    class Options < LunaPark::Values::Compound
       attr_accessor :dataset, :republish_timeout
     end
   end

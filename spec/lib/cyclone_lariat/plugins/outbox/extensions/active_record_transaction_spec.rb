@@ -23,14 +23,16 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
         sending_error: 'Something went wrong'
       )
     end
-    let(:messages_repo) { instance_double(CycloneLariat::Outbox::Repo::Messages, create: event.uuid, delete: true) }
-    let(:sns_client)    { instance_double(CycloneLariat::Clients::Sns, publish: true) }
+    let(:messages_repo)    { instance_double(CycloneLariat::Outbox::Repo::Messages, create: event.uuid, delete: true) }
+    let(:sns_client)       { instance_double(CycloneLariat::Clients::Sns, publish: true) }
+    let(:on_sending_error) { nil }
 
     before do
       CycloneLariat.configure { |config| config.driver = :active_record }
       CycloneLariat::Outbox.configure do |config|
         config.dataset = ArOutboxMessage
-        config.republish_timeout = 120
+        config.resend_timeout = 120
+        config.on_sending_error = on_sending_error
       end
       allow(CycloneLariat::Clients::Sns).to receive(:new).and_return(sns_client)
       allow(CycloneLariat::Outbox::Repo::Messages).to receive(:new).and_return(messages_repo)
@@ -46,7 +48,7 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
       expect(sns_client).to have_received(:publish).with(event, fifo: true)
     end
 
-    it 'should delete published messages' do
+    it 'should delete sent messages' do
       transaction
       expect(messages_repo).to have_received(:delete).with([event.uuid])
     end
@@ -55,7 +57,7 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
       expect(transaction).to eq('result')
     end
 
-    context 'when publishing of message fails' do
+    context 'when sending message failed' do
       before do
         allow(sns_client).to receive(:publish).and_raise(StandardError.new('Something went wrong'))
         allow(messages_repo).to receive(:update_error)
@@ -69,6 +71,15 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
       it 'should not delete message' do
         transaction
         expect(messages_repo).not_to have_received(:delete).with([event.uuid])
+      end
+
+      context 'when on_sending_error callback present' do
+        let(:on_sending_error) { double(call: true) }
+
+        it 'should call on_sending_error' do
+          transaction
+          expect(on_sending_error).to have_received(:call).with(event, instance_of(StandardError))
+        end
       end
     end
 

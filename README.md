@@ -811,7 +811,7 @@ This extension allows you to save messages to a database inside a transaction. I
 ```ruby
 CycloneLariat::Outbox.configure do |config|
   config.dataset = DB[:outbox_messages] # Outbox messages dataset. Sequel dataset or ActiveRecord model
-  config.republish_timeout = 120 # After timeout messages will become visible for republishing
+  config.resend_timeout = 120 # After timeout messages will become visible for resending
 end
 ```
 
@@ -856,16 +856,16 @@ ActiveRecord::Base.transaction(with_outbox: true) do |outbox|
 end
 ```
 
-### Republishing
+### Resending
 
-To republish messages you can use the following service:
+To resend messages you can use the following service:
 
 ```ruby
-CycloneLariat::Outbox::Services::Republish.call
+CycloneLariat::Outbox::Services::Resend.call
 ```
 
-This service tries to publish messages from the outbox table where `created_at < republish_timeout`.
-Successfully published messages will be removed from the outbox table.
+This service tries to publish messages from the outbox table where `created_at < resend_timeout`.
+Successfully published messages will be removed.
 
 ## Rake tasks
 

@@ -4,8 +4,8 @@ require 'cyclone_lariat/plugins/outbox'
 
 RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
   let(:dataset) { DB[:sequel_outbox_messages] }
-  let(:republish_timeout) { 120 }
-  let(:config) { CycloneLariat::Outbox::Options.new(dataset: dataset, republish_timeout: republish_timeout) }
+  let(:resend_timeout) { 120 }
+  let(:config) { CycloneLariat::Outbox::Options.new(dataset: dataset, resend_timeout: resend_timeout) }
   let(:repo) { described_class.new(config) }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(
@@ -43,9 +43,9 @@ RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
     end
   end
 
-  describe '#each_for_republishing' do
+  describe '#each_for_resending' do
     let!(:event_within_timeout) { repo.create event }
-    let!(:event_for_republishing) do
+    let!(:event_for_resending) do
       event = CycloneLariat::Messages::V1::Event.new(
         uuid: SecureRandom.uuid,
         publisher: 'users',
@@ -56,12 +56,12 @@ RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
         sent_at: Time.now
       )
       uuid = repo.create event
-      dataset.where(uuid: uuid).update(created_at: Time.now - republish_timeout)
+      dataset.where(uuid: uuid).update(created_at: Time.now - resend_timeout)
       event
     end
 
-    it 'should show only events available for republishing' do
-      expect { |b| repo.each_for_republishing(&b) }.to yield_with_args(event_for_republishing)
+    it 'should show only events available for resending' do
+      expect { |b| repo.each_for_resending(&b) }.to yield_with_args(event_for_resending)
     end
   end
 

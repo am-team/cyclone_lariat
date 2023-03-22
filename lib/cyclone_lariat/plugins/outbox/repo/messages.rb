@@ -17,7 +17,7 @@ module CycloneLariat
 
         extend Forwardable
 
-        def_delegators :driver, :update_error, :create, :delete, :each_for_republishing
+        def_delegators :driver, :update_error, :create, :delete, :each_for_resending
 
         def driver
           @driver ||= select_driver

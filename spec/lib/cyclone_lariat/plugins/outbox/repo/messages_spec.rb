@@ -59,12 +59,12 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
-    describe '#each_for_republishing' do
-      subject(:each_for_republishing) { repo.each_for_republishing }
+    describe '#each_for_resending' do
+      subject(:each_for_resending) { repo.each_for_resending }
 
       it 'should be delegated to sequel repo' do
-        expect(sequel_repo).to receive(:each_for_republishing)
-        each_for_republishing
+        expect(sequel_repo).to receive(:each_for_resending)
+        each_for_resending
       end
     end
 
@@ -107,12 +107,12 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
-    describe '#each_for_republishing' do
-      subject(:each_for_republishing) { repo.each_for_republishing }
+    describe '#each_for_resending' do
+      subject(:each_for_resending) { repo.each_for_resending }
 
       it 'should be delegated to sequel repo' do
-        expect(ar_repo).to receive(:each_for_republishing)
-        each_for_republishing
+        expect(ar_repo).to receive(:each_for_resending)
+        each_for_resending
       end
     end
 

@@ -10,11 +10,11 @@ module CycloneLariat
     module Repo
       module ActiveRecord
         class Messages
-          attr_reader :dataset, :republish_timeout
+          attr_reader :dataset, :resend_timeout
 
           def initialize(config)
             @dataset = config.dataset
-            @republish_timeout = config.republish_timeout
+            @resend_timeout = config.resend_timeout
           end
 
           def create(msg)
@@ -29,9 +29,9 @@ module CycloneLariat
             dataset.where(uuid: uuid).update(sending_error: error_message)
           end
 
-          def each_for_republishing
+          def each_for_resending
             dataset
-              .where('created_at < ?', Time.now - republish_timeout)
+              .where('created_at < ?', Time.now - resend_timeout)
               .order(created_at: :asc)
               .each do |row|
               msg = build_message_from_ar_row(row)

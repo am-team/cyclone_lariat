@@ -5,7 +5,12 @@ require 'cyclone_lariat/plugins/outbox'
 RSpec.describe CycloneLariat::Outbox::Repo::ActiveRecord::Messages do
   let(:dataset) { ArOutboxMessage }
   let(:resend_timeout) { 120 }
-  let(:config) { CycloneLariat::Outbox::Options.new(dataset: dataset, resend_timeout: resend_timeout) }
+  let(:config) do
+    CycloneLariat::Outbox.configure do |config|
+      config.dataset = dataset
+      config.resend_timeout = resend_timeout
+    end
+  end
   let(:repo) { described_class.new(config) }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(

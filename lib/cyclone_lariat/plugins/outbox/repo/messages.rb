@@ -6,7 +6,7 @@ require 'cyclone_lariat/plugins/outbox/repo/active_record/messages'
 require 'cyclone_lariat/plugins/outbox/repo/sequel/messages'
 
 module CycloneLariat
-  module Outbox
+  class Outbox
     module Repo
       class Messages
         include LunaPark::Extensions::Injector

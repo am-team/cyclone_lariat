@@ -23,64 +23,23 @@ RSpec.describe CycloneLariat::Outbox::Extensions::SequelTransaction do
         sending_error: 'Something went wrong'
       )
     end
-    let(:messages_repo)    { instance_double(CycloneLariat::Outbox::Repo::Messages, create: event.uuid, delete: true) }
-    let(:sns_client)       { instance_double(CycloneLariat::Clients::Sns, publish: true) }
-    let(:on_sending_error) { nil }
+    let(:outbox) { instance_double(CycloneLariat::Outbox, :<< =>  true, publish: true) }
 
     before do
+      allow(CycloneLariat::Outbox).to receive(:new).and_return(outbox)
       CycloneLariat.configure { |config| config.driver = :sequel }
-      CycloneLariat::Outbox.configure do |config|
-        config.dataset = DB[:sequel_outbox_messages]
-        config.resend_timeout = 120
-        config.on_sending_error = on_sending_error
-      end
-      allow(CycloneLariat::Clients::Sns).to receive(:new).and_return(sns_client)
-      allow(CycloneLariat::Outbox::Repo::Messages).to receive(:new).and_return(messages_repo)
+      CycloneLariat::Outbox.load
     end
 
-    it 'should save outbox messages to database' do
-      transaction
-      expect(messages_repo).to have_received(:create).with(event)
-    end
+    after { CycloneLariat.configure { |config| config.driver = nil } }
 
     it 'should publish outbox messages' do
       transaction
-      expect(sns_client).to have_received(:publish).with(event, fifo: true)
-    end
-
-    it 'should delete sent messages' do
-      transaction
-      expect(messages_repo).to have_received(:delete).with([event.uuid])
+      expect(outbox).to have_received(:publish)
     end
 
     it 'should return transaction block result' do
       expect(transaction).to eq('result')
-    end
-
-    context 'when sending message failed' do
-      before do
-        allow(sns_client).to receive(:publish).and_raise(StandardError.new('Something went wrong'))
-        allow(messages_repo).to receive(:update_error)
-      end
-
-      it 'should update message error' do
-        transaction
-        expect(messages_repo).to have_received(:update_error).with(event.uuid, 'Something went wrong')
-      end
-
-      it 'should not delete message' do
-        transaction
-        expect(messages_repo).not_to have_received(:delete).with([event.uuid])
-      end
-
-      context 'when on_sending_error callback present' do
-        let(:on_sending_error) { double(call: true) }
-
-        it 'should call on_sending_error' do
-          transaction
-          expect(on_sending_error).to have_received(:call).with(event, instance_of(StandardError))
-        end
-      end
     end
 
     context 'when exception raised inside transaction' do
@@ -93,7 +52,7 @@ RSpec.describe CycloneLariat::Outbox::Extensions::SequelTransaction do
 
       it 'should not publish outbox messages' do
         begin transaction rescue nil end
-        expect(sns_client).not_to have_received(:publish).with(event)
+        expect(outbox).not_to have_received(:publish)
       end
     end
   end

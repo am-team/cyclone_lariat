@@ -813,6 +813,8 @@ CycloneLariat::Outbox.configure do |config|
   config.dataset = DB[:outbox_messages] # Outbox messages dataset. Sequel dataset or ActiveRecord model
   config.resend_timeout = 120 # After timeout messages will become visible for resending
 end
+
+CycloneLariat::Outbox.load
 ```
 
 Before using the outbox, add and apply this migration:

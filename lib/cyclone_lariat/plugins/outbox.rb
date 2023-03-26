@@ -2,31 +2,54 @@
 
 require 'cyclone_lariat/core'
 require 'cyclone_lariat/clients/sns'
-require 'cyclone_lariat/plugins/outbox/options'
+require 'cyclone_lariat/plugins/outbox/configurable'
+require 'cyclone_lariat/plugins/outbox/loadable'
 require 'cyclone_lariat/plugins/outbox/extensions/active_record_transaction'
 require 'cyclone_lariat/plugins/outbox/extensions/sequel_transaction'
+require 'cyclone_lariat/plugins/outbox/repo/messages'
 
 module CycloneLariat
-  module Outbox
-    class << self
-      def config
-        @config ||= Outbox::Options.new
-      end
+  class Outbox
+    extend CycloneLariat::Outbox::Configurable
+    extend CycloneLariat::Outbox::Loadable
+    include LunaPark::Extensions::Injector
 
-      def configure
-        yield(config)
-        extend_driver_transaction
-      end
+    dependency(:sns_client) { CycloneLariat::Clients::Sns.new }
+    dependency(:repo)       { CycloneLariat::Outbox::Repo::Messages.new }
 
-      private
+    attr_reader :messages
 
-      def extend_driver_transaction
-        case CycloneLariat.config.driver
-        when :sequel        then Sequel::Database.prepend(Outbox::Extensions::SequelTransaction)
-        when :active_record then ActiveRecord::ConnectionAdapters::AbstractAdapter.prepend(Outbox::Extensions::ActiveRecordTransaction)
-        else raise ArgumentError, "Undefined driver `#{driver}`"
+    def initialize
+      @messages = []
+    end
+
+    def publish
+      sent_message_uids = messages.each_with_object([]) do |message, sent_message_uuids|
+        begin
+          sns_client.publish message, fifo: message.fifo?
+          sent_message_uuids << message.uuid
+        rescue StandardError => e
+          config.on_sending_error.call(message, e) if config.on_sending_error
+          repo.update_error(message.uuid, e.message)
+          next
         end
       end
+      repo.delete(sent_message_uids) unless sent_message_uids.empty?
+    end
+
+    def <<(message)
+      message.uuid = repo.create(message)
+      messages << message
+    end
+
+    def push(message)
+      self << message
+    end
+
+    private
+
+    def config
+      self.class.config
     end
   end
 end

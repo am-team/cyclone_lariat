@@ -3,7 +3,7 @@
 require 'cyclone_lariat/repo/mappers/base'
 
 module CycloneLariat
-  module Outbox
+  class Outbox
     module Mappers
       class Messages < CycloneLariat::Repo::Mappers::Base
         class << self

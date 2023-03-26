@@ -6,7 +6,7 @@ require 'cyclone_lariat/messages/builder'
 require 'cyclone_lariat/plugins/outbox/mappers/messages'
 
 module CycloneLariat
-  module Outbox
+  class Outbox
     module Repo
       module ActiveRecord
         class Messages

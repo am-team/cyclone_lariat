@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0.rc4]
+Added
+- `CycloneLariat::Migration#subscribed?(topic:, endpoint:)` to check existance
+    subscriptions
+Changed
+- Fix `CycloneLariat::Clients::Sns#list_subscriptions`
+
 ## [1.0.0.rc3]
 Added
 - `CycloneLariat::Messages::Builder` for building messages

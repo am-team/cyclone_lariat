@@ -73,6 +73,10 @@ module CycloneLariat
       puts "  Subscription was deleted `#{topic.name} -> #{endpoint.name}`"
     end
 
+    def subscribed?(topic:, endpoint:)
+      sns.subscribed?(topic: topic, endpoint: endpoint)
+    end
+
     def default_policy(queue)
       {
         'Sid' => queue.arn,

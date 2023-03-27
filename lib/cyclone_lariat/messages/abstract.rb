@@ -11,7 +11,7 @@ module CycloneLariat
 
       KIND = 'unknown'
 
-      attr :uuid
+      attr :uuid,      String, :new
       attr :publisher, String, :new
       attr :type,      String, :new
 

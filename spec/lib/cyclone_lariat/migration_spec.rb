@@ -243,6 +243,21 @@ RSpec.describe CycloneLariat::Migration do
     end
   end
 
+  describe '#subscribed?' do
+    subject(:subscribed?) { migration.subscribed? topic: topic, endpoint: queue }
+
+    let(:sns) { instance_double CycloneLariat::Clients::Sns, subscribed?: true }
+
+    before do
+      migration.dependencies = { sns: -> { sns } }
+    end
+
+    it 'should answer subscribed? or no' do
+      expect(sns).to receive(:subscribed?).with(topic: topic, endpoint: queue)
+      expect(subscribed?).to be true
+    end
+  end
+
   describe '#queues' do
     subject(:queues) { migration.queues }
 

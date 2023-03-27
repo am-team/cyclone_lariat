@@ -471,6 +471,54 @@ RSpec.describe CycloneLariat::Clients::Sns do
     end
   end
 
+  describe '#subscribed?' do
+    let(:topic) { client.topic(:note_added, fifo: true) }
+    let(:sqs_client) do
+      CycloneLariat::Clients::Sqs.new(
+        aws_key: 'key',
+        aws_secret_key: 'secret_key',
+        aws_region: 'region',
+        aws_account_id: 42,
+        publisher: 'sample_app',
+        instance: :test,
+        version: 1
+      )
+    end
+
+    let(:queue) { sqs_client.queue(:note_added, fifo: true) }
+    subject(:subscribed?) { client.subscribed?(topic: topic, endpoint: queue) }
+
+    context 'when subscription already exists' do
+      before do
+        allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
+          {
+            subscriptions: [instance_double(Aws::SNS::Types::Subscription, endpoint: queue.arn, subscription_arn: 'subscription_arn')],
+            next_token: nil
+          }
+        )
+      end
+
+      it 'should be true' do
+        expect(subscribed?).to be_truthy
+      end
+    end
+
+    context 'when subscription is not exists' do
+      before do
+        allow(aws_sns_client).to receive(:list_subscriptions_by_topic).with(topic_arn: topic.arn).and_return(
+          {
+            subscriptions: [],
+            next_token: nil
+          }
+        )
+      end
+
+      it 'should be false' do
+        expect(subscribed?).to be_falsey
+      end
+    end
+  end
+
   describe '#list_all' do
     let(:first_page) do
       {
@@ -508,6 +556,67 @@ RSpec.describe CycloneLariat::Clients::Sns do
         arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-cubs_added.fifo
         arn:aws:sns:eu-west-1:247602342345:test-event-fanout-cyclone_lariat-chip_added.fifo
       ]
+    end
+  end
+
+  describe '#list_subscriptions' do
+    let(:first_page) do
+      {
+        subscriptions: [
+          Aws::SNS::Types::Subscription.new(
+            endpoint: 'arn:aws:sqs:eu-west-1:247602342345:test-event-queue-office-user_country_is_changed-crm',
+            owner: '247602342345',
+            protocol: 'sqs',
+            subscription_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-office-user_country_is_changed:1966be52-993c-4c7e-a07c-787d21376fd2',
+            topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-office-user_country_is_changed'
+          )
+        ],
+        next_token: 'page_2'
+      }
+    end
+
+    let(:second_page) do
+      {
+        subscriptions: [
+          Aws::SNS::Types::Subscription.new(
+            endpoint: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-office-user_country_is_changed',
+            owner: '247602342345',
+            protocol: 'sns',
+            subscription_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-identify-phone_is_verified:e9946a60-54df-4d00-943c-4b2ff48891ac',
+            topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test-event-fanout-identify-phone_is_verified'
+          ),
+          Aws::SNS::Types::Subscription.new(
+            endpoint: 'xxx@yyy.com',
+            owner: '247602342345',
+            protocol: 'email',
+            subscription_arn: 'arn:aws:sns:eu-west-1:247602342345:test_CloudWatch_Alarms_Topic:7cf4b48b-c6ff-4f2f-a904-871b2c9e5822',
+            topic_arn: 'arn:aws:sns:eu-west-1:247602342345:test_CloudWatch_Alarms_Topic'
+          )
+        ],
+        next_token: nil
+      }
+    end
+
+    before do
+      allow(aws_sns_client).to receive(:list_subscriptions).with(next_token: 'page_2').and_return(second_page)
+      allow(aws_sns_client).to receive(:list_subscriptions).with(no_args).and_return(first_page)
+    end
+
+    subject(:list_subscriptions) { client.list_subscriptions }
+
+    it 'should generate list of expected subscriptions' do
+      expect(list_subscriptions.map { |s| { topic: s[:topic].name, endpoint: s[:endpoint].name } }).to match_array(
+        [
+          {
+            topic: CycloneLariat::Resources::Topic.from_arn(first_page[:subscriptions].first.topic_arn).name,
+            endpoint: CycloneLariat::Resources::Queue.from_arn(first_page[:subscriptions].first.endpoint).name
+          },
+          {
+            topic: CycloneLariat::Resources::Topic.from_arn(second_page[:subscriptions].first.topic_arn).name,
+            endpoint: CycloneLariat::Resources::Topic.from_arn(second_page[:subscriptions].first.endpoint).name
+          }
+        ]
+      )
     end
   end
 end

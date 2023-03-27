@@ -75,6 +75,11 @@ module CycloneLariat
         topic
       end
 
+      def subscribed?(topic:, endpoint:)
+        subscription_arn = find_subscription_arn(topic: topic, endpoint: endpoint)
+        subscription_arn.nil? ? false : true
+      end
+
       def subscribe(topic:, endpoint:)
         subscription_arn = find_subscription_arn(topic: topic, endpoint: endpoint)
         raise Errors::SubscriptionAlreadyExists.new(topic: topic, endpoint: endpoint) if subscription_arn
@@ -117,7 +122,16 @@ module CycloneLariat
 
         loop do
           resp[:subscriptions].each do |s|
-            endpoint = s.endpoint.split(':')[2] == 'sqs' ? Resources::Queue.from_arn(s.endpoint) : Resources::Topic.from_arn(s.endpoint)
+            endpoint =
+              case s.protocol
+              when 'sqs'
+                Resources::Queue.from_arn(s.endpoint)
+              when 'sns'
+                Resources::Topic.from_arn(s.endpoint)
+              else
+                next
+              end
+
             subscriptions << { topic: Resources::Topic.from_arn(s.topic_arn), endpoint: endpoint, arn: s.subscription_arn }
           end
 

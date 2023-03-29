@@ -869,7 +869,7 @@ To resend messages you can use the following service:
 CycloneLariat::Outbox::Services::Resend.call
 ```
 
-This service tries to publish messages from the outbox table where `created_at < resend_timeout`.
+This service tries to publish messages from the outbox table for which `created_at < resend_timeout`.
 Successfully published messages will be removed.
 
 ## Rake tasks

@@ -2,7 +2,7 @@
 
 require 'cyclone_lariat/plugins/outbox'
 
-RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
+RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordOutbox do
   describe '#transaction' do
     subject(:transaction) do
       ActiveRecord::Base.transaction(with_outbox: true) do |outbox|
@@ -23,7 +23,7 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
         sending_error: 'Something went wrong'
       )
     end
-    let(:outbox) { instance_double(CycloneLariat::Outbox, :<< =>  true, publish: true) }
+    let(:outbox) { instance_double(CycloneLariat::Outbox, :<< => true, publish: true) }
 
     before do
       allow(CycloneLariat::Outbox).to receive(:new).and_return(outbox)
@@ -46,7 +46,7 @@ RSpec.describe CycloneLariat::Outbox::Extensions::ActiveRecordTransaction do
       subject(:transaction) do
         DB.transaction(with_outbox: true) do |outbox|
           outbox << event
-          raise StandardError.new('Something went wrong')
+          raise StandardError, 'Something went wrong'
         end
       end
 

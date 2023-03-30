@@ -33,10 +33,10 @@ module CycloneLariat
             dataset
               .where('created_at < ?', Time.now - resend_timeout)
               .order(created_at: :asc)
-              .each do |row|
-              msg = build_message_from_ar_row(row)
-              yield(msg)
-            end
+              .find_each do |row|
+                msg = build_message_from_ar_row(row)
+                yield(msg)
+              end
           end
 
           private

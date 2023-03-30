@@ -25,7 +25,6 @@ RSpec.describe CycloneLariat::Outbox::Repo::ActiveRecord::Messages do
     )
   end
 
-
   describe '#create' do
     subject(:create_event) { repo.create event }
 

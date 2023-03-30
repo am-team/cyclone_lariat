@@ -11,9 +11,12 @@ module CycloneLariat
 
       def extend_driver_transaction
         case CycloneLariat.config.driver
-        when :sequel        then Sequel::Database.prepend(Outbox::Extensions::SequelTransaction)
-        when :active_record then ActiveRecord::ConnectionAdapters::AbstractAdapter.prepend(Outbox::Extensions::ActiveRecordTransaction)
-        else raise ArgumentError, "Undefined driver `#{driver}`"
+        when :sequel
+          Sequel::Database.prepend(Outbox::Extensions::SequelOutbox)
+        when :active_record
+          ActiveRecord::ConnectionAdapters::AbstractAdapter.prepend(Outbox::Extensions::ActiveRecordOutbox)
+        else
+          raise ArgumentError, "Undefined driver `#{driver}`"
         end
       end
     end

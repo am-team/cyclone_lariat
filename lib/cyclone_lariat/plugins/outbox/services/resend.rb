@@ -24,8 +24,8 @@ module CycloneLariat
               sns_client.publish message, fifo: message.fifo?
               sent_message_uuids << message.uuid
             rescue StandardError => e
-              on_sending_error.call(message, e) if on_sending_error
               messages_repo.update_error(message.uuid, e.message)
+              on_sending_error&.call(message, e)
               next
             end
           end

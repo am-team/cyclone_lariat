@@ -3,14 +3,14 @@
 module CycloneLariat
   class Outbox
     module Extensions
-      module SequelTransaction
+      module ActiveRecordOutbox
         def transaction(opts = {}, &block)
-          opts = Sequel::OPTS.dup.merge(opts)
+          opts = opts.dup
           return super unless opts.delete(:with_outbox)
 
           outbox = CycloneLariat::Outbox.new
-          result = super(opts) do |conn|
-            block.call(outbox, conn)
+          result = super(opts) do
+            block.call(outbox)
           end
 
           outbox.publish

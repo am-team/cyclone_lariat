@@ -33,10 +33,10 @@ module CycloneLariat
             dataset
               .where(::Sequel.lit('created_at < ?', Time.now - resend_timeout))
               .order(::Sequel.asc(:created_at))
-              .each do |row|
-              msg = build Outbox::Mappers::Messages.from_row(row)
-              yield(msg)
-            end
+              .paged_each do |row|
+                msg = build Outbox::Mappers::Messages.from_row(row)
+                yield(msg)
+              end
           end
 
           private

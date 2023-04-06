@@ -3,7 +3,7 @@
 module CycloneLariat
   class Outbox
     module Configurable
-      CONFIG_ATTRS = %i[dataset resend_timeout on_sending_error].freeze
+      CONFIG_ATTRS = %i[dataset on_sending_error].freeze
 
       def config
         @config ||= Struct.new(*CONFIG_ATTRS).new

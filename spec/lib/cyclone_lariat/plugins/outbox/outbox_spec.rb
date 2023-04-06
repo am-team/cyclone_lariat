@@ -34,7 +34,6 @@ RSpec.describe CycloneLariat::Outbox do
     CycloneLariat.configure { |config| config.driver = :sequel }
     CycloneLariat::Outbox.configure do |config|
       config.dataset = DB[:sequel_outbox_messages]
-      config.resend_timeout = 120
       config.on_sending_error = on_sending_error
     end
     CycloneLariat::Outbox.load

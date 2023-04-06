@@ -17,20 +17,18 @@ module CycloneLariat
         dependency(:on_sending_error) { CycloneLariat::Outbox.config.on_sending_error }
 
         def call
-          sent_message_uuids = []
-
-          messages_repo.each_for_resending do |message|
-            begin
-              sns_client.publish message, fifo: message.fifo?
-              sent_message_uuids << message.uuid
-            rescue StandardError => e
-              messages_repo.update_error(message.uuid, e.message)
-              on_sending_error&.call(message, e)
-              next
+          messages_repo.each_with_error do |message|
+            messages_repo.transaction do
+              begin
+                messages_repo.lock(message.uuid)
+                sns_client.publish message, fifo: message.fifo?
+                messages_repo.delete(message.uuid)
+              rescue StandardError => e
+                messages_repo.update_error(message.uuid, e.message)
+                on_sending_error&.call(message, e)
+              end
             end
           end
-
-          messages_repo.delete(sent_message_uuids) unless sent_message_uuids.empty?
         end
       end
     end

@@ -10,11 +10,12 @@ module CycloneLariat
     module Repo
       module Sequel
         class Messages
-          attr_reader :dataset, :resend_timeout
+          LIMIT = 1000
 
-          def initialize(config)
-            @dataset = config.dataset
-            @resend_timeout = config.resend_timeout
+          attr_reader :dataset
+
+          def initialize(dataset)
+            @dataset = dataset
           end
 
           def create(msg)
@@ -29,14 +30,23 @@ module CycloneLariat
             dataset.where(uuid: uuid).update(sending_error: error_message)
           end
 
-          def each_for_resending
+          def each_with_error
             dataset
-              .where(::Sequel.lit('created_at < ?', Time.now - resend_timeout))
+              .where { sending_error !~ nil }
               .order(::Sequel.asc(:created_at))
-              .paged_each do |row|
+              .limit(LIMIT)
+              .each do |row|
                 msg = build Outbox::Mappers::Messages.from_row(row)
                 yield(msg)
               end
+          end
+
+          def transaction(&block)
+            dataset.db.transaction(&block)
+          end
+
+          def lock(uuid)
+            dataset.where(uuid: uuid).for_update.nowait
           end
 
           private

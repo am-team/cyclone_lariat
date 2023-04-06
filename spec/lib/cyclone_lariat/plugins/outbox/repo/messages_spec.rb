@@ -41,6 +41,24 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
+    describe '#transaction' do
+      subject(:transaction) { repo.transaction }
+
+      it 'should be delegated to sequel repo' do
+        expect(sequel_repo).to receive(:transaction)
+        transaction
+      end
+    end
+
+    describe '#lock' do
+      subject(:lock) { repo.lock(42) }
+
+      it 'should be delegated to sequel repo' do
+        expect(sequel_repo).to receive(:lock)
+        lock
+      end
+    end
+
     describe '#create' do
       subject(:create) { repo.create(42) }
 
@@ -59,12 +77,12 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
-    describe '#each_for_resending' do
-      subject(:each_for_resending) { repo.each_for_resending }
+    describe '#each_with_error' do
+      subject(:each_with_error) { repo.each_with_error }
 
       it 'should be delegated to sequel repo' do
-        expect(sequel_repo).to receive(:each_for_resending)
-        each_for_resending
+        expect(sequel_repo).to receive(:each_with_error)
+        each_with_error
       end
     end
 
@@ -89,6 +107,24 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
+    describe '#transaction' do
+      subject(:transaction) { repo.transaction }
+
+      it 'should be delegated to sequel repo' do
+        expect(ar_repo).to receive(:transaction)
+        transaction
+      end
+    end
+
+    describe '#lock' do
+      subject(:lock) { repo.lock(42) }
+
+      it 'should be delegated to sequel repo' do
+        expect(ar_repo).to receive(:lock)
+        lock
+      end
+    end
+
     describe '#create' do
       subject(:create) { repo.create(42) }
 
@@ -107,12 +143,12 @@ RSpec.describe CycloneLariat::Outbox::Repo::Messages do
       end
     end
 
-    describe '#each_for_resending' do
-      subject(:each_for_resending) { repo.each_for_resending }
+    describe '#each_with_error' do
+      subject(:each_with_error) { repo.each_with_error }
 
       it 'should be delegated to sequel repo' do
-        expect(ar_repo).to receive(:each_for_resending)
-        each_for_resending
+        expect(ar_repo).to receive(:each_with_error)
+        each_with_error
       end
     end
 

@@ -6,9 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0.rc6]
 Changed
-- rename `messages_dataset` to `inbox_dataset`
+- Rename `messages_dataset` to `inbox_dataset`
 Added
-- outbox plugin - implementation of the transactional outbox pattern
+- `CycloneLariat::Outbox` - implementation of the transactional outbox pattern
 
 ## [1.0.0.rc5]
 Changed

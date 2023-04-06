@@ -4,14 +4,7 @@ require 'cyclone_lariat/plugins/outbox'
 
 RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
   let(:dataset) { DB[:sequel_outbox_messages] }
-  let(:resend_timeout) { 120 }
-  let(:config) do
-    CycloneLariat::Outbox.configure do |config|
-      config.dataset = dataset
-      config.resend_timeout = resend_timeout
-    end
-  end
-  let(:repo) { described_class.new(config) }
+  let(:repo) { described_class.new(dataset) }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(
       uuid: SecureRandom.uuid,
@@ -48,25 +41,24 @@ RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
     end
   end
 
-  describe '#each_for_resending' do
-    let!(:event_within_timeout) { repo.create event }
-    let!(:event_for_resending) do
-      event = CycloneLariat::Messages::V1::Event.new(
-        uuid: SecureRandom.uuid,
-        publisher: 'users',
-        type: 'create_user',
-        version: 1,
-        data: { email: 'john.doe@example.com', password: 'password' },
-        sending_error: 'Something went wrong',
-        sent_at: Time.now
-      )
-      uuid = repo.create event
-      dataset.where(uuid: uuid).update(created_at: Time.now - resend_timeout)
-      event
+  describe '#each_with_error' do
+    let!(:event_without_error) do
+      event.clone.tap do |e|
+        e.uuid = SecureRandom.uuid
+        e.sending_error = nil
+        repo.create e
+      end
+    end
+    let!(:event_with_error) do
+      event.clone.tap do |e|
+        e.uuid = SecureRandom.uuid
+        e.sending_error = 'error'
+        repo.create e
+      end
     end
 
-    it 'should show only events available for resending' do
-      expect { |b| repo.each_for_resending(&b) }.to yield_with_args(event_for_resending)
+    it 'should show only events with sending error' do
+      expect { |b| repo.each_with_error(&b) }.to yield_with_args(event_with_error)
     end
   end
 
@@ -86,6 +78,20 @@ RSpec.describe CycloneLariat::Outbox::Repo::Sequel::Messages do
     it 'should update event sending error' do
       update_error
       expect(dataset.first(uuid: event_uuid)[:sending_error]).to eq('Error message')
+    end
+  end
+
+  describe '#transaction' do
+    subject(:transaction) do
+      repo.transaction do
+        repo.lock(event_uuid)
+        repo.delete(event_uuid)
+      end
+    end
+    let!(:event_uuid) { repo.create event }
+
+    it 'should commit changes' do
+      expect { transaction }.to change { dataset.count }.by(-1)
     end
   end
 end

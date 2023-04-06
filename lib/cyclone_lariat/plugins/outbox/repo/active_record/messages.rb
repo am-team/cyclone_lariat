@@ -10,11 +10,12 @@ module CycloneLariat
     module Repo
       module ActiveRecord
         class Messages
-          attr_reader :dataset, :resend_timeout
+          LIMIT = 1000
 
-          def initialize(config)
-            @dataset = config.dataset
-            @resend_timeout = config.resend_timeout
+          attr_reader :dataset
+
+          def initialize(dataset)
+            @dataset = dataset
           end
 
           def create(msg)
@@ -29,14 +30,23 @@ module CycloneLariat
             dataset.where(uuid: uuid).update(sending_error: error_message)
           end
 
-          def each_for_resending
+          def each_with_error
             dataset
-              .where('created_at < ?', Time.now - resend_timeout)
+              .where('sending_error IS NOT NULL')
               .order(created_at: :asc)
-              .find_each do |row|
+              .limit(LIMIT)
+              .each do |row|
                 msg = build_message_from_ar_row(row)
                 yield(msg)
               end
+          end
+
+          def transaction(&block)
+            dataset.transaction(&block)
+          end
+
+          def lock(uuid)
+            dataset.lock('FOR UPDATE NOWAIT').where(uuid: uuid)
           end
 
           private

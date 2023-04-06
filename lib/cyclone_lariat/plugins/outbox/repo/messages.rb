@@ -17,7 +17,7 @@ module CycloneLariat
 
         extend Forwardable
 
-        def_delegators :driver, :update_error, :create, :delete, :each_for_resending
+        def_delegators :driver, :transaction, :lock, :update_error, :create, :delete, :each_with_error
 
         def driver
           @driver ||= select_driver
@@ -27,8 +27,8 @@ module CycloneLariat
 
         def select_driver
           case general_config.driver
-          when :sequel        then sequel_messages_class.new(config)
-          when :active_record then active_record_messages_class.new(config)
+          when :sequel        then sequel_messages_class.new(config.dataset)
+          when :active_record then active_record_messages_class.new(config.dataset)
           else raise ArgumentError, "Undefined driver `#{general_config.driver}`"
           end
         end

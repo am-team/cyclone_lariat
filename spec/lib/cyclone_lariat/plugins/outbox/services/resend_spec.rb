@@ -24,7 +24,9 @@ RSpec.describe CycloneLariat::Outbox::Services::Resend do
   end
 
   before do
-    allow(messages_repo).to receive(:each_for_resending).and_yield(message1).and_yield(message2)
+    allow(messages_repo).to receive(:transaction) { |&block| block.call }
+    allow(messages_repo).to receive(:lock)
+    allow(messages_repo).to receive(:each_with_error).and_yield(message1).and_yield(message2)
     allow(messages_repo).to receive(:delete).and_return(true)
     allow(messages_repo).to receive(:update_error).and_return(true)
     allow(sns_client).to receive(:publish).and_return(true)
@@ -38,7 +40,8 @@ RSpec.describe CycloneLariat::Outbox::Services::Resend do
 
   it 'deletes sent messages' do
     call
-    expect(messages_repo).to have_received(:delete).with([message1.uuid, message2.uuid])
+    expect(messages_repo).to have_received(:delete).with(message1.uuid)
+    expect(messages_repo).to have_received(:delete).with(message2.uuid)
   end
 
   context 'when sending message failed' do
@@ -53,7 +56,7 @@ RSpec.describe CycloneLariat::Outbox::Services::Resend do
 
     it 'does not delete messages' do
       call
-      expect(messages_repo).to have_received(:delete).with([message1.uuid])
+      expect(messages_repo).to have_received(:delete).with(message1.uuid)
     end
 
     context 'when on_sending_error callback present' do

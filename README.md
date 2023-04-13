@@ -734,7 +734,7 @@ $ rake cyclone_lariat:graph               # Make graph
 Graph generated in [grpahviz](https://graphviz.org/) format for the entry scheme. You should install
 it on your system. For convert it in png use:
 ```bash
-$ rake cyclone_lariat:list:subscriptions | dot -Tpng -o foo.png
+$ rake cyclone_lariat:graph | dot -Tpng -o foo.png
 ```
 
 ## Subscriber

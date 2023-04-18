@@ -809,10 +809,11 @@ This extension allows you to save messages to a database inside a transaction. I
 ### Configuration
 
 ```ruby
+OutboxErrorLogger = LunaPark::Notifiers::Log.new
 CycloneLariat::Outbox.configure do |config|
   config.dataset = DB[:outbox_messages] # Outbox messages dataset. Sequel dataset or ActiveRecord model
   config.on_sending_error = lambda do |event, error|
-    Notifier.error(error, details: event.to_h)
+    OutboxErrorLogger.error(error, details: event.to_h)
   end
 end
 

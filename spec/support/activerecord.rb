@@ -22,10 +22,10 @@ ActiveRecord::Base.connection.create_table(:ar_inbox_messages, id: :uuid, primar
 end
 ActiveRecord::Base.connection.execute('DROP TABLE IF EXISTS ar_outbox_messages')
 ActiveRecord::Base.connection.create_table(:ar_outbox_messages, id: :uuid, primary_key: :uuid, default: -> { 'public.uuid_generate_v4()' }) do |t|
-  t.string :deduplication_id, null: true, default: nil
-  t.string :group_id, null: true, default: nil
-  t.string :sending_error, null: true, default: nil
-  t.jsonb :serialized_message, null: true, default: nil
+  t.string :deduplication_id, null: true
+  t.string :group_id, null: true
+  t.string :sending_error, null: true
+  t.jsonb :serialized_message, null: false
   t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
 end
 ActiveRecord::Base.connection.execute('DROP TABLE IF EXISTS ar_lariat_versions')

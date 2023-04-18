@@ -24,10 +24,10 @@ end
 DB.drop_table?(:sequel_outbox_messages)
 DB.create_table :sequel_outbox_messages do
   column :uuid, :uuid, primary_key: true
-  column :deduplication_id, String
-  column :group_id, String
+  column :deduplication_id, String, null: true
+  column :group_id, String, null: true
   column :serialized_message, :json, null: false
-  column :sending_error, String
+  column :sending_error, String, null: true
   DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 end
 DB.drop_table?(:sequel_lariat_versions)

@@ -67,7 +67,7 @@ Last install command will create 2 files:
     c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
     c.instance = ENV['INSTANCE']                # stage, production, test
     c.driver = :sequel                          # driver Sequel
-    c.messages_dataset = DB[:async_messages]    # Sequel dataset for store income messages (on receiver)
+    c.inbox_dataset = DB[:inbox_messages]       # Sequel dataset for store incoming messages (on receiver)
     c.versions_dataset = DB[:lariat_versions]   # Sequel dataset for versions of publisher migrations
     c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
   end
@@ -93,7 +93,7 @@ Last install command will create 2 files:
 
   Sequel.migration do
     change do
-      create_table :async_messages do
+      create_table :inbox_messages do
         column   :uuid, :uuid, primary_key: true
         String   :type,                         null: false
         Integer  :version,                      null: false
@@ -124,19 +124,19 @@ Last install command will create 2 files:
   # frozen_string_literal: true
 
   CycloneLariat.configure do |c|
-    c.version = 1                               # api version
+    c.version = 1                                 # api version
 
-    c.aws_key = ENV['AWS_KEY']                  # aws key
-    c.aws_secret_key = ENV['AWS_SECRET_KEY']    # aws secret
-    c.aws_account_id = ENV['AWS_ACCOUNT_ID']    # aws account id
-    c.aws_region = ENV['AWS_REGION']            # aws region
+    c.aws_key = ENV['AWS_KEY']                    # aws key
+    c.aws_secret_key = ENV['AWS_SECRET_KEY']      # aws secret
+    c.aws_account_id = ENV['AWS_ACCOUNT_ID']      # aws account id
+    c.aws_region = ENV['AWS_REGION']              # aws region
 
-    c.publisher = ENV['APP_NAME']               # name of your publishers, usually name of your application
-    c.instance = ENV['INSTANCE']                # stage, production, test
-    c.driver = :active_record                   # driver ActiveRecord
-    c.messages_dataset = CycloneLariatMessage   # ActiveRecord model for store income messages (on receiver)
-    c.versions_dataset = CycloneLariatVersion   # ActiveRecord model for versions of publisher migrations
-    c.fake_publish = ENV['INSTANCE'] == 'test'  # when true, prevents messages from being published
+    c.publisher = ENV['APP_NAME']                 # name of your publishers, usually name of your application
+    c.instance = ENV['INSTANCE']                  # stage, production, test
+    c.driver = :active_record                     # driver ActiveRecord
+    c.inbox_dataset = CycloneLariatInboxMessage   # ActiveRecord model for store income messages (on receiver)
+    c.versions_dataset = CycloneLariatVersion     # ActiveRecord model for versions of publisher migrations
+    c.fake_publish = ENV['INSTANCE'] == 'test'    # when true, prevents messages from being published
   end
   ```
 
@@ -801,20 +801,91 @@ class Receiver
 end
 ```
 
+## Transactional outbox
+
+This extension allows you to save messages to a database inside a transaction. It prevents messages from being lost when publishing fails. After the transaction is copmpleted, publishing will be perfromed and successfully published messages will be deleted from the database. For more information, see [Transactional outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html)
+
+
+### Configuration
+
+```ruby
+OutboxErrorLogger = LunaPark::Notifiers::Log.new
+CycloneLariat::Outbox.configure do |config|
+  config.dataset = DB[:outbox_messages] # Outbox messages dataset. Sequel dataset or ActiveRecord model
+  config.on_sending_error = lambda do |event, error|
+    OutboxErrorLogger.error(error, details: event.to_h)
+  end
+end
+
+CycloneLariat::Outbox.load
+```
+
+Before using the outbox, add and apply this migration:
+
+```ruby
+# Sequel
+DB.create_table :outbox_messages do
+  column :uuid, :uuid, primary_key: true
+  column :deduplication_id, String, null: true
+  column :group_id, String, null: true
+  column :serialized_message, :json, null: false
+  column :sending_error, String, null: true
+  DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
+end
+
+# ActiveRecord
+create_table(:outbox_messages, id: :uuid, primary_key: :uuid, default: -> { 'public.uuid_generate_v4()' }) do |t|
+  t.string :deduplication_id, null: true
+  t.string :group_id, null: true
+  t.string :sending_error, null: true
+  t.jsonb :serialized_message, null: false
+  t.datetime :created_at, null: false, default: -> { 'CURRENT_TIMESTAMP' }
+end
+```
+
+### Usage example
+
+```ruby
+# Sequel
+DB.transaction(with_outbox: true) do |outbox|
+  some_action
+  outbox << CycloneLariat::Messages::V1::Event.new(...)
+  ...
+end
+
+# ActiveRecord
+ActiveRecord::Base.transaction(with_outbox: true) do |outbox|
+  some_action
+  outbox << CycloneLariat::Messages::V1::Event.new(...)
+  ...
+end
+```
+
+### Resending
+
+To resend messages you can use the following service:
+
+```ruby
+CycloneLariat::Outbox::Services::Resend.call
+```
+
+This service tries to publish messages from the outbox table with `sending_error != nil`.
+Successfully published messages will be removed.
+
 ## Rake tasks
 
-For simplify write some Rake tasks you can use `CycloneLariat::Repo::Messages`.
+For simplify write some Rake tasks you can use `CycloneLariat::Repo::InboxMessages`.
 
 ```ruby
 # For retry all unprocessed
 
-CycloneLariat::Repo::Messages.new.each_unprocessed do |event|
+CycloneLariat::Repo::InboxMessages.new.each_unprocessed do |event|
   # Your logic here
 end
 
 # For retry all events with client errors
 
-CycloneLariat::Repo::Messages.new.each_with_client_errors do |event|
+CycloneLariat::Repo::InboxMessages.new.each_with_client_errors do |event|
   # Your logic here
 end
 ```

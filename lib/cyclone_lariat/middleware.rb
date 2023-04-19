@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/repo/inbox_messages'
 require 'cyclone_lariat/core'
 require 'luna_park/errors'
 require 'cyclone_lariat/messages/builder'
@@ -10,7 +10,7 @@ module CycloneLariat
   class Middleware
     attr_reader :config
 
-    def initialize(errors_notifier: nil, message_notifier: nil, repo: Repo::Messages, **options)
+    def initialize(errors_notifier: nil, message_notifier: nil, repo: Repo::InboxMessages, **options)
       @config           = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
       @events_repo      = repo.new(**@config.to_h)
       @message_notifier = message_notifier

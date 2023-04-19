@@ -2,13 +2,13 @@
 
 require 'cyclone_lariat/messages/v1/event'
 require 'cyclone_lariat/messages/v1/command'
-require 'cyclone_lariat/repo/messages_mapper'
+require 'cyclone_lariat/repo/mappers/inbox_messages'
 require 'cyclone_lariat/messages/builder'
 
 module CycloneLariat
   module Repo
     module Sequel
-      class Messages
+      class InboxMessages
         attr_reader :dataset
 
         def initialize(dataset)
@@ -24,7 +24,7 @@ module CycloneLariat
         end
 
         def create(msg)
-          dataset.insert MessagesMapper.to_row(msg)
+          dataset.insert Mappers::InboxMessages.to_row(msg)
         end
 
         def exists?(uuid:)
@@ -42,19 +42,19 @@ module CycloneLariat
           row = dataset.where(uuid: uuid).first
           return if row.nil?
 
-          build MessagesMapper.from_row(row)
+          build Mappers::InboxMessages.from_row(row)
         end
 
         def each_unprocessed
           dataset.where(processed_at: nil).each do |row|
-            msg = build MessagesMapper.from_row(row)
+            msg = build Mappers::InboxMessages.from_row(row)
             yield(msg)
           end
         end
 
         def each_with_client_errors
           dataset.where { (processed_at !~ nil) & (client_error_message !~ nil) }.each do |row|
-            msg = build MessagesMapper.from_row(row)
+            msg = build Mappers::InboxMessages.from_row(row)
             yield(msg)
           end
         end

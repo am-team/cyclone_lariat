@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'securerandom'
-require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/repo/inbox_messages'
 
-RSpec.describe CycloneLariat::Repo::Sequel::Messages do
-  let(:dataset) { DB[:sequel_async_messages] }
+RSpec.describe CycloneLariat::Repo::Sequel::InboxMessages do
+  let(:dataset) { DB[:sequel_inbox_messages] }
   let(:repo) { described_class.new dataset }
   let(:event) do
     CycloneLariat::Messages::V1::Event.new(

@@ -2,13 +2,13 @@
 
 require 'cyclone_lariat/messages/v1/event'
 require 'cyclone_lariat/messages/v1/command'
-require 'cyclone_lariat/repo/messages_mapper'
+require 'cyclone_lariat/repo/mappers/inbox_messages'
 require 'cyclone_lariat/messages/builder'
 
 module CycloneLariat
   module Repo
     module ActiveRecord
-      class Messages
+      class InboxMessages
         attr_reader :dataset
 
         def initialize(dataset)
@@ -24,7 +24,7 @@ module CycloneLariat
         end
 
         def create(msg)
-          dataset.create(MessagesMapper.to_row(msg)).uuid
+          dataset.create(Mappers::InboxMessages.to_row(msg)).uuid
         end
 
         def exists?(uuid:)
@@ -68,7 +68,7 @@ module CycloneLariat
         private
 
         def build_message_from_ar_row(row)
-          build MessagesMapper.from_row(row.attributes.symbolize_keys)
+          build Mappers::InboxMessages.from_row(row.attributes.symbolize_keys)
         end
 
         def current_timestamp_from_db

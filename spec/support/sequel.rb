@@ -7,8 +7,8 @@ require_relative '../../config/db'
 DB = Sequel.connect(DB_CONF)
 
 DB.run('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
-DB.drop_table?(:sequel_async_messages)
-DB.create_table :sequel_async_messages do
+DB.drop_table?(:sequel_inbox_messages)
+DB.create_table :sequel_inbox_messages do
   column :uuid, :uuid, primary_key: true
   String :kind, null: false
   String :type, null: false
@@ -20,6 +20,15 @@ DB.create_table :sequel_async_messages do
   DateTime :sent_at, null: true, default: nil
   DateTime :received_at, null: false, default: Sequel::CURRENT_TIMESTAMP
   DateTime :processed_at, null: true, default: nil
+end
+DB.drop_table?(:sequel_outbox_messages)
+DB.create_table :sequel_outbox_messages do
+  column :uuid, :uuid, primary_key: true
+  column :deduplication_id, String, null: true
+  column :group_id, String, null: true
+  column :serialized_message, :json, null: false
+  column :sending_error, String, null: true
+  DateTime :created_at, null: false, default: Sequel::CURRENT_TIMESTAMP
 end
 DB.drop_table?(:sequel_lariat_versions)
 DB.create_table :sequel_lariat_versions do

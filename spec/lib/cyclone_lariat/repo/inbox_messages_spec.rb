@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'cyclone_lariat/repo/messages'
+require 'cyclone_lariat/repo/inbox_messages'
 
-RSpec.describe CycloneLariat::Repo::Messages do
-  let(:sequel_repo) { instance_double CycloneLariat::Repo::Sequel::Messages }
-  let(:sequel_repo_class) { class_double CycloneLariat::Repo::Sequel::Messages, new: sequel_repo }
+RSpec.describe CycloneLariat::Repo::InboxMessages do
+  let(:sequel_repo) { instance_double CycloneLariat::Repo::Sequel::InboxMessages }
+  let(:sequel_repo_class) { class_double CycloneLariat::Repo::Sequel::InboxMessages, new: sequel_repo }
 
-  let(:ar_repo) { instance_double CycloneLariat::Repo::ActiveRecord::Messages }
-  let(:ar_repo_class) { class_double CycloneLariat::Repo::ActiveRecord::Messages, new: ar_repo }
+  let(:ar_repo) { instance_double CycloneLariat::Repo::ActiveRecord::InboxMessages }
+  let(:ar_repo_class) { class_double CycloneLariat::Repo::ActiveRecord::InboxMessages, new: ar_repo }
 
   before do
     repo.dependencies = {

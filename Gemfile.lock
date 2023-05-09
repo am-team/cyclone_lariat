@@ -1,11 +1,11 @@
 PATH
   remote: .
   specs:
-    cyclone_lariat (1.0.0.rc5)
+    cyclone_lariat (1.0.0.rc7)
       aws-sdk-sns
       aws-sdk-sqs
       dry-cli (~> 0.6)
-      dry-validation (~> 1.5)
+      dry-validation (< 1.9.0)
       luna_park (~> 0.11)
       terminal-table (~> 3.0)
 
@@ -28,8 +28,8 @@ GEM
     arel (9.0.0)
     ast (2.4.2)
     aws-eventstream (1.2.0)
-    aws-partitions (1.738.0)
-    aws-sdk-core (3.171.0)
+    aws-partitions (1.761.0)
+    aws-sdk-core (3.172.0)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.651.0)
       aws-sigv4 (~> 1.5)
@@ -37,7 +37,7 @@ GEM
     aws-sdk-sns (1.60.0)
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sigv4 (~> 1.1)
-    aws-sdk-sqs (1.53.0)
+    aws-sdk-sqs (1.55.0)
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sigv4 (~> 1.1)
     aws-sigv4 (1.5.2)

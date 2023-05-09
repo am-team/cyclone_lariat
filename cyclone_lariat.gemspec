@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-sdk-sns'
   spec.add_dependency 'aws-sdk-sqs'
   spec.add_dependency 'dry-cli', '~> 0.6'
-  spec.add_dependency 'dry-validation', '~> 1.5'
+  spec.add_dependency 'dry-validation', '< 1.9.0' # 1.9.0 use zeitwerk that require ruby > 2.5
   spec.add_dependency 'luna_park', '~> 0.11'
   spec.add_dependency 'terminal-table', '~> 3.0'
 

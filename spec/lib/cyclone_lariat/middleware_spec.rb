@@ -109,7 +109,7 @@ RSpec.describe CycloneLariat::Middleware do
 
     context 'when messages_repo is defined' do
       let(:dataset) { double }
-      let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, disabled?: false }
+      let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, disabled?: false, find: event }
       let(:messages_repo_class) { class_double(CycloneLariat::Repo::InboxMessages, new: messages_repo) }
       let(:middleware) { described_class.new(inbox_dataset: dataset, repo: messages_repo_class) }
       let(:event) { instance_double CycloneLariat::Messages::V1::Event, processed?: true }
@@ -150,6 +150,17 @@ RSpec.describe CycloneLariat::Middleware do
 
         it 'should not crete new event in repository' do
           expect(messages_repo).to receive(:create)
+          receive_event
+        end
+      end
+
+      context 'when before_save hook is defined' do
+        let(:on_before_save) { double(call: true) }
+        let(:messages_repo) { instance_double CycloneLariat::Repo::InboxMessages, disabled?: false, find: nil, create: nil, processed!: true }
+        let(:middleware) { described_class.new(inbox_dataset: dataset, repo: messages_repo_class, before_save: on_before_save) }
+
+        it 'should call the hook' do
+          expect(on_before_save).to receive(:call)
           receive_event
         end
       end

@@ -10,11 +10,12 @@ module CycloneLariat
   class Middleware
     attr_reader :config
 
-    def initialize(errors_notifier: nil, message_notifier: nil, repo: Repo::InboxMessages, **options)
+    def initialize(errors_notifier: nil, message_notifier: nil, before_save: nil, repo: Repo::InboxMessages, **options)
       @config           = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
       @events_repo      = repo.new(**@config.to_h)
       @message_notifier = message_notifier
       @errors_notifier  = errors_notifier
+      @before_save      = before_save
     end
 
     def call(_worker_instance, queue, _sqs_msg, body, &block)
@@ -34,7 +35,7 @@ module CycloneLariat
 
     private
 
-    attr_reader :errors_notifier, :message_notifier, :events_repo
+    attr_reader :errors_notifier, :message_notifier, :events_repo, :before_save
 
     def receive_message!(body)
       body[:Message] ? JSON.parse(body[:Message], symbolize_names: true) : body
@@ -48,10 +49,16 @@ module CycloneLariat
 
       existed = events_repo.find(uuid: event.uuid)
       return true if existed&.processed?
+      return yield if existed
 
-      events_repo.create(event) unless existed
+      event.clone.tap do |e|
+        before_save.call(e) if before_save
+        events_repo.create(e)
+      end
+
       yield
-      events_repo.processed! uuid: event.uuid, error: event.client_error
+
+      events_repo.processed!(uuid: event.uuid, error: event.client_error)
     end
 
     def catch_business_error(event)

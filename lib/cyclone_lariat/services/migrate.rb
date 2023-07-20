@@ -11,7 +11,8 @@ module CycloneLariat
       end
 
       def call
-        alert('No one migration exists') if !Dir.exist?(dir) || Dir.empty?(dir)
+        return 'No migration exists' if !Dir.exist?(dir) || Dir.empty?(dir)
+
         output = []
 
         migration_paths.each do |path|

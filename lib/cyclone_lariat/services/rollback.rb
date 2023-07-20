@@ -11,6 +11,8 @@ module CycloneLariat
       end
 
       def call(version = nil)
+        return 'No migration exists' if !Dir.exist?(dir) || Dir.empty?(dir)
+
         version ||= existed_migrations[-1]
         output = []
 

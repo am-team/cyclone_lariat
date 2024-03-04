@@ -18,6 +18,7 @@ module CycloneLariat
             required(:version).filled(:integer).value(eql?: 2)
             required(:data).value(:hash?)
             optional(:request_id).value(format?: UUID_MATCHER)
+            optional(:track_id).value(format?: UUID_MATCHER)
             required(:sent_at).value(format?: ISO8601_MATCHER)
             required(:subject).hash do
               required(:type).filled(:string)

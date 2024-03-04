@@ -21,6 +21,7 @@ module CycloneLariat
           version: version,
           data: data,
           request_id: request_id,
+          track_id: track_id,
           sent_at: sent_at&.iso8601(3),
           subject: subject,
           object: object

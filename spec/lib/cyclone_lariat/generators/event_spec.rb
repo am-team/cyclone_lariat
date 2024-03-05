@@ -58,6 +58,7 @@ RSpec.describe CycloneLariat::Generators::Event do
   describe '#event_v1' do
     let(:uuid)       { SecureRandom.uuid }
     let(:request_id) { SecureRandom.uuid }
+    let(:track_id)   { SecureRandom.uuid }
 
     subject(:event) do
       object_with_generator.event_v1(
@@ -67,6 +68,7 @@ RSpec.describe CycloneLariat::Generators::Event do
           size: 'L'
         },
         request_id: request_id,
+        track_id: track_id,
         uuid: uuid
       )
     end
@@ -81,6 +83,7 @@ RSpec.describe CycloneLariat::Generators::Event do
       expect(event.type).to eq('pizza_already_created')
       expect(event.data).to eq({ type: 'margaritta', size: 'L' })
       expect(event.request_id).to eq(request_id)
+      expect(event.track_id).to eq(track_id)
       expect(event.uuid).to eq(uuid)
       expect(event.kind).to eq('event')
       expect(event.version).to eq(1)
@@ -91,6 +94,7 @@ RSpec.describe CycloneLariat::Generators::Event do
   describe '#event_v2' do
     let(:uuid)        { SecureRandom.uuid }
     let(:request_id)  { SecureRandom.uuid }
+    let(:track_id)    { SecureRandom.uuid }
     let(:subject_uid) { SecureRandom.uuid }
     let(:object_uid)  { SecureRandom.uuid }
 
@@ -104,6 +108,7 @@ RSpec.describe CycloneLariat::Generators::Event do
         subject: { type: 'pizzeria', uuid: subject_uid },
         object:  { type: 'pizza',    uuid: object_uid },
         request_id: request_id,
+        track_id: track_id,
         uuid: uuid
       )
     end
@@ -118,6 +123,7 @@ RSpec.describe CycloneLariat::Generators::Event do
       expect(event.type).to eq('pizza_already_created')
       expect(event.data).to eq({ type: 'margaritta', size: 'L' })
       expect(event.request_id).to eq(request_id)
+      expect(event.track_id).to eq(track_id)
       expect(event.uuid).to eq(uuid)
       expect(event.subject).to eq(type: 'pizzeria', uuid: subject_uid)
       expect(event.object).to eq(type: 'pizza', uuid: object_uid)

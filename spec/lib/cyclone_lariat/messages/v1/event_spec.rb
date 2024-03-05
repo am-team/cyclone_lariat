@@ -218,6 +218,46 @@ module CycloneLariat
       end
     end
 
+    describe '#track_id' do
+      subject(:track_id) { message.track_id }
+
+      context 'when it undefined' do
+        before { params.delete :track_id }
+
+        it { is_expected.to be_nil }
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined with track_id' do
+        let(:uuid) { SecureRandom.uuid }
+
+        before { params[:track_id] = uuid }
+
+        it 'should be eq defined uuid' do
+          is_expected.to eq uuid
+        end
+
+        it 'should be valid' do
+          expect(message.valid?).to eq true
+        end
+      end
+
+      context 'when it defined in int UUID format' do
+        before { params[:track_id] = 'string' }
+
+        it 'should be eq defined string' do
+          is_expected.to eq('string')
+        end
+
+        it 'should be invalid' do
+          expect(message.valid?).to eq false
+        end
+      end
+    end
+
     describe '#sent_at' do
       subject(:sent_at) { message.sent_at }
 

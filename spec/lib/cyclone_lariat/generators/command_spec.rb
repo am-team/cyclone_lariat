@@ -58,6 +58,7 @@ RSpec.describe CycloneLariat::Generators::Command do
   describe '#command_v1' do
     let(:uuid)       { SecureRandom.uuid }
     let(:request_id) { SecureRandom.uuid }
+    let(:track_id)   { SecureRandom.uuid }
 
     subject(:command) do
       object_with_generator.command(
@@ -67,6 +68,7 @@ RSpec.describe CycloneLariat::Generators::Command do
           size: 'L'
         },
         request_id: request_id,
+        track_id: track_id,
         uuid: uuid
       )
     end
@@ -81,6 +83,7 @@ RSpec.describe CycloneLariat::Generators::Command do
       expect(command.type).to eq('create_pizza')
       expect(command.data).to eq({ type: 'margaritta', size: 'L' })
       expect(command.request_id).to eq(request_id)
+      expect(command.track_id).to eq(track_id)
       expect(command.uuid).to eq(uuid)
       expect(command.kind).to eq('command')
       expect(command.version).to eq(1)
@@ -91,6 +94,7 @@ RSpec.describe CycloneLariat::Generators::Command do
   describe '#command_v2' do
     let(:uuid)        { SecureRandom.uuid }
     let(:request_id)  { SecureRandom.uuid }
+    let(:track_id)    { SecureRandom.uuid }
     let(:subject_uid) { SecureRandom.uuid }
     let(:object_uid)  { SecureRandom.uuid }
 
@@ -104,6 +108,7 @@ RSpec.describe CycloneLariat::Generators::Command do
         subject: { type: 'pizzeria', uuid: subject_uid },
         object:  { type: 'pizza',    uuid: object_uid },
         request_id: request_id,
+        track_id: track_id,
         uuid: uuid,
         version: 2
       )

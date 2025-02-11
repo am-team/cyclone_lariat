@@ -1,4 +1,4 @@
-FROM ruby:2.6.5-buster
+FROM ruby:3.3.5-alpine
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         postgresql-client

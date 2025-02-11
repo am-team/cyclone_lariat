@@ -12,9 +12,8 @@ module CycloneLariat
       end
 
       def call(queues)
-        rows = []
-        queues.each do |queue|
-          rows << row(queue)
+        rows = queues.map do |queue|
+          row(queue)
         end
 
         Terminal::Table.new rows: rows, headings: HEADS

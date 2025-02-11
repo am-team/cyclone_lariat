@@ -7,7 +7,7 @@ inherit_mode:
     - Exclude
 
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 3.3
   Exclude:
     - Rakefile
   UseCache: true
@@ -21,9 +21,6 @@ Metrics/LineLength:
     - 'lib/cyclone_lariat/abstract/client.rb'
     - 'lib/cyclone_lariat/migration.rb'
 
-Style/Documentation:
-  Exclude:
-    - '**/*'
 
 Metrics/ParameterLists:
   Exclude:
@@ -47,12 +44,18 @@ Metrics/CyclomaticComplexity:
     - 'lib/cyclone_lariat/event.rb'
     - 'lib/cyclone_lariat/messages/abstract.rb'
     - 'lib/cyclone_lariat/migration.rb'
+    - 'lib/cyclone_lariat/options.rb'
+    - 'lib/cyclone_lariat/clients/sqs.rb'
+    - 'lib/cyclone_lariat/clients/sns.rb'
 
 Metrics/PerceivedComplexity:
   Exclude:
     - 'lib/cyclone_lariat/event.rb'
     - 'lib/cyclone_lariat/messages/abstract.rb'
     - 'lib/cyclone_lariat/migration.rb'
+    - 'lib/cyclone_lariat/options.rb'
+    - 'lib/cyclone_lariat/clients/sqs.rb'
+    - 'lib/cyclone_lariat/clients/sns.rb'
 
 Metrics/AbcSize:
   Exclude:
@@ -71,7 +74,80 @@ Metrics/ClassLength:
     - 'lib/cyclone_lariat/migration.rb'
     - 'lib/cyclone_lariat/abstract/client.rb'
     - 'lib/cyclone_lariat/sns.rb'
+    - 'lib/cyclone_lariat/resources/topic.rb'
+    - 'lib/cyclone_lariat/resources/queue.rb'
+    - 'lib/cyclone_lariat/clients/sns.rb'
 
 Lint/RescueException:
   Exclude:
     - 'lib/cyclone_lariat/middleware.rb'
+
+Style/Attr:
+  Enabled: false
+
+# TODO: убрать/изменить правило
+Style/Documentation:
+  Enabled: false
+
+Style/ArgumentsForwarding:
+  Enabled: false
+
+Naming/BlockForwarding:
+  Enabled: false
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: true
+
+Lint/MixedRegexpCaptureTypes:
+  Enabled: true
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Style/BisectedAttrAccessor:
+  Enabled: true
+
+Style/ExponentialNotation:
+  Enabled: true
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Style/RedundantAssignment:
+  Enabled: true
+
+Style/RedundantFetchBlock:
+  Enabled: true
+
+Style/RedundantRegexpCharacterClass:
+  Enabled: true
+
+Style/RedundantRegexpEscape:
+  Enabled: true
+
+Style/SlicingWithRange:
+  Enabled: true
+
+Performance/RedundantBlockCall:
+  Enabled: false
+
+Style/SuperArguments:
+  Enabled: false
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+require:
+  - rubocop-performance

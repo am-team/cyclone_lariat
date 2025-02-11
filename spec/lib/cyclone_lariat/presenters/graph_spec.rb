@@ -36,7 +36,7 @@ RSpec.describe CycloneLariat::Presenters::Graph do
         ]
       end
 
-      let(:expected_graph) {
+      let(:expected_graph) do
         [
           "digraph G {\n  rankdir=LR;",
           '  "test-event-fanout-graph_test-parent_topic.fifo" [shape=component style=filled, fillcolor=white];',
@@ -47,7 +47,7 @@ RSpec.describe CycloneLariat::Presenters::Graph do
           '  "test-event-fanout-graph_test-parent_topic.fifo" -> "test-event-queue-graph_test-child_queue.fifo";',
           '}'
         ]
-      }
+      end
 
       it 'should draw expected graph' do
         is_expected.to eq(expected_graph)

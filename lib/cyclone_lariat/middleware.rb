@@ -10,12 +10,14 @@ module CycloneLariat
   class Middleware
     attr_reader :config
 
-    def initialize(errors_notifier: nil, message_notifier: nil, before_save: nil, repo: Repo::InboxMessages, **options)
-      @config           = CycloneLariat::Options.wrap(options).merge!(CycloneLariat.config)
+    def initialize(args = {})
+      @message_notifier = args.delete(:message_notifier)
+      @errors_notifier  = args.delete(:errors_notifier)
+      @before_save      = args.delete(:before_save)
+
+      repo              = args.delete(:repo) || CycloneLariat::Repo::InboxMessages
+      @config           = CycloneLariat::Options.wrap(args).merge!(CycloneLariat.config)
       @events_repo      = repo.new(**@config.to_h)
-      @message_notifier = message_notifier
-      @errors_notifier  = errors_notifier
-      @before_save      = before_save
     end
 
     def call(_worker_instance, queue, _sqs_msg, body, &block)
@@ -52,7 +54,7 @@ module CycloneLariat
       return yield if existed
 
       event.clone.tap do |e|
-        before_save.call(e) if before_save
+        before_save&.call(e)
         events_repo.create(e)
       end
 

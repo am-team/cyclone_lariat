@@ -34,9 +34,11 @@ module CycloneLariat
     class QueueDoesNotExists < LunaPark::Errors::System
       message { |d| "Queue does not exists: `#{d[:expected_queue]}`" }
     end
+
     class SubscriptionAlreadyExists < LunaPark::Errors::System
       message { |d| "Subscription for topic `#{d[:topic].name}`, on endpoint `#{d[:endpoint].name}` already exists" }
     end
+
     class SubscriptionDoesNotExists < LunaPark::Errors::System
       message { |d| "Subscription for topic `#{d[:topic].name}`, on endpoint `#{d[:endpoint].name}` does not exists" }
     end

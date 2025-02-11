@@ -4,12 +4,12 @@ module CycloneLariat
   class Outbox
     module Extensions
       module ActiveRecordOutbox
-        def transaction(opts = {}, &block)
+        def transaction(**opts, &block)
           opts = opts.dup
-          return super unless opts.delete(:with_outbox)
+          return super(**opts, &block) unless opts.delete(:with_outbox)
 
           outbox = CycloneLariat::Outbox.new
-          result = super(opts) do
+          result = super(**opts) do
             block.call(outbox)
           end
 

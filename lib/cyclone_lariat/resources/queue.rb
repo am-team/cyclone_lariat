@@ -9,7 +9,8 @@ module CycloneLariat
 
       attr_reader :instance, :kind, :region, :dest, :account_id, :publisher, :type, :fifo, :content_based_deduplication
 
-      def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:, content_based_deduplication: nil, tags: nil, name: nil)
+      def initialize(instance:, kind:, region:, dest:, account_id:, publisher:, type:, fifo:,
+                     content_based_deduplication: nil, tags: nil, name: nil)
         @instance  = instance
         @kind      = kind
         @region    = region
@@ -111,7 +112,7 @@ module CycloneLariat
         # url_array[3]  => 247606935658 # account_id
         # url_array[4]  => test-event-queue-cyclone_lariat-note_added.fifo # name
         def from_url(url)
-          raise ArgumentError, 'Url is not http format' unless url =~ URI::DEFAULT_PARSER.make_regexp
+          raise ArgumentError, 'Url is not http format' unless url&.match?(URI::DEFAULT_PARSER.make_regexp)
 
           url_array = url.split('/')
           raise ArgumentError, 'Url should start from https' unless url_array[0] == 'https:'
@@ -142,25 +143,23 @@ module CycloneLariat
       end
 
       def tags
-        @tags ||= begin
-          if standard?
-            {
-              'standard' => 'true',
-              'instance' => String(instance),
-              'kind' => String(kind),
-              'publisher' => String(publisher),
-              'type' => String(type),
-              'dest' => dest ? String(dest) : 'undefined',
-              'fifo' => fifo ? 'true' : 'false'
-            }
-          else
-            {
-              'standard' => 'false',
-              'name' => String(name),
-              'fifo' => fifo ? 'true' : 'false'
-            }
-          end
-        end
+        @tags ||= if standard?
+                    {
+                      'standard' => 'true',
+                      'instance' => String(instance),
+                      'kind' => String(kind),
+                      'publisher' => String(publisher),
+                      'type' => String(type),
+                      'dest' => dest ? String(dest) : 'undefined',
+                      'fifo' => fifo ? 'true' : 'false'
+                    }
+                  else
+                    {
+                      'standard' => 'false',
+                      'name' => String(name),
+                      'fifo' => fifo ? 'true' : 'false'
+                    }
+                  end
       end
     end
   end

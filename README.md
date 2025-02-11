@@ -783,11 +783,12 @@ class Receiver
     # Options dataset, errors_notifier and message_notifier is optionals.
     # If you dont define notifiers - middleware does not notify
     # If you dont define dataset - middleware does not store events in db
-    chain.add CycloneLariat::Middleware,
-              dataset: DB[:events],
-              errors_notifier:  LunaPark::Notifiers::Sentry.new,
-              message_notifier: LunaPark::Notifiers::Log.new(min_lvl: :debug, format: :pretty_json),
-              before_save: -> { |message|  message.data[:password] = nil }
+    chain.add CycloneLariat::Middleware, {
+      dataset: DB[:events],
+      errors_notifier:  LunaPark::Notifiers::Sentry.new,
+      message_notifier: LunaPark::Notifiers::Log.new(min_lvl: :debug, format: :pretty_json),
+      before_save: -> { |message|  message.data[:password] = nil }
+    }
   end
 
   class UserIsNotRegistered < LunaPark::Errors::Business

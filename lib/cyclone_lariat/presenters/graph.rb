@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module CycloneLariat
   module Presenters
     class Graph
@@ -34,7 +32,11 @@ module CycloneLariat
 
       def present_resource(resource)
         color = resource.custom? ? ', fillcolor=grey' : ', fillcolor=white'
-        style = resource.topic? ? "[shape=component style=filled#{color}]" : "[shape=record, style=\"rounded,filled\"#{color}]"
+        style = if resource.topic?
+                  "[shape=component style=filled#{color}]"
+                else
+                  "[shape=record, style=\"rounded,filled\"#{color}]"
+                end
         "  \"#{resource.name}\" #{style};"
       end
 

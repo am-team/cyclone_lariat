@@ -67,7 +67,7 @@ RSpec.describe CycloneLariat::Generators::Queue do
       expect(queue.tags).to eq({
         'standard' => 'false',
         'name' => 'pizza_line.fifo',
-        'fifo' => 'true',
+        'fifo' => 'true'
       })
     end
   end

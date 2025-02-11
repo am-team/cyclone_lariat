@@ -25,9 +25,9 @@ module CycloneLariat
       class Install < Dry::CLI::Command
         desc 'Install cyclone lariat to current directory'
         option :adapter,
-          default: 'sequel',
-          values: %w[sequel active_record],
-          desc: 'adapter for store events and versions'
+               default: 'sequel',
+               values: %w[sequel active_record],
+               desc: 'adapter for store events and versions'
 
         def call(adapter: 'sequel', **)
           create_config(adapter)
@@ -35,7 +35,7 @@ module CycloneLariat
         end
 
         def create_config(adapter)
-          FileUtils.mkdir_p INITIALIZERS_DIR unless Dir.exist? INITIALIZERS_DIR
+          FileUtils.mkdir_p INITIALIZERS_DIR
           config_path = "#{INITIALIZERS_DIR}/cyclone_lariat.rb"
           config_file = File.open(config_path, 'w')
           config_file.puts config_contents(adapter)
@@ -43,7 +43,7 @@ module CycloneLariat
         end
 
         def create_rake_task
-          FileUtils.mkdir_p RAKE_TASKS_DIR unless Dir.exist? RAKE_TASKS_DIR
+          FileUtils.mkdir_p RAKE_TASKS_DIR
           config_path = "#{RAKE_TASKS_DIR}/cyclone_lariat.rake"
           config_file = File.open(config_path, 'w')
           config_file.puts rake_task_context
@@ -154,7 +154,7 @@ module CycloneLariat
           def call(title:, **)
             abort('Use only a-z and _ in your title') unless title_correct? title
 
-            FileUtils.mkdir_p CycloneLariat::Migration::DIR unless Dir.exist? CycloneLariat::Migration::DIR
+            FileUtils.mkdir_p CycloneLariat::Migration::DIR
 
             file_name = generate_filename(title)
             class_name = generate_class_name(title)

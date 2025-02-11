@@ -64,7 +64,7 @@ module CycloneLariat
       end
 
       def message_without_kind
-        @raw_message.reject { |key, _| key == :kind }
+        @raw_message.except(:kind)
       end
 
       def kind

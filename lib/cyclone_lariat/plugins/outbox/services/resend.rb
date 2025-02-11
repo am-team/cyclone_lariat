@@ -19,14 +19,12 @@ module CycloneLariat
         def call
           messages_repo.each_with_error do |message|
             messages_repo.transaction do
-              begin
-                messages_repo.lock(message.uuid)
-                sns_client.publish message, fifo: message.fifo?
-                messages_repo.delete(message.uuid)
-              rescue StandardError => e
-                messages_repo.update_error(message.uuid, e.message)
-                on_sending_error&.call(message, e)
-              end
+              messages_repo.lock(message.uuid)
+              sns_client.publish message, fifo: message.fifo?
+              messages_repo.delete(message.uuid)
+            rescue StandardError => e
+              messages_repo.update_error(message.uuid, e.message)
+              on_sending_error&.call(message, e)
             end
           end
         end

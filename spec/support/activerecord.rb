@@ -37,9 +37,11 @@ class ArInboxMessage < ActiveRecord::Base
   self.inheritance_column = :_type_disabled
   self.primary_key = 'uuid'
 end
+
 class ArOutboxMessage < ActiveRecord::Base
   self.inheritance_column = :_type_disabled
   self.primary_key = 'uuid'
 end
+
 class ArLariatVersion < ActiveRecord::Base
 end

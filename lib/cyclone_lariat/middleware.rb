@@ -52,7 +52,7 @@ module CycloneLariat
       return yield if existed
 
       event.clone.tap do |e|
-        before_save.call(e) if before_save
+        before_save&.call(e)
         events_repo.create(e)
       end
 

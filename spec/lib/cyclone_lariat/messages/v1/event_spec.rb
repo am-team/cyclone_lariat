@@ -3,7 +3,7 @@
 require 'cyclone_lariat/messages/v1/event'
 require 'securerandom'
 
-module CycloneLariat
+module CycloneLariat # rubocop:disable Metrics/ModuleLength
   RSpec.describe Messages::V1::Event do
     let(:params) do
       {
@@ -12,7 +12,7 @@ module CycloneLariat
         type: 'create_user',
         version: 1,
         data: { email: 'john.doe@example.com' },
-        sent_at: '1970-01-01 16:40:00'
+        sent_at: '1970-01-01 16:40:00 +01:00'
       }
     end
 

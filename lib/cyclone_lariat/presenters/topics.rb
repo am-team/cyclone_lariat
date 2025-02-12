@@ -12,9 +12,8 @@ module CycloneLariat
       end
 
       def call(topics)
-        rows = []
-        topics.each do |topic|
-          rows << row(topic)
+        rows = topics.map do |topic|
+          row(topic)
         end
 
         Terminal::Table.new rows: rows, headings: HEADS

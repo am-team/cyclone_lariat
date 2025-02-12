@@ -7,7 +7,8 @@ module CycloneLariat
 
       attr_reader :instance, :kind, :region, :account_id, :publisher, :type, :fifo, :content_based_deduplication
 
-      def initialize(instance:, kind:, region:, account_id:, publisher:, type:, fifo:, content_based_deduplication: nil, tags: nil, name: nil)
+      def initialize(instance:, kind:, region:, account_id:, publisher:, type:, fifo:,
+                     content_based_deduplication: nil, tags: nil, name: nil)
         @instance  = instance
         @kind      = kind
         @region    = region
@@ -108,24 +109,22 @@ module CycloneLariat
       end
 
       def tags
-        @tags ||= begin
-          if standard?
-            [
-              { key: 'standard',  value: 'true' },
-              { key: 'instance',  value: String(instance) },
-              { key: 'kind',      value: String(kind) },
-              { key: 'publisher', value: String(publisher) },
-              { key: 'type',      value: String(type) },
-              { key: 'fifo',      value: fifo ? 'true' : 'false' }
-            ]
-          else
-            [
-              { key: 'standard',  value: 'false' },
-              { key: 'name',      value: String(name) },
-              { key: 'fifo',      value: fifo ? 'true' : 'false' }
-            ]
-          end
-        end
+        @tags ||= if standard?
+                    [
+                      { key: 'standard',  value: 'true' },
+                      { key: 'instance',  value: String(instance) },
+                      { key: 'kind',      value: String(kind) },
+                      { key: 'publisher', value: String(publisher) },
+                      { key: 'type',      value: String(type) },
+                      { key: 'fifo',      value: fifo ? 'true' : 'false' }
+                    ]
+                  else
+                    [
+                      { key: 'standard',  value: 'false' },
+                      { key: 'name',      value: String(name) },
+                      { key: 'fifo',      value: fifo ? 'true' : 'false' }
+                    ]
+                  end
       end
     end
   end

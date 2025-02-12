@@ -25,14 +25,12 @@ module CycloneLariat
 
     def publish
       sent_message_uids = messages.each_with_object([]) do |message, sent_message_uuids|
-        begin
-          sns_client.publish message, fifo: message.fifo?
-          sent_message_uuids << message.uuid
-        rescue StandardError => e
-          repo.update_error(message.uuid, e.message)
-          config.on_sending_error&.call(message, e)
-          next
-        end
+        sns_client.publish message, fifo: message.fifo?
+        sent_message_uuids << message.uuid
+      rescue StandardError => e
+        repo.update_error(message.uuid, e.message)
+        config.on_sending_error&.call(message, e)
+        next
       end
       repo.delete(sent_message_uids) unless sent_message_uids.empty?
     end

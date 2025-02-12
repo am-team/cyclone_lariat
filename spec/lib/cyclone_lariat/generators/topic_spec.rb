@@ -38,13 +38,13 @@ RSpec.describe CycloneLariat::Generators::Topic do
       expect(topic.fifo).to eq true
       expect(topic.content_based_deduplication).to eq true
       expect(topic.tags).to eq([
-        { key: 'standard', value: 'true' },
-        { key: 'instance', value: 'test' },
-        { key: 'kind', value: 'event' },
-        { key: 'publisher', value: 'pizzeria' },
-        { key: 'type', value: 'pizza_line' },
-        { key: 'fifo', value: 'true' }
-      ])
+                                 { key: 'standard', value: 'true' },
+                                 { key: 'instance', value: 'test' },
+                                 { key: 'kind', value: 'event' },
+                                 { key: 'publisher', value: 'pizzeria' },
+                                 { key: 'type', value: 'pizza_line' },
+                                 { key: 'fifo', value: 'true' }
+                               ])
     end
   end
 
@@ -63,10 +63,10 @@ RSpec.describe CycloneLariat::Generators::Topic do
       expect(topic.fifo).to eq(true)
       expect(topic.name).to eq('pizza_line.fifo')
       expect(topic.tags).to eq([
-        { key: 'standard', value: 'false' },
-        { key: 'name', value: 'pizza_line.fifo' },
-        { key: 'fifo', value: 'true' }
-      ])
+                                 { key: 'standard', value: 'false' },
+                                 { key: 'name', value: 'pizza_line.fifo' },
+                                 { key: 'fifo', value: 'true' }
+                               ])
     end
   end
 end

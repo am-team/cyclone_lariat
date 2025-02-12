@@ -10,7 +10,7 @@ namespace :cyclone_lariat do
 
   desc 'Rollback topics for SQS/SNS'
   task :rollback, [:version] => :config do |_, args|
-    target_version = args[:version] ? args[:version].to_i : nil
+    target_version = args[:version]&.to_i
     CycloneLariat::Migration.rollback(target_version)
   end
 

@@ -31,7 +31,8 @@ module CycloneLariat
         Messages::V1::Event.wrap(params.compact)
       end
 
-      def event_v2(type, subject:, object:, data: {}, request_id: nil, group_id: nil, deduplication_id: nil, uuid: SecureRandom.uuid)
+      def event_v2(type, subject:, object:, data: {}, request_id: nil, group_id: nil, deduplication_id: nil,
+                   uuid: SecureRandom.uuid)
         params = {
           uuid: uuid,
           type: type,

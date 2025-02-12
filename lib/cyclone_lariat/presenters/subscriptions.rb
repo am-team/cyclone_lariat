@@ -12,9 +12,8 @@ module CycloneLariat
       end
 
       def call(subscriptions)
-        rows = []
-        subscriptions.each do |subscription|
-          rows << row(subscription)
+        rows = subscriptions.map do |subscription|
+          row(subscription)
         end
 
         Terminal::Table.new rows: rows, headings: HEADS

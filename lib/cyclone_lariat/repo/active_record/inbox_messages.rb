@@ -33,7 +33,10 @@ module CycloneLariat
 
         def processed!(uuid:, error: nil)
           data = { processed_at: current_timestamp_from_db }
-          data.merge!(client_error_message: error.message, client_error_details: JSON.generate(error.details)) if error
+          if error
+            data[:client_error_message] = error.message
+            data[:client_error_details] = JSON.generate(error.details)
+          end
 
           message = dataset.where(uuid: uuid).first
           return false unless message

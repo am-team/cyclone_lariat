@@ -77,7 +77,7 @@ module CycloneLariat
 
       def subscribed?(topic:, endpoint:)
         subscription_arn = find_subscription_arn(topic: topic, endpoint: endpoint)
-        subscription_arn.nil? ? false : true
+        !subscription_arn.nil?
       end
 
       def subscribe(topic:, endpoint:)
@@ -132,7 +132,10 @@ module CycloneLariat
                 next
               end
 
-            subscriptions << { topic: Resources::Topic.from_arn(s.topic_arn), endpoint: endpoint, arn: s.subscription_arn }
+            subscriptions << {
+              topic: Resources::Topic.from_arn(s.topic_arn), endpoint: endpoint,
+              arn: s.subscription_arn
+            }
           end
 
           break if resp[:next_token].nil?
@@ -166,11 +169,11 @@ module CycloneLariat
           raise ArgumentError, 'Endpoint should be Topic or Queue'
         end
 
-        found_subscription = topic_subscriptions(topic).select do |subscription|
+        found_subscription = topic_subscriptions(topic).find do |subscription|
           subscription.endpoint == endpoint.arn
-        end.first
+        end
 
-        found_subscription ? found_subscription.subscription_arn : nil
+        found_subscription&.subscription_arn
       end
     end
   end

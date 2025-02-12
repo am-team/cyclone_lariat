@@ -102,7 +102,7 @@ RSpec.describe CycloneLariat::Generators::Command do
           size: 'L'
         },
         subject: { type: 'pizzeria', uuid: subject_uid },
-        object:  { type: 'pizza',    uuid: object_uid },
+        object: { type: 'pizza', uuid: object_uid },
         request_id: request_id,
         uuid: uuid,
         version: 2

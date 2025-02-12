@@ -51,7 +51,11 @@ RSpec.describe CycloneLariat::Outbox::Extensions::SequelOutbox do
       end
 
       it 'should not publish outbox messages' do
-        begin transaction rescue nil end
+        begin
+          transaction
+        rescue StandardError
+          nil
+        end
         expect(outbox).not_to have_received(:publish)
       end
     end

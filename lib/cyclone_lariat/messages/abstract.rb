@@ -19,7 +19,7 @@ module CycloneLariat
             :deduplication_id, :group_id, :processed_at, :received_at
 
       # Make validation public
-      def validation
+      def validation # rubocop:disable Lint/UselessMethodDefinition
         super
       end
 
@@ -126,11 +126,12 @@ module CycloneLariat
 
       def wrap_string(value)
         case value
-        when String then String(value)
-        when Integer then String(value)
-        when NilClass then nil
-        when FalseClass then nil
-        else raise ArgumentError, "Unknown type `#{value.class}`"
+        when String, Integer
+          String(value)
+        when NilClass, FalseClass
+          nil
+        else
+          raise ArgumentError, "Unknown type `#{value.class}`"
         end
       end
     end

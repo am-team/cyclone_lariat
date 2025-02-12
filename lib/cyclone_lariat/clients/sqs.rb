@@ -60,7 +60,7 @@ module CycloneLariat
       end
 
       def publish_event(type, fifo:, dest: nil, queue: nil, **options)
-        options[:version] ||= self.config.version
+        options[:version] ||= config.version
         options[:data]    ||= {}
         options[:uuid]    ||= SecureRandom.uuid
 
@@ -68,7 +68,7 @@ module CycloneLariat
       end
 
       def publish_command(type, fifo:, dest: nil, queue: nil, **options)
-        options[:version] ||= self.config.version
+        options[:version] ||= config.version
         options[:data]    ||= {}
         options[:uuid]    ||= SecureRandom.uuid
 

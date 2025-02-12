@@ -7,7 +7,7 @@ require 'cyclone_lariat/middleware'
 RSpec.describe CycloneLariat::Middleware do
   describe '#call' do
     subject(:receive_event) do
-      middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': msg }) do
+      middleware.call(nil, 'create_message', nil, { MessageId: 12, Message: msg }) do
         business_logic.call
       end
     end
@@ -48,7 +48,7 @@ RSpec.describe CycloneLariat::Middleware do
 
       context 'receive business error' do
         subject(:receive_event) do
-          middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': msg }) do
+          middleware.call(nil, 'create_message', nil, { MessageId: 12, Message: msg }) do
             raise LunaPark::Errors::Business
           end
         end
@@ -65,7 +65,7 @@ RSpec.describe CycloneLariat::Middleware do
 
       context 'receive system error' do
         subject(:receive_event) do
-          middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': msg }) do
+          middleware.call(nil, 'create_message', nil, { MessageId: 12, Message: msg }) do
             raise LunaPark::Errors::System
           end
         end
@@ -78,7 +78,7 @@ RSpec.describe CycloneLariat::Middleware do
 
       context 'receive system exception' do
         subject(:receive_event) do
-          middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': msg }) do
+          middleware.call(nil, 'create_message', nil, { MessageId: 12, Message: msg }) do
             raise StandardError
           end
         end
@@ -91,7 +91,7 @@ RSpec.describe CycloneLariat::Middleware do
 
       context 'receive bad JSON' do
         subject(:receive_event) do
-          middleware.call(nil, 'create_message', nil, { 'MessageId': 12, 'Message': 'I`m bad JSON`' }) do
+          middleware.call(nil, 'create_message', nil, { MessageId: 12, Message: 'I`m bad JSON`' }) do
             true
           end
         end
@@ -181,14 +181,14 @@ RSpec.describe CycloneLariat::Middleware do
       before do
         CycloneLariat.configure do |cfg|
           cfg.inbox_dataset = DB[:sequel_inbox_messages]
-          cfg.driver           = :sequel
+          cfg.driver = :sequel
         end
       end
 
       after do
         CycloneLariat.configure do |cfg|
           cfg.inbox_dataset = nil
-          cfg.driver           = nil
+          cfg.driver = nil
         end
       end
 

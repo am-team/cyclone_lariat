@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Shoryuken middleware for LunaPark based application.'
   spec.homepage      = 'https://am-team.github.io/cyclone_lariat/#/'
   spec.license       = 'MIT'
-  spec.required_ruby_version = '>= 2.4.0'
+  spec.required_ruby_version = '>= 3.3'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     # spec.metadata['allowed_push_host'] = 'https://rubygems.org'
   else
     raise 'RubyGems 2.0 or newer is required to protect against ' \
-      'public gem pushes.'
+          'public gem pushes.'
   end
   spec.metadata['yard.run'] = 'yri'
 
@@ -42,7 +42,15 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'luna_park', '~> 0.11'
   spec.add_dependency 'terminal-table', '~> 3.0'
 
-  spec.add_development_dependency 'bundler', '~> 1.17'
+  # Add dependencies for libraries that are being removed from the Ruby standard library
+  spec.add_dependency 'base64', '~> 0.1.0'
+  spec.add_dependency 'bigdecimal', '~> 3.1'
+  spec.add_dependency 'logger', '~> 1.6'
+  spec.add_dependency 'mutex_m', '~> 0.1.0'
+  spec.add_dependency 'ostruct', '~> 0.5.0'
+
+  spec.add_development_dependency 'activerecord', '~> 6.1'
+  spec.add_development_dependency 'bundler', '~> 2.1'
   spec.add_development_dependency 'byebug', '~> 11.1'
   spec.add_development_dependency 'database_cleaner-active_record'
   spec.add_development_dependency 'database_cleaner-sequel', '~> 2.0'
@@ -50,14 +58,17 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'guard-bundler'
   spec.add_development_dependency 'guard-rspec'
   spec.add_development_dependency 'guard-rubocop'
-  spec.add_development_dependency 'pg', '~> 1.2'
-  spec.add_development_dependency 'pry', '~> 0.13'
+  spec.add_development_dependency 'pg', '~> 1.5'
+  spec.add_development_dependency 'pry', '~> 0.14.2'
   spec.add_development_dependency 'pry-byebug', '~> 3.9'
   spec.add_development_dependency 'rake', '~> 13.0'
-  spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'rubocop', '~> 0.87'
+  spec.add_development_dependency 'rspec', '~> 3.10'
+  spec.add_development_dependency 'rubocop', '~> 1.50'
+  spec.add_development_dependency 'rubocop-performance', '~> 1.17'
+  spec.add_development_dependency 'rubocop-rspec', '~> 2.18'
   spec.add_development_dependency 'simplecov', '~> 0.18'
   spec.add_development_dependency 'timecop', '~> 0.9'
   spec.add_development_dependency 'webmock', '~> 3.7.0'
   spec.add_development_dependency 'yard', '~> 0.9'
+  spec.metadata['rubygems_mfa_required'] = 'true'
 end
